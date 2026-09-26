@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Pulse Skin Survey</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%22295%20120%20125%20182%22%20fill%3D%22%2396262C%22%3E%3Cpath%20d%3D%22M416.203%20235.545C418.208%20235.545%20419.833%20224.99%20419.833%20211.97C419.833%20198.95%20418.208%20188.395%20416.203%20188.395C414.199%20188.395%20412.573%20198.95%20412.573%20211.97C412.573%20224.99%20414.199%20235.545%20416.203%20235.545Z%22%20/%3E%3Cpath%20d%3D%22M400.127%20259.898C402.418%20259.898%20404.276%20237.86%20404.276%20210.675C404.276%20183.489%20402.418%20161.451%20400.127%20161.451C397.836%20161.451%20395.979%20183.489%20395.979%20210.675C395.979%20237.86%20397.836%20259.898%20400.127%20259.898Z%22%20/%3E%3Cpath%20d%3D%22M382.499%20275.442C385.649%20275.442%20388.203%20246.444%20388.203%20210.674C388.203%20174.904%20385.649%20145.907%20382.499%20145.907C379.349%20145.907%20376.795%20174.904%20376.795%20210.674C376.795%20246.444%20379.349%20275.442%20382.499%20275.442Z%22%20/%3E%3Cpath%20d%3D%22M361.497%20285.286C365.363%20285.286%20368.497%20252.229%20368.497%20211.452C368.497%20170.674%20365.363%20137.617%20361.497%20137.617C357.631%20137.617%20354.497%20170.674%20354.497%20211.452C354.497%20252.229%20357.631%20285.286%20361.497%20285.286Z%22%20/%3E%3Cpath%20d%3D%22M307.83%20301.867C314.703%20301.867%20320.274%20261.155%20320.274%20210.934C320.274%20160.712%20314.703%20120%20307.83%20120C300.957%20120%20295.385%20160.712%20295.385%20210.934C295.385%20261.155%20300.957%20301.867%20307.83%20301.867Z%22%20/%3E%3Cpath%20d%3D%22M337.387%20288.913C342.255%20288.913%20346.201%20254.116%20346.201%20211.192C346.201%20168.268%20342.255%20133.471%20337.387%20133.471C332.518%20133.471%20328.572%20168.268%20328.572%20211.192C328.572%20254.116%20332.518%20288.913%20337.387%20288.913Z%22%20/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&family=Raleway:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --warm-white: #FFFBF7;
+    --paper: #FFF3E8;
+    --espresso: #261000;
+    --espresso-soft: #5B4436;
+    --auburn: #96262C;
+    --burnt-orange: #AB5B1E;
+    --gold: #E4A524;
+    --line: #E7D6C8;
+    --grad: linear-gradient(135deg, #81261A 0%, #AA5B1E 52%, #D79423 100%);
+    --display: "Romie", "Gilda Display", "Didot", "Bodoni 72", Georgia, serif;
+    --body: "Raleway", "Helvetica Neue", Arial, sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { min-height: 100%; }
+  body {
+    margin: 0; background: var(--warm-white); color: var(--espresso);
+    font-family: var(--body); font-size: 16px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .wrap { max-width: 640px; margin: 0 auto; padding-inline: 20px; }
+
+  header.top { padding-block: 20px; border-bottom: 1px solid var(--line); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .wordmark { display: inline-flex; align-items: center; color: #191819; text-decoration: none; }
+  .wordmark-svg { height: 22px; width: auto; display: block; }
+  .step-count { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--espresso-soft); font-variant-numeric: tabular-nums; }
+
+  .progress { height: 4px; background: var(--line); }
+  .progress i { display: block; height: 100%; width: 0; background: var(--grad); transition: width .25s ease; }
+
+  main { padding-block: 36px 48px; }
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--burnt-orange); margin: 0 0 12px; }
+  h1, h2.q {
+    font-family: var(--display); font-weight: 400; line-height: 1.12;
+    margin: 0 0 10px; text-wrap: balance;
+  }
+  h1 { font-size: clamp(34px, 7vw, 48px); }
+  h2.q { font-size: clamp(26px, 5.4vw, 34px); }
+  .help { color: var(--espresso-soft); margin: 0 0 22px; font-size: 15px; }
+  .intro p { margin: 0 0 14px; color: var(--espresso-soft); max-width: 34em; }
+
+  .desc {
+    background: var(--paper); border-left: 3px solid var(--gold);
+    padding: 14px 16px; border-radius: 0 12px 12px 0; margin: 0 0 22px; font-size: 15px;
+  }
+  .desc b { display: block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--burnt-orange); margin-bottom: 4px; }
+
+  .options { display: grid; gap: 10px; border: 0; padding: 0; margin: 0; }
+  .opt { position: relative; display: block; }
+  .opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .opt span {
+    display: flex; align-items: center; gap: 12px; min-height: 52px;
+    padding: 12px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    cursor: pointer; font-size: 16px; line-height: 1.3;
+  }
+  .opt span::before {
+    content: ""; flex: none; width: 18px; height: 18px; border: 1.5px solid #BFA893; background: #fff;
+  }
+  .opt input[type=radio] + span::before { border-radius: 50%; }
+  .opt input[type=checkbox] + span::before { border-radius: 5px; }
+  .opt input:checked + span { border-color: var(--burnt-orange); background: var(--paper); box-shadow: inset 0 0 0 1px var(--burnt-orange); }
+  .opt input[type=radio]:checked + span::before { border: 5.5px solid var(--auburn); }
+  .opt input[type=checkbox]:checked + span::before { background: var(--auburn); border-color: var(--auburn); box-shadow: inset 0 0 0 3px #fff; }
+  .opt input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .shades { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .shade { position: relative; display: block; }
+  .shade input { position: absolute; opacity: 0; pointer-events: none; }
+  .shade span {
+    display: grid; justify-items: center; align-content: start; gap: 6px; height: 100%;
+    padding: 10px 4px; border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    text-align: center; font-size: 12px; font-weight: 500; line-height: 1.25; cursor: pointer;
+  }
+  .shade i { width: 34px; height: 34px; border-radius: 50%; display: block; border: 1px solid rgba(38,16,0,.12); }
+  .shade input:checked + span { border-color: var(--burnt-orange); background: var(--paper); box-shadow: inset 0 0 0 1px var(--burnt-orange); }
+  .shade input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .shade-none { grid-column: 1 / -1; }
+  .shade-none span { grid-auto-flow: column; justify-content: center; align-items: center; }
+  @media (max-width: 399px) { .shades { grid-template-columns: repeat(2, 1fr); } }
+
+  .other { margin-top: 10px; }
+  .other input {
+    width: 100%; font: inherit; font-size: 16px; padding: 12px 14px; border-radius: 10px;
+    border: 1px solid var(--line); background: #fff; color: var(--espresso);
+  }
+  .other input:focus { border-color: var(--burnt-orange); outline: none; box-shadow: 0 0 0 3px rgba(228,165,36,.3); }
+
+  .nav { display: flex; gap: 10px; align-items: center; margin-top: 28px; }
+  .btn {
+    font: inherit; font-weight: 700; font-size: 15px; letter-spacing: .03em;
+    border-radius: 999px; padding: 14px 24px; cursor: pointer; border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--espresso); color: var(--warm-white); flex: 1; }
+  .btn-primary:hover { background: var(--auburn); }
+  .btn-primary[disabled] { opacity: .45; cursor: default; background: var(--espresso); }
+  .btn-back { background: transparent; color: var(--espresso); border-color: var(--line); }
+  .btn-back:hover { border-color: var(--espresso); }
+  .skip { font-size: 13px; color: var(--espresso-soft); margin: 12px 0 0; text-align: center; }
+  .error { color: var(--auburn); font-weight: 600; font-size: 14px; margin: 14px 0 0; }
+
+  .end { text-align: left; }
+  .end h1 { margin-bottom: 14px; }
+  .end p { color: var(--espresso-soft); margin: 0 0 14px; max-width: 34em; }
+  a.cta {
+    display: inline-block; margin-top: 8px; text-decoration: none; font-weight: 700; letter-spacing: .03em;
+    background: var(--grad); color: var(--warm-white); padding: 14px 26px; border-radius: 999px;
+  }
+  footer { border-top: 1px solid var(--line); padding-block: 20px; font-size: 13px; color: var(--espresso-soft); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="wordmark" href="/"><svg class="wordmark-svg" role="img" aria-label="Pulse" xmlns="http://www.w3.org/2000/svg" viewBox="120 344.5 477 119" fill="currentColor"><path d="M471.805 402.885C467.072 400.978 462.235 399.117 457.548 397.313C452.179 395.247 446.622 393.116 441.215 390.901C432.908 387.507 423.067 382.544 420.644 374.299C417.996 365.288 424.404 357.754 430.7 354.033C436.65 350.528 444.087 348.667 452.216 348.667C454.415 348.667 456.65 348.808 458.867 349.069C463.947 349.686 468.83 350.425 472.778 352.696C474.752 353.827 476.38 355.323 477.493 357.024C478.7 358.866 479.13 363.727 479.13 363.727L491.347 365.531L491.431 364.54C492.573 351.649 473.947 347.265 468.213 346.228C463.133 345.312 458.035 344.844 453.067 344.844C445.808 344.844 439.035 345.835 432.917 347.779C426.678 349.771 415.686 354.697 412.215 365.391C409.231 374.57 412.477 384.684 420.485 391.181C430.513 399.314 442.693 403.698 454.471 407.942C461.889 410.615 469.56 413.373 476.548 417.037C480.318 419.01 484.574 421.393 487.343 424.665C490.627 428.544 490.271 433.48 489.392 436.929C487.484 444.426 481.356 450.698 472.142 454.587C466.089 457.139 458.998 458.485 451.636 458.485C449.176 458.485 446.688 458.336 444.255 458.036C440.158 457.532 434.9 456.616 430.653 453.97C428.53 452.652 426.996 451.269 426.079 449.867C425.125 448.39 424.975 446.66 424.816 444.819C424.779 444.417 424.751 444.024 424.704 443.622L424.629 442.94L412.692 440.575L412.617 441.631C411.654 454.989 429.334 459.71 436.977 461.131C441.589 461.981 446.407 462.421 451.281 462.421C458.68 462.421 466.033 461.448 473.133 459.532C480.514 457.541 490.571 453.4 496.586 445.006C502.217 437.144 502.526 426.348 497.316 419.337C491.272 411.204 481.403 406.745 471.814 402.885H471.805Z" /><path d="M155.67 348.63C150.3 347.938 144.818 347.92 139.514 347.892C139.514 347.892 136.605 347.882 135.585 347.882C133.564 347.882 131.544 347.882 129.523 347.892H129.42C128.588 347.892 127.718 347.854 126.848 347.826C125.931 347.789 125.005 347.761 124.088 347.761C122.797 347.761 121.749 347.826 120.795 347.976L120 348.097V460.729H131.291V414.495C143.471 414.495 156.035 414.392 167.99 410.4C178.505 406.885 185.614 400.688 188.552 392.462C192.397 381.674 190.423 368.887 183.734 361.343C176.203 352.846 164.314 349.733 155.66 348.611L155.67 348.63ZM135.707 410.849C134.247 410.886 132.779 410.924 131.319 410.97V351.453C146.661 351.453 167.139 351.762 176.306 366.914C180.198 373.355 181.002 382.394 178.402 390.508C175.988 398.042 170.516 403.455 161.676 407.054C153.462 410.4 144.435 410.625 135.707 410.849Z" /><path d="M582.519 454.12C578.028 455.26 573.183 456.064 568.131 456.522C560.002 457.251 551.798 457.317 544.108 457.317H538.327V409.007H594.858V405.25H538.327V351.556C540.422 351.556 542.527 351.528 544.632 351.509C547.055 351.481 549.487 351.462 551.919 351.462C556.522 351.462 562.574 351.537 568.58 352.107C580.451 353.239 588.637 355.856 595.12 360.595L597.009 361.969L594.493 347.957H526.989V460.738H594.493L596.962 447.137L595.148 448.315C590.517 451.315 586.747 453.045 582.537 454.11L582.519 454.12Z" /><path d="M304.167 401.202C304.167 398.725 304.177 396.238 304.196 393.752C304.242 385.694 304.28 377.365 303.849 369.195C303.391 360.567 300.678 349.826 290.341 347.695L289.219 347.461V360.698L290.107 360.745C300.229 361.296 300.164 374.196 300.117 382.731C300.117 383.46 300.117 384.161 300.117 384.806C300.154 393.639 300.145 402.623 300.136 411.307V419.411C300.126 427.291 299.49 435.639 294.953 443.22C291.529 448.941 286.206 453.372 279.546 456.036C274.597 458.018 268.928 459.065 263.147 459.065C251.042 459.065 240.808 454.634 235.082 446.912C230.676 440.977 228.506 433.265 228.431 423.319C228.384 416.411 228.394 409.39 228.412 402.595C228.412 399.127 228.431 395.659 228.431 392.2V360.567C228.431 360.109 228.431 359.651 228.45 359.184C228.515 355.566 228.581 351.462 224.82 348.994C223.043 347.835 221.209 347.733 219.17 347.733H210.171V351.154L210.938 351.294C215.447 352.098 217.046 354.36 217.046 359.931V377.608C217.046 389.695 217.046 401.791 217.056 413.877V415.915C217.046 425.375 217.028 435.153 221.743 443.706C225.41 450.352 231.191 455.559 238.478 458.784C244.886 461.616 252.23 463 260.93 462.991C262.857 462.991 264.896 462.925 266.982 462.785C273.746 462.336 283.447 460.439 291.277 453.895C304.925 442.491 304.579 424.263 304.27 408.185C304.224 405.764 304.177 403.473 304.177 401.202H304.167Z" /><path d="M354.833 457.438C352.195 457.438 349.566 457.401 346.956 457.373C344.711 457.345 342.485 457.317 340.286 457.307V347.966H329.042V460.729H396.967L399.38 447.109L397.575 448.277C384.497 456.737 368.659 457.438 354.842 457.438H354.833Z" /></svg></a>
+    <span class="step-count" id="stepCount" aria-live="polite"></span>
+  </div>
+</header>
+<div class="progress" aria-hidden="true"><i id="bar"></i></div>
+
+<main>
+  <div class="wrap" id="app">
+    <noscript><p>This survey needs JavaScript turned on.</p></noscript>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">Questions about this survey: jelyn@pulsecosmeticsolutions.com</div>
+</footer>
+
+<script>
+  // ---- Settings ----
+  var ENDPOINT = "https://script.google.com/macros/s/AKfycbxqre8bK-vNamqo9zud4tY_bEJlVosERZZ0tTNo6Nk4iCiglGLiMmII71ca7P4Nw8cr5Q/exec";
+  // ------------------
+
+  var SHADES = [
+    ["Pearl","mst_1","#f6ede4"],["Selenite","mst_2","#f3e7db"],["Moonstone","mst_3","#f7ead0"],
+    ["Citrine","mst_4","#eadaba"],["Amber","mst_5","#d7bd96"],["Tiger's Eye","mst_6","#a07e56"],
+    ["Bronzite","mst_7","#825c43"],["Smoky Quartz","mst_8","#604134"],["Obsidian","mst_9","#3a312a"],["Onyx","mst_10","#292420"]
+  ];
+
+  var DESCRIPTION = "Pulse is an app that scans your face, builds a skincare routine around what it finds, and lets you rescan to see whether the routine is working. Every skin concern is tested across ten skin tones before it goes in the app, and the results are published.";
+
+  // screen: true = answer required and can end the survey
+  var QUESTIONS = [
+    { id: "q1_age", type: "radio", screen: true, title: "How old are you?",
+      options: [["under_22","Under 22"],["22_25","22–25"],["26_30","26–30"],["31_35","31–35"],["over_35","Over 35"]],
+      disqualify: ["under_22","over_35"] },
+    { id: "q2_us", type: "radio", screen: true, title: "Do you live in the United States?",
+      options: [["yes","Yes"],["no","No"]], disqualify: ["no"] },
+    { id: "q3_bought", type: "radio", screen: true, title: "In the last six months, have you bought any skincare product for your face?",
+      help: "For example a cleanser, moisturizer, serum or sunscreen.",
+      options: [["yes","Yes"],["no","No"]], disqualify: ["no"] },
+    { id: "q4_shade", type: "shade", title: "Which shade is closest to the skin on your face?",
+      help: "Choose the one that looks closest. There's no wrong answer." },
+    { id: "q5_concerns", type: "checkbox", title: "Which skin concerns do you want to improve?",
+      help: "Choose all that apply.",
+      options: [["dark_spots","Dark spots or hyperpigmentation"],["post_acne_marks","Post-acne marks"],["acne","Breakouts or acne"],
+        ["uneven_tone","Uneven tone"],["redness","Redness"],["dryness","Dryness"],["oiliness","Oiliness"],
+        ["enlarged_pores","Enlarged pores"],["texture","Texture"],["fine_lines","Fine lines"],["dark_circles","Dark circles"],
+        ["razor_bumps","Razor bumps"],["sensitivity","Sensitivity"],["other","Something else"]],
+      other: "q5_other", otherLabel: "What else?" },
+    { id: "q6_scanned", type: "radio", title: "Has an app, website or in-store tool ever analyzed your skin?",
+      options: [["yes_right","Yes, and the results seemed right"],["yes_wrong","Yes, and the results seemed wrong"],
+        ["yes_unsure","Yes, and I couldn't tell"],["never","No, never"]] },
+    { id: "q7_routine", type: "radio", title: "Which best describes your skincare?",
+      options: [["multi_step_daily","I follow the same multi-step routine most days"],["routine_skipped","I have a routine but skip it often"],
+        ["when_remember","I use products when I remember, with no set routine"],["rarely","I rarely use skincare"]] },
+    { id: "q8_spend", type: "radio", title: "About how much do you spend on skincare in a typical month?",
+      options: [["under_25","Under $25"],["25_50","$25–$50"],["51_100","$51–$100"],["101_200","$101–$200"],
+        ["over_200","Over $200"],["prefer_not","Prefer not to say"]] },
+    { id: "q9_confidence", type: "radio", title: "How confident are you that the products you use are actually working for your skin?",
+      options: [["very","Very confident"],["somewhat","Somewhat confident"],["not_very","Not very confident"],["not_at_all","Not at all confident"]] },
+    { id: "q10_interest", type: "radio", describe: true, title: "How interested would you be in using Pulse?",
+      options: [["very","Very interested"],["somewhat","Somewhat interested"],["not_very","Not very interested"],["not_at_all","Not at all interested"]] },
+    { id: "q11_accuracy", type: "radio", describe: true, title: "How much would it matter to you that the scan is tested to be accurate on your skin tone?",
+      options: [["main_reason","It would be a main reason I'd use it"],["somewhat","It would matter somewhat"],["not_much","It wouldn't matter much"]] },
+    { id: "q12_price", type: "radio", describe: true,
+      title: "Premium costs $59.99 a year (about $5 a month) or $9.99 month to month. Which is closest to what you'd do?",
+      options: [["yearly","Pay for the yearly plan"],["monthly","Pay month to month"],["free_only","Use only the free version"],["wouldnt_use","Wouldn't use it"]] },
+    { id: "q13_copied", type: "radio", title: "Have you ever copied a skincare routine or product from a friend, family member or creator?",
+      options: [["someone_i_know","Yes, from someone I know"],["creator","Yes, from a creator or influencer"],["both","Both"],["no","No"]] },
+    { id: "q14_professional", type: "radio", title: "Do you see an esthetician, dermatologist or other skin professional?",
+      options: [["regularly","Yes, regularly"],["occasionally","Yes, occasionally"],["no","No"]] },
+    { id: "q14b_share", type: "radio", title: "Would you share your skin progress in Pulse with them?",
+      showIf: function (a) { return a.q14_professional === "regularly" || a.q14_professional === "occasionally"; },
+      options: [["yes","Yes"],["maybe","Maybe"],["no","No"]] },
+    { id: "q15_gender", type: "radio", section: "About you", title: "How do you describe your gender?",
+      options: [["woman","Woman"],["man","Man"],["non_binary","Non-binary"],["another","I describe my gender another way"],["prefer_not","Prefer not to say"]],
+      other: "q15_other", otherWhen: "another", otherLabel: "How do you describe it? (optional)" },
+    { id: "q16_income", type: "radio", section: "About you", title: "What is your household income before taxes?",
+      help: "Optional.",
+      options: [["under_50k","Under $50,000"],["50_99k","$50,000–$99,999"],["100_149k","$100,000–$149,999"],["150k_plus","$150,000 or more"],["prefer_not","Prefer not to say"]] }
+  ];
+
+  var app = document.getElementById("app");
+  var bar = document.getElementById("bar");
+  var stepCount = document.getElementById("stepCount");
+  var answers = {};
+  var others = {};
+  var idx = -1; // -1 = intro
+  var trail = [];
+
+  function source() {
+    try {
+      var s = new URLSearchParams(window.location.search).get("src") || "";
+      s = s.toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 30);
+      return s || "direct";
+    } catch (e) { return "direct"; }
+  }
+  var SRC = source();
+
+  function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
+  function visible(q) { return !q.showIf || q.showIf(answers); }
+  function totalVisible() { return QUESTIONS.filter(visible).length; }
+  function position(i) { var n = 0; for (var k = 0; k <= i; k++) if (visible(QUESTIONS[k])) n++; return n; }
+
+  function setProgress() {
+    if (idx < 0) { bar.style.width = "0%"; stepCount.textContent = ""; return; }
+    if (idx >= QUESTIONS.length) { bar.style.width = "100%"; stepCount.textContent = ""; return; }
+    var p = position(idx), t = totalVisible();
+    bar.style.width = Math.round((p - 1) / t * 100) + "%";
+    stepCount.textContent = p + " of " + t;
+  }
+
+  function intro() {
+    idx = -1; setProgress();
+    app.innerHTML =
+      '<section class="intro">' +
+      '<p class="eyebrow">Pulse skin survey</p>' +
+      '<h1>Help shape what Pulse becomes.</h1>' +
+      '<p>About five minutes and 16 or so short questions. Your skin, your routine and what you would want from a skincare app.</p>' +
+      '<p>After the first three, every question is optional. Answers are anonymous: we don’t ask for your name or email.</p>' +
+      '<div class="nav"><button class="btn btn-primary" id="start" type="button">Start the survey</button></div>' +
+      '</section>';
+    document.getElementById("start").onclick = function () { go(0); };
+  }
+
+  function renderOptions(q) {
+    if (q.type === "shade") {
+      var h = '<div class="shades" role="radiogroup" aria-labelledby="qtitle">';
+      SHADES.forEach(function (s) {
+        var id = "o_" + s[1];
+        h += '<label class="shade" for="' + id + '"><input type="radio" name="opt" id="' + id + '" value="' + s[1] + '"' +
+          (answers[q.id] === s[1] ? " checked" : "") + '><span><i style="background:' + s[2] + '"></i>' + esc(s[0]) + '</span></label>';
+      });
+      h += '<label class="shade shade-none" for="o_prefer_not"><input type="radio" name="opt" id="o_prefer_not" value="prefer_not"' +
+        (answers[q.id] === "prefer_not" ? " checked" : "") +
+        '><span><i style="background:repeating-linear-gradient(45deg,#FFF3E8 0 4px,#E7D6C8 4px 8px)"></i>Prefer not to say</span></label></div>';
+      return h;
+    }
+    var multi = q.type === "checkbox";
+    var cur = answers[q.id];
+    var h2 = '<div class="options" role="' + (multi ? "group" : "radiogroup") + '" aria-labelledby="qtitle">';
+    q.options.forEach(function (o, n) {
+      var id = "o_" + n;
+      var on = multi ? (cur || []).indexOf(o[0]) !== -1 : cur === o[0];
+      h2 += '<label class="opt" for="' + id + '"><input type="' + (multi ? "checkbox" : "radio") + '" name="opt" id="' + id +
+        '" value="' + o[0] + '"' + (on ? " checked" : "") + '><span>' + esc(o[1]) + '</span></label>';
+    });
+    h2 += '</div>';
+    if (q.other) {
+      h2 += '<div class="other" id="otherWrap" hidden><label for="otherInput" class="help" style="display:block;margin:0 0 6px">' +
+        esc(q.otherLabel) + '</label><input id="otherInput" type="text" maxlength="80" value="' + esc(others[q.other] || "") + '"></div>';
+    }
+    return h2;
+  }
+
+  function currentValue(q) {
+    if (q.type === "checkbox") {
+      return Array.prototype.map.call(app.querySelectorAll('input[name=opt]:checked'), function (el) { return el.value; });
+    }
+    var el = app.querySelector('input[name=opt]:checked');
+    return el ? el.value : "";
+  }
+
+  function showQuestion() {
+    var q = QUESTIONS[idx];
+    setProgress();
+    var isLast = position(idx) === totalVisible();
+    app.innerHTML =
+      '<section>' +
+      '<p class="eyebrow">' + esc(q.section || (q.screen ? "A few quick checks" : "Your skin and routine")) + '</p>' +
+      (q.describe ? '<div class="desc"><b>About Pulse</b>' + esc(DESCRIPTION) + '</div>' : '') +
+      '<h2 class="q" id="qtitle" tabindex="-1">' + esc(q.title) + '</h2>' +
+      (q.help ? '<p class="help">' + esc(q.help) + '</p>' : '<div style="height:12px"></div>') +
+      renderOptions(q) +
+      '<p class="error" id="err" hidden></p>' +
+      '<div class="nav">' +
+      '<button class="btn btn-back" type="button" id="back">Back</button>' +
+      '<button class="btn btn-primary" type="button" id="next">' + (isLast ? "Submit" : "Next") + '</button>' +
+      '</div>' +
+      (q.screen ? '' : '<p class="skip">You can skip any question.</p>') +
+      '</section>';
+
+    var next = document.getElementById("next");
+    var otherWrap = document.getElementById("otherWrap");
+    function sync() {
+      var v = currentValue(q);
+      if (q.screen) next.disabled = !v;
+      if (otherWrap) {
+        var show = q.type === "checkbox" ? v.indexOf("other") !== -1 : v === q.otherWhen;
+        otherWrap.hidden = !show;
+      }
+    }
+    app.querySelectorAll('input[name=opt]').forEach(function (el) { el.addEventListener("change", sync); });
+    sync();
+    document.getElementById("back").onclick = back;
+    next.onclick = function () { advance(q); };
+    try { document.getElementById("qtitle").focus({ preventScroll: true }); } catch (e) {}
+    window.scrollTo(0, 0);
+  }
+
+  function advance(q) {
+    var v = currentValue(q);
+    answers[q.id] = v;
+    if (q.other) {
+      var inp = document.getElementById("otherInput");
+      var keep = q.type === "checkbox" ? v.indexOf("other") !== -1 : v === q.otherWhen;
+      others[q.other] = keep && inp ? inp.value.trim() : "";
+    }
+    if (q.screen && q.disqualify && q.disqualify.indexOf(v) !== -1) { screenedOut(); return; }
+    var n = idx + 1;
+    while (n < QUESTIONS.length && !visible(QUESTIONS[n])) n++;
+    if (n >= QUESTIONS.length) { submit(); return; }
+    trail.push(idx);
+    go(n, true);
+  }
+
+  function go(i, fromAdvance) {
+    if (!fromAdvance && idx >= 0) trail.push(idx);
+    idx = i; showQuestion();
+  }
+
+  function back() {
+    if (!trail.length) { intro(); return; }
+    idx = trail.pop(); showQuestion();
+  }
+
+  function endScreen(title, lines, withCta) {
+    idx = QUESTIONS.length; setProgress();
+    app.innerHTML = '<section class="end"><p class="eyebrow">Pulse skin survey</p><h1 tabindex="-1" id="endTitle">' + esc(title) + '</h1>' +
+      lines.map(function (l) { return '<p>' + esc(l) + '</p>'; }).join("") +
+      (withCta ? '<a class="cta" href="/">Join the Pulse waitlist</a>' : '') + '</section>';
+    try { document.getElementById("endTitle").focus({ preventScroll: true }); } catch (e) {}
+    window.scrollTo(0, 0);
+  }
+
+  function screenedOut() {
+    endScreen("Thank you for your time.",
+      ["This survey is for a specific group of people, so we won’t need any more answers from you. Nothing you entered has been saved."], true);
+  }
+
+  function responseId() {
+    var a = new Uint32Array(2);
+    try { crypto.getRandomValues(a); } catch (e) { a[0] = Date.now(); a[1] = Math.random() * 1e9; }
+    return a[0].toString(36) + a[1].toString(36);
+  }
+
+  function submit() {
+    var payload = { form: "survey", source: SRC, response_id: responseId(), submitted_at: new Date().toISOString() };
+    QUESTIONS.forEach(function (q) {
+      var v = answers[q.id];
+      payload[q.id] = Array.isArray(v) ? v.join(";") : (visible(q) ? (v || "") : "");
+      if (q.other) payload[q.other] = others[q.other] || "";
+    });
+    app.innerHTML = '<section><h2 class="q">Sending your answers…</h2></section>';
+    fetch(ENDPOINT, {
+      method: "POST", mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    }).then(function () {
+      endScreen("Thank you. That’s everything.",
+        ["Your answers go straight into decisions being made right now: which skin concerns Pulse checks first, what it costs, and what it has to prove before it tells you anything.",
+         "If you’re not on the waitlist yet, you can join below."], true);
+    }).catch(function () {
+      app.innerHTML = '<section><h2 class="q">We couldn’t send your answers.</h2>' +
+        '<p class="help">Check your connection, then try again. Your answers are still here.</p>' +
+        '<div class="nav"><button class="btn btn-primary" type="button" id="retry">Try again</button></div></section>';
+      document.getElementById("retry").onclick = submit;
+    });
+  }
+
+  intro();
+</script>
+</body>
+</html>
