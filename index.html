@@ -160,6 +160,14 @@
     display: flex; gap: 12px; align-items: flex-start; background: var(--paper);
     border-radius: 12px; padding: 14px; font-size: 14px; margin-top: 6px;
   }
+  .survey-cta { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .survey-cta p { margin: 0 0 12px; font-size: 14px; color: var(--espresso-soft); }
+  .survey-cta strong { color: var(--espresso); }
+  .btn-survey {
+    display: block; text-align: center; text-decoration: none; font-weight: 700; font-size: 14px;
+    border: 1px solid var(--espresso); color: var(--espresso); border-radius: 999px; padding: 12px 18px;
+  }
+  .btn-survey:hover { background: var(--espresso); color: var(--warm-white); }
   .perk b { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1; color: var(--auburn); }
 
   /* Sections */
@@ -295,6 +303,10 @@
         <div class="perk">
           <b>3</b>
           <span id="perkText">Bring three friends and you're in the first beta group, before public launch.</span>
+        </div>
+        <div class="survey-cta">
+          <p><strong>Got five minutes?</strong> Answer a few questions about your skin and routine, and help decide what Pulse checks first.</p>
+          <a class="btn-survey" href="/survey/?src=waitlist">Take the 5-minute survey</a>
         </div>
       </div>
     </div>
