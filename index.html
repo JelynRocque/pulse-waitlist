@@ -198,7 +198,8 @@
   .rule {
     border-left: 3px solid var(--gold); padding-left: 20px;
   }
-  .rule .num { font-family: var(--display); font-size: 88px; line-height: .9; color: var(--auburn); }
+  .rule .num { font-family: var(--display); font-size: clamp(32px, 3.2vw, 38px); line-height: 1.08; color: var(--auburn); text-wrap: balance; }
+  .rule .rule-lead { font-weight: 700; color: var(--espresso); margin-top: 12px; }
   .rule .num sup { font-size: 30px; vertical-align: top; margin-left: 4px; }
   .rule p { margin: 10px 0 0; font-size: 15px; }
 
@@ -350,8 +351,9 @@
         <p class="scale-label">Illustration of the rule, not test results. Pulse publishes real results by skin tone at launch and updates them every six months.</p>
       </div>
       <div class="rule">
-        <div class="num">5</div>
-        <p><strong>The 5-point rule.</strong> If Pulse reads a skin concern correctly 90 times out of 100 on one skin tone, it has to get at least 85 right on every other tone. If it falls short, that feature waits until it doesn't.</p>
+        <div class="num">The 5&#8209;point rule</div>
+        <p class="rule-lead">If it doesn't meet our bar, it doesn't ship.</p>
+        <p>If Pulse reads a skin concern correctly 90 times out of 100 on one skin tone, it has to get at least 85 right on every other tone. If it falls short, that feature waits until it doesn't.</p>
       </div>
     </div>
   </div>
