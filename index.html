@@ -119,6 +119,7 @@
   .tone-none { grid-column: 1 / -1; }
   .tone-none span { grid-auto-flow: column; justify-content: center; align-items: center; }
   @media (max-width: 399px) { .tones { grid-template-columns: repeat(2, 1fr); } }
+  .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
   .tone input { position: absolute; opacity: 0; pointer-events: none; }
   .tone { display: block; }
   .tone span { height: 100%; align-content: start; }
@@ -264,6 +265,7 @@
         <h2>Join the waitlist</h2>
         <p class="sub">Be first to scan, build your routine and see whether it's working.</p>
         <form id="waitlist" novalidate>
+          <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input type="text" id="website" name="website" tabindex="-1" autocomplete="off"></div>
           <label class="field" for="email">Email
             <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
           </label>
@@ -400,6 +402,7 @@
   };
   // ---------------------------------
 
+  var PAGE_LOADED = Date.now();
   (function () {
     var $ = function (id) { return document.getElementById(id); };
     var form = $("waitlist"), err = $("formError"), btn = $("submitBtn");
@@ -457,7 +460,9 @@
         my_code: code,
         referred_by: referredBy === code ? "" : referredBy,
         email_updates: $("updates").checked ? "yes" : "no",
-        joined_at: new Date().toISOString()
+        joined_at: new Date().toISOString(),
+        hp: document.getElementById("website").value,
+        t: Date.now() - PAGE_LOADED
       };
       btn.disabled = true; btn.textContent = "Joining…";
 

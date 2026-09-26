@@ -226,6 +226,7 @@
     } catch (e) { return "direct"; }
   }
   var SRC = source();
+  var STARTED = Date.now();
 
   function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
   function visible(q) { return !q.showIf || q.showIf(answers); }
@@ -375,7 +376,7 @@
   }
 
   function submit() {
-    var payload = { form: "survey", source: SRC, response_id: responseId(), submitted_at: new Date().toISOString() };
+    var payload = { form: "survey", source: SRC, response_id: responseId(), submitted_at: new Date().toISOString(), t: Date.now() - STARTED };
     QUESTIONS.forEach(function (q) {
       var v = answers[q.id];
       payload[q.id] = Array.isArray(v) ? v.join(";") : (visible(q) ? (v || "") : "");
