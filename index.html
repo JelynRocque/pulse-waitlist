@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Pulse scans your skin, builds your routine and shows you whether it's working. Tested across every skin tone. Join the waitlist.">
+<meta property="og:title" content="Pulse: stop guessing what your skin needs">
+<meta property="og:description" content="Scan, get a routine built for your skin, and see whether it's working. Tested across every skin tone before anything ships.">
+<title>Pulse Waitlist</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%22295%20120%20125%20182%22%20fill%3D%22%2396262C%22%3E%3Cpath%20d%3D%22M416.203%20235.545C418.208%20235.545%20419.833%20224.99%20419.833%20211.97C419.833%20198.95%20418.208%20188.395%20416.203%20188.395C414.199%20188.395%20412.573%20198.95%20412.573%20211.97C412.573%20224.99%20414.199%20235.545%20416.203%20235.545Z%22%20/%3E%3Cpath%20d%3D%22M400.127%20259.898C402.418%20259.898%20404.276%20237.86%20404.276%20210.675C404.276%20183.489%20402.418%20161.451%20400.127%20161.451C397.836%20161.451%20395.979%20183.489%20395.979%20210.675C395.979%20237.86%20397.836%20259.898%20400.127%20259.898Z%22%20/%3E%3Cpath%20d%3D%22M382.499%20275.442C385.649%20275.442%20388.203%20246.444%20388.203%20210.674C388.203%20174.904%20385.649%20145.907%20382.499%20145.907C379.349%20145.907%20376.795%20174.904%20376.795%20210.674C376.795%20246.444%20379.349%20275.442%20382.499%20275.442Z%22%20/%3E%3Cpath%20d%3D%22M361.497%20285.286C365.363%20285.286%20368.497%20252.229%20368.497%20211.452C368.497%20170.674%20365.363%20137.617%20361.497%20137.617C357.631%20137.617%20354.497%20170.674%20354.497%20211.452C354.497%20252.229%20357.631%20285.286%20361.497%20285.286Z%22%20/%3E%3Cpath%20d%3D%22M307.83%20301.867C314.703%20301.867%20320.274%20261.155%20320.274%20210.934C320.274%20160.712%20314.703%20120%20307.83%20120C300.957%20120%20295.385%20160.712%20295.385%20210.934C295.385%20261.155%20300.957%20301.867%20307.83%20301.867Z%22%20/%3E%3Cpath%20d%3D%22M337.387%20288.913C342.255%20288.913%20346.201%20254.116%20346.201%20211.192C346.201%20168.268%20342.255%20133.471%20337.387%20133.471C332.518%20133.471%20328.572%20168.268%20328.572%20211.192C328.572%20254.116%20332.518%20288.913%20337.387%20288.913Z%22%20/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&family=Raleway:wght@400;500;600;700&display=swap">
+<style>
+  /* Pulse brand kit tokens (Figma: Pulse App Pitch Deck v2.0, Brand Kit) */
+  :root {
+    --warm-white: #FFFBF7;
+    --paper: #FFF3E8;
+    --espresso: #261000;
+    --espresso-soft: #5B4436;
+    --auburn: #96262C;
+    --sienna: #882E1A;
+    --burnt-orange: #AB5B1E;
+    --gold: #E4A524;
+    --canary: #FFD530;
+    --line: #E7D6C8;
+    --grad: linear-gradient(135deg, #81261A 0%, #AA5B1E 52%, #D79423 100%);
+    --display: "Romie", "Gilda Display", "Didot", "Bodoni 72", Georgia, serif;
+    --body: "Raleway", "Helvetica Neue", Arial, sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--warm-white);
+    color: var(--espresso);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-inline: 24px; }
+  @media (max-width: 480px) { .wrap { padding-inline: 18px; } }
+
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+  .demo-note {
+    background: var(--espresso);
+    color: var(--warm-white);
+    font-size: 13px;
+    text-align: center;
+    padding: 8px 16px;
+  }
+  .demo-note strong { color: var(--canary); font-weight: 600; }
+
+  header.top { padding-block: 22px; }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .wordmark { display: inline-flex; align-items: center; color: #191819; text-decoration: none; }
+  .wordmark-svg { height: 26px; width: auto; display: block; }
+  @media (max-width: 480px) { .wordmark-svg { height: 22px; } }
+  .top-link {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--espresso); text-decoration: none; border-bottom: 1px solid var(--gold); padding-bottom: 2px;
+  }
+
+  /* Hero */
+  .hero {
+    background: var(--grad);
+    color: var(--warm-white);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(120% 80% at 90% 0%, rgba(255,213,48,.22), transparent 60%);
+    pointer-events: none;
+  }
+  .hero .wrap {
+    position: relative; z-index: 1;
+    display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px;
+    padding-block: 72px 80px; align-items: center;
+  }
+  @media (max-width: 860px) { .hero .wrap { grid-template-columns: 1fr; gap: 36px; padding-block: 48px 56px; } }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--canary); margin: 0 0 18px;
+  }
+  h1 {
+    font-family: var(--display); font-weight: 400;
+    font-size: clamp(40px, 6vw, 72px); line-height: 1.02; letter-spacing: -0.01em;
+    margin: 0 0 22px; text-wrap: balance;
+  }
+  h1 em { font-style: italic; color: var(--canary); }
+  .lede { font-size: 18px; max-width: 34em; margin: 0; color: #FFF1E4; }
+
+  /* Form card */
+  .card {
+    background: var(--warm-white); color: var(--espresso);
+    border-radius: 18px; padding: 28px;
+    box-shadow: 0 24px 60px -24px rgba(38,16,0,.55);
+  }
+  .card h2 { font-family: var(--display); font-weight: 400; font-size: 28px; line-height: 1.15; margin: 0 0 6px; }
+  .card .sub { font-size: 14px; color: var(--espresso-soft); margin: 0 0 20px; }
+  form { display: grid; gap: 16px; }
+  label.field { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+  input[type=email] {
+    font: inherit; font-size: 16px; padding: 13px 14px; border-radius: 10px;
+    border: 1px solid var(--line); background: #fff; color: var(--espresso); width: 100%;
+  }
+  input[type=email]:focus { border-color: var(--burnt-orange); outline: none; box-shadow: 0 0 0 3px rgba(228,165,36,.3); }
+  fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+  legend { font-size: 13px; font-weight: 600; padding: 0; margin-bottom: 8px; }
+  legend span { font-weight: 400; color: var(--espresso-soft); }
+  .tones { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .tone-none { grid-column: 1 / -1; }
+  .tone-none span { grid-auto-flow: column; justify-content: center; align-items: center; }
+  @media (max-width: 399px) { .tones { grid-template-columns: repeat(2, 1fr); } }
+  .tone input { position: absolute; opacity: 0; pointer-events: none; }
+  .tone { display: block; }
+  .tone span { height: 100%; align-content: start; }
+  .tone span {
+    display: grid; justify-items: center; gap: 6px; text-align: center;
+    font-size: 12px; font-weight: 500; line-height: 1.25;
+    padding: 10px 4px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; background: #fff;
+  }
+  .tone i { width: 26px; height: 26px; border-radius: 50%; display: block; border: 1px solid rgba(38,16,0,.12); }
+  .tone input:checked + span { border-color: var(--burnt-orange); box-shadow: inset 0 0 0 1px var(--burnt-orange); background: var(--paper); }
+  .tone input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--espresso-soft); }
+  .check input { margin-top: 3px; accent-color: var(--auburn); width: 16px; height: 16px; flex: none; }
+  button.primary {
+    font: inherit; font-weight: 700; font-size: 15px; letter-spacing: 0.04em;
+    border: 0; border-radius: 999px; padding: 15px 22px; cursor: pointer;
+    background: var(--espresso); color: var(--warm-white);
+    transition: transform .15s ease, background .15s ease;
+  }
+  button.primary:hover { background: var(--auburn); }
+  button.primary:active { transform: translateY(1px); }
+  button.primary[disabled] { opacity: .6; cursor: default; }
+  .fine { font-size: 12px; color: var(--espresso-soft); margin: 0; }
+  .error { font-size: 13px; color: var(--auburn); font-weight: 600; margin: 0; }
+
+  /* Success + share */
+  .done h2 { margin-bottom: 8px; }
+  .share-box { display: flex; gap: 8px; margin: 18px 0 12px; }
+  .share-box input {
+    flex: 1; min-width: 0; font: inherit; font-size: 14px; padding: 12px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--paper); color: var(--espresso);
+  }
+  .btn-ghost {
+    font: inherit; font-weight: 700; font-size: 14px; border-radius: 10px; padding: 0 16px; cursor: pointer;
+    border: 1px solid var(--espresso); background: transparent; color: var(--espresso); white-space: nowrap;
+  }
+  .btn-ghost:hover { background: var(--espresso); color: var(--warm-white); }
+  .perk {
+    display: flex; gap: 12px; align-items: flex-start; background: var(--paper);
+    border-radius: 12px; padding: 14px; font-size: 14px; margin-top: 6px;
+  }
+  .perk b { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1; color: var(--auburn); }
+
+  /* Sections */
+  section.block { padding-block: 88px; }
+  @media (max-width: 600px) { section.block { padding-block: 60px; } }
+  .kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--burnt-orange); margin: 0 0 14px; }
+  h2.big { font-family: var(--display); font-weight: 400; font-size: clamp(32px, 4.2vw, 48px); line-height: 1.08; margin: 0 0 18px; text-wrap: balance; max-width: 18em; }
+  .measure { max-width: 38em; color: var(--espresso-soft); margin: 0; }
+
+  /* Accuracy gate diagram */
+  .gate { margin-top: 44px; display: grid; grid-template-columns: 1fr 300px; gap: 48px; align-items: end; }
+  @media (max-width: 860px) { .gate { grid-template-columns: 1fr; gap: 28px; } }
+  .scale { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; align-items: end; height: 240px; }
+  .col { display: grid; grid-template-rows: 1fr auto auto; gap: 8px; height: 100%; }
+  .bar-track { position: relative; }
+  .bar { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 8px 8px 3px 3px; border: 1px solid rgba(38,16,0,.12); }
+  .swatch { height: 34px; border-radius: 8px; border: 1px solid rgba(38,16,0,.12); }
+  .col:first-child small { text-align: left; }
+  .col:last-child small { text-align: right; }
+  .col small { min-height: 1.4em; white-space: nowrap; text-align: center; font-size: 12px; font-weight: 600; color: var(--espresso-soft); }
+  .band {
+    position: absolute; left: 0; right: 0; height: calc(240px * 0.12);
+    border-top: 1.5px dashed var(--auburn); border-bottom: 1.5px dashed var(--auburn);
+    background: rgba(150,38,44,.06); pointer-events: none;
+  }
+  .scale-wrap { position: relative; }
+  .scale-label { font-size: 12px; color: var(--espresso-soft); margin-top: 14px; }
+  .rule {
+    border-left: 3px solid var(--gold); padding-left: 20px;
+  }
+  .rule .num { font-family: var(--display); font-size: 88px; line-height: .9; color: var(--auburn); }
+  .rule .num sup { font-size: 30px; vertical-align: top; margin-left: 4px; }
+  .rule p { margin: 10px 0 0; font-size: 15px; }
+
+  /* Loop */
+  .loop { background: var(--paper); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 44px; }
+  @media (max-width: 760px) { .steps { grid-template-columns: 1fr; gap: 24px; } }
+  .step { border-top: 1px solid var(--line); padding-top: 20px; }
+  .step .n { font-family: var(--display); font-size: 20px; color: var(--burnt-orange); }
+  .step h3 { font-family: var(--display); font-weight: 400; font-size: 26px; margin: 6px 0 8px; }
+  .step p { margin: 0; color: var(--espresso-soft); font-size: 15px; }
+
+  /* Privacy */
+  .privacy { background: var(--espresso); color: var(--warm-white); }
+  .privacy .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+  @media (max-width: 760px) { .privacy .wrap { grid-template-columns: 1fr; gap: 28px; } }
+  .privacy .kicker { color: var(--canary); }
+  .privacy h2.big { color: var(--warm-white); }
+  .promises { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  .promises li { padding: 16px 0; border-bottom: 1px solid rgba(255,251,247,.14); display: grid; gap: 2px; }
+  .promises li:first-child { padding-top: 0; }
+  .promises b { font-weight: 600; color: var(--gold); }
+  .promises span { color: #E9DCD2; font-size: 15px; }
+
+  /* Final CTA */
+  .final { text-align: left; }
+  .final .wrap { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; justify-content: space-between; }
+  .final h2.big { margin: 0; }
+  a.cta-link {
+    display: inline-block; text-decoration: none; font-weight: 700; letter-spacing: .04em;
+    background: var(--grad); color: var(--warm-white); padding: 16px 28px; border-radius: 999px;
+  }
+
+  footer { border-top: 1px solid var(--line); padding-block: 28px; font-size: 13px; color: var(--espresso-soft); }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+
+<div class="demo-note" id="demoNote" hidden><strong>Preview.</strong> Sign-ups on this copy aren't saved. The hosted version sends them to your Google Sheet.</div>
+
+<header class="top">
+  <div class="wrap">
+    <a class="wordmark" href="#join"><svg class="wordmark-svg" role="img" aria-label="Pulse" xmlns="http://www.w3.org/2000/svg" viewBox="120 344.5 477 119" fill="currentColor"><path d="M471.805 402.885C467.072 400.978 462.235 399.117 457.548 397.313C452.179 395.247 446.622 393.116 441.215 390.901C432.908 387.507 423.067 382.544 420.644 374.299C417.996 365.288 424.404 357.754 430.7 354.033C436.65 350.528 444.087 348.667 452.216 348.667C454.415 348.667 456.65 348.808 458.867 349.069C463.947 349.686 468.83 350.425 472.778 352.696C474.752 353.827 476.38 355.323 477.493 357.024C478.7 358.866 479.13 363.727 479.13 363.727L491.347 365.531L491.431 364.54C492.573 351.649 473.947 347.265 468.213 346.228C463.133 345.312 458.035 344.844 453.067 344.844C445.808 344.844 439.035 345.835 432.917 347.779C426.678 349.771 415.686 354.697 412.215 365.391C409.231 374.57 412.477 384.684 420.485 391.181C430.513 399.314 442.693 403.698 454.471 407.942C461.889 410.615 469.56 413.373 476.548 417.037C480.318 419.01 484.574 421.393 487.343 424.665C490.627 428.544 490.271 433.48 489.392 436.929C487.484 444.426 481.356 450.698 472.142 454.587C466.089 457.139 458.998 458.485 451.636 458.485C449.176 458.485 446.688 458.336 444.255 458.036C440.158 457.532 434.9 456.616 430.653 453.97C428.53 452.652 426.996 451.269 426.079 449.867C425.125 448.39 424.975 446.66 424.816 444.819C424.779 444.417 424.751 444.024 424.704 443.622L424.629 442.94L412.692 440.575L412.617 441.631C411.654 454.989 429.334 459.71 436.977 461.131C441.589 461.981 446.407 462.421 451.281 462.421C458.68 462.421 466.033 461.448 473.133 459.532C480.514 457.541 490.571 453.4 496.586 445.006C502.217 437.144 502.526 426.348 497.316 419.337C491.272 411.204 481.403 406.745 471.814 402.885H471.805Z" /><path d="M155.67 348.63C150.3 347.938 144.818 347.92 139.514 347.892C139.514 347.892 136.605 347.882 135.585 347.882C133.564 347.882 131.544 347.882 129.523 347.892H129.42C128.588 347.892 127.718 347.854 126.848 347.826C125.931 347.789 125.005 347.761 124.088 347.761C122.797 347.761 121.749 347.826 120.795 347.976L120 348.097V460.729H131.291V414.495C143.471 414.495 156.035 414.392 167.99 410.4C178.505 406.885 185.614 400.688 188.552 392.462C192.397 381.674 190.423 368.887 183.734 361.343C176.203 352.846 164.314 349.733 155.66 348.611L155.67 348.63ZM135.707 410.849C134.247 410.886 132.779 410.924 131.319 410.97V351.453C146.661 351.453 167.139 351.762 176.306 366.914C180.198 373.355 181.002 382.394 178.402 390.508C175.988 398.042 170.516 403.455 161.676 407.054C153.462 410.4 144.435 410.625 135.707 410.849Z" /><path d="M582.519 454.12C578.028 455.26 573.183 456.064 568.131 456.522C560.002 457.251 551.798 457.317 544.108 457.317H538.327V409.007H594.858V405.25H538.327V351.556C540.422 351.556 542.527 351.528 544.632 351.509C547.055 351.481 549.487 351.462 551.919 351.462C556.522 351.462 562.574 351.537 568.58 352.107C580.451 353.239 588.637 355.856 595.12 360.595L597.009 361.969L594.493 347.957H526.989V460.738H594.493L596.962 447.137L595.148 448.315C590.517 451.315 586.747 453.045 582.537 454.11L582.519 454.12Z" /><path d="M304.167 401.202C304.167 398.725 304.177 396.238 304.196 393.752C304.242 385.694 304.28 377.365 303.849 369.195C303.391 360.567 300.678 349.826 290.341 347.695L289.219 347.461V360.698L290.107 360.745C300.229 361.296 300.164 374.196 300.117 382.731C300.117 383.46 300.117 384.161 300.117 384.806C300.154 393.639 300.145 402.623 300.136 411.307V419.411C300.126 427.291 299.49 435.639 294.953 443.22C291.529 448.941 286.206 453.372 279.546 456.036C274.597 458.018 268.928 459.065 263.147 459.065C251.042 459.065 240.808 454.634 235.082 446.912C230.676 440.977 228.506 433.265 228.431 423.319C228.384 416.411 228.394 409.39 228.412 402.595C228.412 399.127 228.431 395.659 228.431 392.2V360.567C228.431 360.109 228.431 359.651 228.45 359.184C228.515 355.566 228.581 351.462 224.82 348.994C223.043 347.835 221.209 347.733 219.17 347.733H210.171V351.154L210.938 351.294C215.447 352.098 217.046 354.36 217.046 359.931V377.608C217.046 389.695 217.046 401.791 217.056 413.877V415.915C217.046 425.375 217.028 435.153 221.743 443.706C225.41 450.352 231.191 455.559 238.478 458.784C244.886 461.616 252.23 463 260.93 462.991C262.857 462.991 264.896 462.925 266.982 462.785C273.746 462.336 283.447 460.439 291.277 453.895C304.925 442.491 304.579 424.263 304.27 408.185C304.224 405.764 304.177 403.473 304.177 401.202H304.167Z" /><path d="M354.833 457.438C352.195 457.438 349.566 457.401 346.956 457.373C344.711 457.345 342.485 457.317 340.286 457.307V347.966H329.042V460.729H396.967L399.38 447.109L397.575 448.277C384.497 456.737 368.659 457.438 354.842 457.438H354.833Z" /></svg></a>
+    <a class="top-link" href="#accuracy">Our accuracy standard</a>
+  </div>
+</header>
+
+<section class="hero" id="join">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Early access &middot; United States</p>
+      <h1>Stop guessing what your skin <em>needs</em>.</h1>
+      <p class="lede">Pulse scans your skin, builds a routine around what it finds, and shows you whether it's actually working. Every skin concern is tested across every skin tone before it ships, because the tools that came before have been least accurate on deeper skin.</p>
+    </div>
+
+    <div class="card" aria-live="polite">
+      <div id="formView">
+        <h2>Join the waitlist</h2>
+        <p class="sub">Be first to scan, build your routine and see whether it's working.</p>
+        <form id="waitlist" novalidate>
+          <label class="field" for="email">Email
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+          </label>
+          <fieldset>
+            <legend>Your shade <span>(optional)</span></legend>
+            <div class="tones">
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_1" value="mst_1"><span><i style="background:#f6ede4"></i>Pearl</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_2" value="mst_2"><span><i style="background:#f3e7db"></i>Selenite</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_3" value="mst_3"><span><i style="background:#f7ead0"></i>Moonstone</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_4" value="mst_4"><span><i style="background:#eadaba"></i>Citrine</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_5" value="mst_5"><span><i style="background:#d7bd96"></i>Amber</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_6" value="mst_6"><span><i style="background:#a07e56"></i>Tiger&#x27;s Eye</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_7" value="mst_7"><span><i style="background:#825c43"></i>Bronzite</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_8" value="mst_8"><span><i style="background:#604134"></i>Smoky Quartz</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_9" value="mst_9"><span><i style="background:#3a312a"></i>Obsidian</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_10" value="mst_10"><span><i style="background:#292420"></i>Onyx</span></label>
+              <label class="tone tone-none"><input type="radio" name="tone" id="tone-prefer-not" value="prefer_not"><span><i style="background:repeating-linear-gradient(45deg,#FFF3E8 0 4px,#E7D6C8 4px 8px)"></i>Prefer not to say</span></label>
+            </div>
+          </fieldset>
+          <label class="check" for="updates">
+            <input type="checkbox" id="updates" name="updates">
+            Send me launch news and invite updates by email.
+          </label>
+          <p class="error" id="formError" hidden></p>
+          <button class="primary" type="submit" id="submitBtn">Join the waitlist</button>
+          <p class="fine">We use your email only to tell you about Pulse's launch. Your shade helps us make sure early access includes every skin tone. Unsubscribe anytime.</p>
+        </form>
+      </div>
+
+      <div id="doneView" class="done" hidden>
+        <h2>You're on the list.</h2>
+        <p class="sub" style="margin:0">Share your link. Everyone who joins through it counts toward your early access.</p>
+        <div class="share-box">
+          <input id="shareLink" type="text" readonly aria-label="Your invite link">
+          <button class="btn-ghost" type="button" id="copyBtn">Copy</button>
+        </div>
+        <button class="primary" type="button" id="shareBtn" style="width:100%" hidden>Share with friends</button>
+        <div class="perk">
+          <b>3</b>
+          <span id="perkText">Bring three friends and you're in the first beta group, before public launch.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block loop">
+  <div class="wrap">
+    <p class="kicker">How Pulse works</p>
+    <h2 class="big">A skincare strategy, built on your own skin data.</h2>
+    <div class="steps">
+      <div class="step"><div class="n">Scan</div><h3>Know what your skin needs</h3><p>A face scan finds your skin type and concerns, like dark spots, uneven tone and post-acne marks, and shows where they are.</p></div>
+      <div class="step"><div class="n">Routine</div><h3>Copy what works for skin like yours</h3><p>Get an AM and PM routine built from your scan, or copy the routines of friends and creators with similar skin.</p></div>
+      <div class="step"><div class="n">Progress</div><h3>See the difference</h3><p>Check off your routine each day and rescan to compare against your first scan, so you know what's working.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="accuracy">
+  <div class="wrap">
+    <p class="kicker">The Pulse accuracy standard</p>
+    <h2 class="big">A tool that only works on some skin isn't accurate. It's lucky.</h2>
+    <p class="measure">Skin scanners have a documented accuracy gap, and Stanford researchers found it's widest on deeper skin. Pulse closes it by rule. Each skin concern is tested on a consented panel of at least 30 people for each of ten skin tones, from Pearl to Onyx, labeled by board-certified dermatologists. If any tone trails the best-served tone by more than 5 points, that concern stays out of the app. So whatever your skin looks like, you can trust what Pulse tells you.</p>
+
+    <div class="gate">
+      <div>
+        <div class="scale-wrap">
+          <div class="scale" role="group" aria-label="Accuracy by skin tone, illustration">
+            <div class="col" role="img" aria-label="Pearl" title="Pearl"><div class="bar-track"><div class="bar" style="height:92%;background:#f6ede4"></div></div><div class="swatch" style="background:#f6ede4"></div><small aria-hidden="true">Pearl</small></div>
+            <div class="col" role="img" aria-label="Selenite" title="Selenite"><div class="bar-track"><div class="bar" style="height:91.8%;background:#f3e7db"></div></div><div class="swatch" style="background:#f3e7db"></div><small aria-hidden="true"></small></div>
+            <div class="col" role="img" aria-label="Moonstone" title="Moonstone"><div class="bar-track"><div class="bar" style="height:91.5%;background:#f7ead0"></div></div><div class="swatch" style="background:#f7ead0"></div><small aria-hidden="true"></small></div>
+            <div class="col" role="img" aria-label="Citrine" title="Citrine"><div class="bar-track"><div class="bar" style="height:91%;background:#eadaba"></div></div><div class="swatch" style="background:#eadaba"></div><small aria-hidden="true"></small></div>
+            <div class="col" role="img" aria-label="Amber" title="Amber"><div class="bar-track"><div class="bar" style="height:90.5%;background:#d7bd96"></div></div><div class="swatch" style="background:#d7bd96"></div><small aria-hidden="true"></small></div>
+            <div class="col" role="img" aria-label="Tiger&#x27;s Eye" title="Tiger&#x27;s Eye"><div class="bar-track"><div class="bar" style="height:90%;background:#a07e56"></div></div><div class="swatch" style="background:#a07e56"></div><small aria-hidden="true"></small></div>
+            <div class="col" role="img" aria-label="Bronzite" title="Bronzite"><div class="bar-track"><div class="bar" style="height:89.5%;background:#825c43"></div></div><div class="swatch" style="background:#825c43"></div><small aria-hidden="true"></small></div>
+            <div class="col" role="img" aria-label="Smoky Quartz" title="Smoky Quartz"><div class="bar-track"><div class="bar" style="height:89%;background:#604134"></div></div><div class="swatch" style="background:#604134"></div><small aria-hidden="true"></small></div>
+            <div class="col" role="img" aria-label="Obsidian" title="Obsidian"><div class="bar-track"><div class="bar" style="height:88.5%;background:#3a312a"></div></div><div class="swatch" style="background:#3a312a"></div><small aria-hidden="true"></small></div>
+            <div class="col" role="img" aria-label="Onyx" title="Onyx"><div class="bar-track"><div class="bar" style="height:88%;background:#292420"></div></div><div class="swatch" style="background:#292420"></div><small aria-hidden="true">Onyx</small></div>
+          </div>
+        </div>
+        <p class="scale-label">Illustration of the rule, not test results. Pulse publishes real results by skin tone at launch and updates them every six months.</p>
+      </div>
+      <div class="rule">
+        <div class="num">5<sup>pts</sup></div>
+        <p>The most any skin tone's accuracy may trail the best-served tone before a concern is held back.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block privacy">
+  <div class="wrap">
+    <div>
+      <p class="kicker">Your face, your data</p>
+      <h2 class="big">Privacy is built in from the first scan.</h2>
+      <p class="measure" style="color:#E9DCD2">Face scans are biometric data. Pulse asks for your written consent before any scan and follows Illinois' biometric privacy law everywhere it operates.</p>
+    </div>
+    <ul class="promises">
+      <li><b>Private by default</b><span>Scans and progress photos never appear on your profile.</span></li>
+      <li><b>Never sold</b><span>Your scans are never sold, rented or shared with brands or advertisers.</span></li>
+      <li><b>Deletable anytime</b><span>Delete a scan or your account and it's gone within 30 days.</span></li>
+      <li><b>Model training is opt-in</b><span>Only adults who choose to help improve accuracy ever contribute images.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="block final">
+  <div class="wrap">
+    <h2 class="big">Skincare that works on your skin, proven by people like you.</h2>
+    <a class="cta-link" href="#join">Join the waitlist</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Pulse</span>
+    <span>Questions: <span id="contact">jelyn@pulsecosmeticsolutions.com</span></span>
+  </div>
+</footer>
+
+<script>
+  // ---- Settings you can change ----
+  var CONFIG = {
+    // Paste your Google Apps Script web app URL here after setup. Leave empty for preview mode.
+    endpoint: "https://script.google.com/macros/s/AKfycbxqre8bK-vNamqo9zud4tY_bEJlVosERZZ0tTNo6Nk4iCiglGLiMmII71ca7P4Nw8cr5Q/exec",
+    // The public address of this page, used to build invite links.
+    siteUrl: "",
+    perkText: "Bring three friends and you're in the first beta group, before public launch."
+  };
+  // ---------------------------------
+
+  (function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var form = $("waitlist"), err = $("formError"), btn = $("submitBtn");
+    $("perkText").textContent = CONFIG.perkText;
+    if (!CONFIG.endpoint) $("demoNote").hidden = false;
+
+    function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+
+    function readRef() {
+      try {
+        var p = new URLSearchParams(window.location.search).get("ref");
+        if (p && /^[A-Z0-9]{6}$/.test(p)) { store("pulse_referred_by", p); return p; }
+      } catch (e) {}
+      return store("pulse_referred_by") || "";
+    }
+    var referredBy = readRef();
+
+    function newCode() {
+      var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", out = "";
+      var arr = new Uint32Array(6);
+      (window.crypto || window.msCrypto).getRandomValues(arr);
+      for (var i = 0; i < 6; i++) out += chars[arr[i] % chars.length];
+      return out;
+    }
+
+    function baseUrl() {
+      if (CONFIG.siteUrl) return CONFIG.siteUrl.replace(/[?#].*$/, "");
+      try { return window.location.origin + window.location.pathname; } catch (e) { return "https://pulse.app/"; }
+    }
+
+    function showDone(code) {
+      var link = baseUrl() + "?ref=" + code;
+      $("shareLink").value = link;
+      $("formView").hidden = true;
+      $("doneView").hidden = false;
+      if (navigator.share) $("shareBtn").hidden = false;
+    }
+
+    var existing = store("pulse_my_code");
+    if (existing && store("pulse_joined") === "1") showDone(existing);
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      err.hidden = true;
+      var email = $("email").value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+        err.textContent = "Enter a full email address, like name@example.com.";
+        err.hidden = false; $("email").focus(); return;
+      }
+      var toneEl = form.querySelector('input[name="tone"]:checked');
+      var code = store("pulse_my_code") || newCode();
+      var payload = {
+        email: email,
+        skin_tone: toneEl ? toneEl.value : "",
+        my_code: code,
+        referred_by: referredBy === code ? "" : referredBy,
+        email_updates: $("updates").checked ? "yes" : "no",
+        joined_at: new Date().toISOString()
+      };
+      btn.disabled = true; btn.textContent = "Joining…";
+
+      function finish() {
+        store("pulse_my_code", code); store("pulse_joined", "1");
+        showDone(code);
+      }
+
+      if (!CONFIG.endpoint) { setTimeout(finish, 400); return; }
+
+      fetch(CONFIG.endpoint, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      }).then(finish).catch(function () {
+        btn.disabled = false; btn.textContent = "Join the waitlist";
+        err.textContent = "We couldn't reach the sign-up list. Check your connection and try again.";
+        err.hidden = false;
+      });
+    });
+
+    $("copyBtn").addEventListener("click", function () {
+      var input = $("shareLink"), b = this;
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1800); }
+      try {
+        navigator.clipboard.writeText(input.value).then(done, function () { input.select(); });
+      } catch (e) { input.select(); }
+    });
+
+    $("shareBtn").addEventListener("click", function () {
+      try {
+        navigator.share({
+          title: "Pulse",
+          text: "I just joined the Pulse waitlist. It tells you what your skin needs and shows you whether your routine is working, tested on every skin tone. Join through my link:",
+          url: $("shareLink").value
+        }).catch(function () {});
+      } catch (e) {}
+    });
+  })();
+</script>
+
+</body>
+</html>
