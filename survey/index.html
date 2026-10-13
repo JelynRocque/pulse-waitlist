@@ -359,7 +359,7 @@
     idx = QUESTIONS.length; setProgress();
     app.innerHTML = '<section class="end"><p class="eyebrow">Pulse skin survey</p><h1 tabindex="-1" id="endTitle">' + esc(title) + '</h1>' +
       lines.map(function (l) { return '<p>' + esc(l) + '</p>'; }).join("") +
-      (withCta ? '<a class="cta" href="/">Join the Pulse waitlist</a>' : '') + '</section>';
+      (withCta ? '<a class="cta" href="/waitlist/">Join the Pulse waitlist</a>' : '') + '</section>';
     try { document.getElementById("endTitle").focus({ preventScroll: true }); } catch (e) {}
     window.scrollTo(0, 0);
   }

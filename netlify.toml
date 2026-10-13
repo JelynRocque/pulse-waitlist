@@ -1,3 +1,12 @@
 [build]
   publish = "."
   command = ""
+
+# Invite links shared before the home page launched look like
+# pulseskin.co/?ref=CODE. Send them to the waitlist with the code intact.
+[[redirects]]
+  from = "/"
+  to = "/waitlist/?ref=:ref"
+  query = { ref = ":ref" }
+  status = 301
+  force = true

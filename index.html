@@ -2,508 +2,581 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Pulse scans your skin, builds your routine and shows you whether it's working. Tested across every skin tone. Join the waitlist.">
-<meta property="og:title" content="Pulse: stop guessing what your skin needs">
-<meta property="og:description" content="Scan, get a routine built for your skin, and see whether it's working. Tested across every skin tone before anything ships.">
-<title>Pulse Waitlist</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pulse: A Plan for Your Skin</title>
+<meta name="description" content="Pulse scans your skin, builds an AM and PM routine around what it finds, and shows you whether it's working. Tested on every skin tone before it ships.">
+<meta property="og:title" content="Pulse: A Plan for Your Skin">
+<meta property="og:description" content="Pulse scans your skin, builds a routine around what it finds, and shows you whether it's working.">
+<meta property="og:url" content="https://pulseskin.co/">
+<meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%22295%20120%20125%20182%22%20fill%3D%22%2396262C%22%3E%3Cpath%20d%3D%22M416.203%20235.545C418.208%20235.545%20419.833%20224.99%20419.833%20211.97C419.833%20198.95%20418.208%20188.395%20416.203%20188.395C414.199%20188.395%20412.573%20198.95%20412.573%20211.97C412.573%20224.99%20414.199%20235.545%20416.203%20235.545Z%22%20/%3E%3Cpath%20d%3D%22M400.127%20259.898C402.418%20259.898%20404.276%20237.86%20404.276%20210.675C404.276%20183.489%20402.418%20161.451%20400.127%20161.451C397.836%20161.451%20395.979%20183.489%20395.979%20210.675C395.979%20237.86%20397.836%20259.898%20400.127%20259.898Z%22%20/%3E%3Cpath%20d%3D%22M382.499%20275.442C385.649%20275.442%20388.203%20246.444%20388.203%20210.674C388.203%20174.904%20385.649%20145.907%20382.499%20145.907C379.349%20145.907%20376.795%20174.904%20376.795%20210.674C376.795%20246.444%20379.349%20275.442%20382.499%20275.442Z%22%20/%3E%3Cpath%20d%3D%22M361.497%20285.286C365.363%20285.286%20368.497%20252.229%20368.497%20211.452C368.497%20170.674%20365.363%20137.617%20361.497%20137.617C357.631%20137.617%20354.497%20170.674%20354.497%20211.452C354.497%20252.229%20357.631%20285.286%20361.497%20285.286Z%22%20/%3E%3Cpath%20d%3D%22M307.83%20301.867C314.703%20301.867%20320.274%20261.155%20320.274%20210.934C320.274%20160.712%20314.703%20120%20307.83%20120C300.957%20120%20295.385%20160.712%20295.385%20210.934C295.385%20261.155%20300.957%20301.867%20307.83%20301.867Z%22%20/%3E%3Cpath%20d%3D%22M337.387%20288.913C342.255%20288.913%20346.201%20254.116%20346.201%20211.192C346.201%20168.268%20342.255%20133.471%20337.387%20133.471C332.518%20133.471%20328.572%20168.268%20328.572%20211.192C328.572%20254.116%20332.518%20288.913%20337.387%20288.913Z%22%20/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&family=Raleway:wght@400;500;600;700&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&amp;family=Raleway:wght@400;500;600;700&amp;display=swap">
 <style>
-  /* Pulse brand kit tokens (Figma: Pulse App Pitch Deck v2.0, Brand Kit) */
-  :root {
-    --warm-white: #FFFBF7;
-    --paper: #FFF3E8;
-    --espresso: #261000;
-    --espresso-soft: #5B4436;
-    --auburn: #96262C;
-    --sienna: #882E1A;
-    --burnt-orange: #AB5B1E;
-    --gold: #E4A524;
-    --canary: #FFD530;
-    --line: #E7D6C8;
-    --grad: linear-gradient(135deg, #81261A 0%, #AA5B1E 52%, #D79423 100%);
-    --display: "Romie", "Gilda Display", "Didot", "Bodoni 72", Georgia, serif;
-    --body: "Raleway", "Helvetica Neue", Arial, sans-serif;
-    color-scheme: light;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--warm-white);
-    color: var(--espresso);
-    font-family: var(--body);
-    font-size: 16px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-  }
-  .wrap { max-width: 1120px; margin: 0 auto; padding-inline: 24px; }
-  @media (max-width: 480px) { .wrap { padding-inline: 18px; } }
-
-  a { color: inherit; }
-  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
-
-  .demo-note {
-    background: var(--espresso);
-    color: var(--warm-white);
-    font-size: 13px;
-    text-align: center;
-    padding: 8px 16px;
-  }
-  .demo-note strong { color: var(--canary); font-weight: 600; }
-
-  header.top { padding-block: 22px; }
-  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .wordmark { display: inline-flex; align-items: center; gap: 10px; color: #191819; text-decoration: none; }
-  .wordmark-icon { height: 32px; width: auto; display: block; flex: none; }
-  @media (max-width: 480px) { .wordmark-icon { height: 27px; } }
-  .wordmark-svg { height: 26px; width: auto; display: block; }
-  @media (max-width: 480px) { .wordmark-svg { height: 22px; } }
-  .top-link {
-    font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--espresso); text-decoration: none; border-bottom: 1px solid var(--gold); padding-bottom: 2px;
-  }
-
-  /* Hero */
-  .hero {
-    background: var(--grad);
-    color: var(--warm-white);
-    position: relative;
-    overflow: hidden;
-  }
-  .hero::after {
-    content: ""; position: absolute; inset: 0;
-    background: radial-gradient(120% 80% at 90% 0%, rgba(255,213,48,.22), transparent 60%);
-    pointer-events: none;
-  }
-  .hero .wrap {
-    position: relative; z-index: 1;
-    display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px;
-    padding-block: 72px 80px; align-items: center;
-  }
-  @media (max-width: 860px) { .hero .wrap { grid-template-columns: 1fr; gap: 36px; padding-block: 48px 56px; } }
-
-  .eyebrow {
-    font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--canary); margin: 0 0 18px;
-  }
-  h1 {
-    font-family: var(--display); font-weight: 400;
-    font-size: clamp(40px, 6vw, 72px); line-height: 1.02; letter-spacing: -0.01em;
-    margin: 0 0 22px; text-wrap: balance;
-  }
-  h1 em { font-style: italic; color: var(--canary); }
-  .lede { font-size: 18px; max-width: 34em; margin: 0; color: #FFF1E4; }
-
-  /* Form card */
-  .card {
-    background: var(--warm-white); color: var(--espresso);
-    border-radius: 18px; padding: 28px;
-    box-shadow: 0 24px 60px -24px rgba(38,16,0,.55);
-  }
-  .card h2 { font-family: var(--display); font-weight: 400; font-size: 28px; line-height: 1.15; margin: 0 0 6px; }
-  .card .sub { font-size: 14px; color: var(--espresso-soft); margin: 0 0 20px; }
-  form { display: grid; gap: 16px; }
-  label.field { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
-  input[type=email] {
-    font: inherit; font-size: 16px; padding: 13px 14px; border-radius: 10px;
-    border: 1px solid var(--line); background: #fff; color: var(--espresso); width: 100%;
-  }
-  input[type=email]:focus { border-color: var(--burnt-orange); outline: none; box-shadow: 0 0 0 3px rgba(228,165,36,.3); }
-  fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
-  legend { font-size: 13px; font-weight: 600; padding: 0; margin-bottom: 8px; }
-  legend span { font-weight: 400; color: var(--espresso-soft); }
-  .tones { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .tone-none { grid-column: 1 / -1; }
-  .tone-none span { grid-auto-flow: column; justify-content: center; align-items: center; }
-  @media (max-width: 399px) { .tones { grid-template-columns: repeat(2, 1fr); } }
-  .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
-  .tone input { position: absolute; opacity: 0; pointer-events: none; }
-  .tone { display: block; }
-  .tone span { height: 100%; align-content: start; }
-  .tone span {
-    display: grid; justify-items: center; gap: 6px; text-align: center;
-    font-size: 12px; font-weight: 500; line-height: 1.25;
-    padding: 10px 4px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; background: #fff;
-  }
-  .tone i { width: 26px; height: 26px; border-radius: 50%; display: block; border: 1px solid rgba(38,16,0,.12); }
-  .tone input:checked + span { border-color: var(--burnt-orange); box-shadow: inset 0 0 0 1px var(--burnt-orange); background: var(--paper); }
-  .tone input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
-  .check { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--espresso-soft); }
-  .check input { margin-top: 3px; accent-color: var(--auburn); width: 16px; height: 16px; flex: none; }
-  button.primary {
-    font: inherit; font-weight: 700; font-size: 15px; letter-spacing: 0.04em;
-    border: 0; border-radius: 999px; padding: 15px 22px; cursor: pointer;
-    background: var(--espresso); color: var(--warm-white);
-    transition: transform .15s ease, background .15s ease;
-  }
-  button.primary:hover { background: var(--auburn); }
-  button.primary:active { transform: translateY(1px); }
-  button.primary[disabled] { opacity: .6; cursor: default; }
-  .fine { font-size: 12px; color: var(--espresso-soft); margin: 0; }
-  .error { font-size: 13px; color: var(--auburn); font-weight: 600; margin: 0; }
-
-  /* Success + share */
-  .done h2 { margin-bottom: 8px; }
-  .share-box { display: flex; gap: 8px; margin: 18px 0 12px; }
-  .share-box input {
-    flex: 1; min-width: 0; font: inherit; font-size: 14px; padding: 12px; border-radius: 10px;
-    border: 1px solid var(--line); background: var(--paper); color: var(--espresso);
-  }
-  .btn-ghost {
-    font: inherit; font-weight: 700; font-size: 14px; border-radius: 10px; padding: 0 16px; cursor: pointer;
-    border: 1px solid var(--espresso); background: transparent; color: var(--espresso); white-space: nowrap;
-  }
-  .btn-ghost:hover { background: var(--espresso); color: var(--warm-white); }
-  .perk {
-    display: flex; gap: 12px; align-items: flex-start; background: var(--paper);
-    border-radius: 12px; padding: 14px; font-size: 14px; margin-top: 6px;
-  }
-  .survey-cta { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
-  .survey-cta p { margin: 0 0 12px; font-size: 14px; color: var(--espresso-soft); }
-  .survey-cta strong { color: var(--espresso); }
-  .btn-survey {
-    display: block; text-align: center; text-decoration: none; font-weight: 700; font-size: 14px;
-    border: 1px solid var(--espresso); color: var(--espresso); border-radius: 999px; padding: 12px 18px;
-  }
-  .btn-survey:hover { background: var(--espresso); color: var(--warm-white); }
-  .perk b { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1; color: var(--auburn); }
-
-  /* Sections */
-  section.block { padding-block: 88px; }
-  @media (max-width: 600px) { section.block { padding-block: 60px; } }
-  .kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--burnt-orange); margin: 0 0 14px; }
-  h2.big { font-family: var(--display); font-weight: 400; font-size: clamp(32px, 4.2vw, 48px); line-height: 1.08; margin: 0 0 18px; text-wrap: balance; max-width: 18em; }
-  .measure { max-width: 38em; color: var(--espresso-soft); margin: 0; }
-
-  /* Accuracy gate diagram */
-  .gate { margin-top: 44px; display: grid; grid-template-columns: 1fr 300px; gap: 48px; align-items: end; }
-  @media (max-width: 860px) { .gate { grid-template-columns: 1fr; gap: 28px; } }
-  .scale { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; align-items: end; height: 240px; }
-  .col { display: grid; grid-template-rows: 1fr auto auto; gap: 8px; height: 100%; }
-  .bar-track { position: relative; }
-  .bar { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 8px 8px 3px 3px; border: 1px solid rgba(38,16,0,.12); }
-  .swatch { height: 34px; border-radius: 8px; border: 1px solid rgba(38,16,0,.12); }
-  .col:first-child small { text-align: left; }
-  .col:last-child small { text-align: right; }
-  .col small { min-height: 1.4em; white-space: nowrap; text-align: center; font-size: 12px; font-weight: 600; color: var(--espresso-soft); }
-  .band {
-    position: absolute; left: 0; right: 0; height: calc(240px * 0.12);
-    border-top: 1.5px dashed var(--auburn); border-bottom: 1.5px dashed var(--auburn);
-    background: rgba(150,38,44,.06); pointer-events: none;
-  }
-  .scale-wrap { position: relative; }
-  .scale-label { font-size: 12px; color: var(--espresso-soft); margin-top: 14px; }
-  .rule {
-    border-left: 3px solid var(--gold); padding-left: 20px;
-  }
-  .rule .num { font-family: var(--display); font-size: clamp(32px, 3.2vw, 38px); line-height: 1.08; color: var(--auburn); text-wrap: balance; }
-  .rule .rule-lead { font-weight: 700; color: var(--espresso); margin-top: 12px; }
-  .rule .num sup { font-size: 30px; vertical-align: top; margin-left: 4px; }
-  .rule p { margin: 10px 0 0; font-size: 15px; }
-
-  /* Loop */
-  .loop { background: var(--paper); }
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 44px; }
-  @media (max-width: 760px) { .steps { grid-template-columns: 1fr; gap: 24px; } }
-  .step { border-top: 1px solid var(--line); padding-top: 20px; }
-  .step .n { font-family: var(--display); font-size: 20px; color: var(--burnt-orange); }
-  .step h3 { font-family: var(--display); font-weight: 400; font-size: 26px; margin: 6px 0 8px; }
-  .step p { margin: 0; color: var(--espresso-soft); font-size: 15px; }
-
-  /* Privacy */
-  .privacy { background: var(--espresso); color: var(--warm-white); }
-  .privacy .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
-  @media (max-width: 760px) { .privacy .wrap { grid-template-columns: 1fr; gap: 28px; } }
-  .privacy .kicker { color: var(--canary); }
-  .privacy h2.big { color: var(--warm-white); }
-  .promises { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
-  .promises li { padding: 16px 0; border-bottom: 1px solid rgba(255,251,247,.14); display: grid; gap: 2px; }
-  .promises li:first-child { padding-top: 0; }
-  .promises b { font-weight: 600; color: var(--gold); }
-  .promises span { color: #E9DCD2; font-size: 15px; }
-
-  /* Final CTA */
-  .final { text-align: left; }
-  .final .wrap { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; justify-content: space-between; }
-  .final h2.big { margin: 0; }
-  a.cta-link {
-    display: inline-block; text-decoration: none; font-weight: 700; letter-spacing: .04em;
-    background: var(--grad); color: var(--warm-white); padding: 16px 28px; border-radius: 999px;
-  }
-
-  footer { border-top: 1px solid var(--line); padding-block: 28px; font-size: 13px; color: var(--espresso-soft); }
-  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; }
-
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+body{margin:0;background:#FFFBF7}
+a{color:#96262C}a:hover{color:#5E1418}
+@keyframes pulseFade{from{opacity:0}to{opacity:1}}
+.pulse-hero-bg{background:linear-gradient(120deg,#5E1418 0%,#81261A 28%,#AA5B1E 62%,#D79423 100%);background-size:180% 180%;animation:pulseHeroShift 18s ease-in-out infinite alternate}
+@keyframes pulseHeroShift{0%{background-position:0% 20%}100%{background-position:70% 80%}}
+.pulse-glow{animation:pulseBreathe 6s ease-in-out infinite}
+@keyframes pulseBreathe{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}
+.pulse-ripple{position:absolute;left:50%;top:50%;width:300px;height:437px;margin:-218px 0 0 -150px;fill:#FFD530;pointer-events:none;opacity:.1;z-index:-1;animation:pulseRipple 7s ease-in-out infinite}
+.pulse-ripple-sm{width:200px;height:291px;margin:-145px 0 0 -100px}
+@keyframes pulseRipple{0%,100%{transform:scale(1);opacity:.08}50%{transform:scale(1.06);opacity:.18}}
+@media (prefers-reduced-motion: reduce){.pulse-hero-bg,.pulse-glow,.pulse-ripple{animation:none}}
+@keyframes pulseReportScroll{0%,14%{transform:translateY(0)}86%,100%{transform:translateY(-330px)}}
+@keyframes pulseProductsScroll{0%,16%{transform:translateY(0)}84%,100%{transform:translateY(-250px)}}
+@keyframes pulseProgress{from{width:0}to{width:100%}}
+.pulse-progress{animation:pulseProgress 14.2s linear both}
+@keyframes pulsePop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+.pulse-pop{animation:pulsePop .45s cubic-bezier(.2,.9,.3,1.3) both}
+.pulse-fade{animation:pulseFade .5s ease both}
+.pulse-report-scroll{animation:pulseReportScroll 11s ease-in-out both}
+.pulse-products-scroll{animation:pulseProductsScroll 10s ease-in-out both}
+@media (prefers-reduced-motion: reduce){.pulse-report-scroll,.pulse-products-scroll{animation:none}}
 </style>
 </head>
 <body>
+<div style="font-family: Raleway, 'Helvetica Neue', sans-serif; color: #261000; background: #FFFBF7; font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased">
 
-
-<div class="demo-note" id="demoNote" hidden><strong>Preview.</strong> Sign-ups on this copy aren't saved. The hosted version sends them to your Google Sheet.</div>
-
-<header class="top">
-  <div class="wrap">
-    <a class="wordmark" href="#join"><svg class="wordmark-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="295 120 125 182" fill="currentColor"><path d="M416.203 235.545C418.208 235.545 419.833 224.99 419.833 211.97C419.833 198.95 418.208 188.395 416.203 188.395C414.199 188.395 412.573 198.95 412.573 211.97C412.573 224.99 414.199 235.545 416.203 235.545Z" /><path d="M400.127 259.898C402.418 259.898 404.276 237.86 404.276 210.675C404.276 183.489 402.418 161.451 400.127 161.451C397.836 161.451 395.979 183.489 395.979 210.675C395.979 237.86 397.836 259.898 400.127 259.898Z" /><path d="M382.499 275.442C385.649 275.442 388.203 246.444 388.203 210.674C388.203 174.904 385.649 145.907 382.499 145.907C379.349 145.907 376.795 174.904 376.795 210.674C376.795 246.444 379.349 275.442 382.499 275.442Z" /><path d="M361.497 285.286C365.363 285.286 368.497 252.229 368.497 211.452C368.497 170.674 365.363 137.617 361.497 137.617C357.631 137.617 354.497 170.674 354.497 211.452C354.497 252.229 357.631 285.286 361.497 285.286Z" /><path d="M307.83 301.867C314.703 301.867 320.274 261.155 320.274 210.934C320.274 160.712 314.703 120 307.83 120C300.957 120 295.385 160.712 295.385 210.934C295.385 261.155 300.957 301.867 307.83 301.867Z" /><path d="M337.387 288.913C342.255 288.913 346.201 254.116 346.201 211.192C346.201 168.268 342.255 133.471 337.387 133.471C332.518 133.471 328.572 168.268 328.572 211.192C328.572 254.116 332.518 288.913 337.387 288.913Z" /></svg><svg class="wordmark-svg" role="img" aria-label="Pulse" xmlns="http://www.w3.org/2000/svg" viewBox="120 344.5 477 119" fill="currentColor"><path d="M471.805 402.885C467.072 400.978 462.235 399.117 457.548 397.313C452.179 395.247 446.622 393.116 441.215 390.901C432.908 387.507 423.067 382.544 420.644 374.299C417.996 365.288 424.404 357.754 430.7 354.033C436.65 350.528 444.087 348.667 452.216 348.667C454.415 348.667 456.65 348.808 458.867 349.069C463.947 349.686 468.83 350.425 472.778 352.696C474.752 353.827 476.38 355.323 477.493 357.024C478.7 358.866 479.13 363.727 479.13 363.727L491.347 365.531L491.431 364.54C492.573 351.649 473.947 347.265 468.213 346.228C463.133 345.312 458.035 344.844 453.067 344.844C445.808 344.844 439.035 345.835 432.917 347.779C426.678 349.771 415.686 354.697 412.215 365.391C409.231 374.57 412.477 384.684 420.485 391.181C430.513 399.314 442.693 403.698 454.471 407.942C461.889 410.615 469.56 413.373 476.548 417.037C480.318 419.01 484.574 421.393 487.343 424.665C490.627 428.544 490.271 433.48 489.392 436.929C487.484 444.426 481.356 450.698 472.142 454.587C466.089 457.139 458.998 458.485 451.636 458.485C449.176 458.485 446.688 458.336 444.255 458.036C440.158 457.532 434.9 456.616 430.653 453.97C428.53 452.652 426.996 451.269 426.079 449.867C425.125 448.39 424.975 446.66 424.816 444.819C424.779 444.417 424.751 444.024 424.704 443.622L424.629 442.94L412.692 440.575L412.617 441.631C411.654 454.989 429.334 459.71 436.977 461.131C441.589 461.981 446.407 462.421 451.281 462.421C458.68 462.421 466.033 461.448 473.133 459.532C480.514 457.541 490.571 453.4 496.586 445.006C502.217 437.144 502.526 426.348 497.316 419.337C491.272 411.204 481.403 406.745 471.814 402.885H471.805Z" /><path d="M155.67 348.63C150.3 347.938 144.818 347.92 139.514 347.892C139.514 347.892 136.605 347.882 135.585 347.882C133.564 347.882 131.544 347.882 129.523 347.892H129.42C128.588 347.892 127.718 347.854 126.848 347.826C125.931 347.789 125.005 347.761 124.088 347.761C122.797 347.761 121.749 347.826 120.795 347.976L120 348.097V460.729H131.291V414.495C143.471 414.495 156.035 414.392 167.99 410.4C178.505 406.885 185.614 400.688 188.552 392.462C192.397 381.674 190.423 368.887 183.734 361.343C176.203 352.846 164.314 349.733 155.66 348.611L155.67 348.63ZM135.707 410.849C134.247 410.886 132.779 410.924 131.319 410.97V351.453C146.661 351.453 167.139 351.762 176.306 366.914C180.198 373.355 181.002 382.394 178.402 390.508C175.988 398.042 170.516 403.455 161.676 407.054C153.462 410.4 144.435 410.625 135.707 410.849Z" /><path d="M582.519 454.12C578.028 455.26 573.183 456.064 568.131 456.522C560.002 457.251 551.798 457.317 544.108 457.317H538.327V409.007H594.858V405.25H538.327V351.556C540.422 351.556 542.527 351.528 544.632 351.509C547.055 351.481 549.487 351.462 551.919 351.462C556.522 351.462 562.574 351.537 568.58 352.107C580.451 353.239 588.637 355.856 595.12 360.595L597.009 361.969L594.493 347.957H526.989V460.738H594.493L596.962 447.137L595.148 448.315C590.517 451.315 586.747 453.045 582.537 454.11L582.519 454.12Z" /><path d="M304.167 401.202C304.167 398.725 304.177 396.238 304.196 393.752C304.242 385.694 304.28 377.365 303.849 369.195C303.391 360.567 300.678 349.826 290.341 347.695L289.219 347.461V360.698L290.107 360.745C300.229 361.296 300.164 374.196 300.117 382.731C300.117 383.46 300.117 384.161 300.117 384.806C300.154 393.639 300.145 402.623 300.136 411.307V419.411C300.126 427.291 299.49 435.639 294.953 443.22C291.529 448.941 286.206 453.372 279.546 456.036C274.597 458.018 268.928 459.065 263.147 459.065C251.042 459.065 240.808 454.634 235.082 446.912C230.676 440.977 228.506 433.265 228.431 423.319C228.384 416.411 228.394 409.39 228.412 402.595C228.412 399.127 228.431 395.659 228.431 392.2V360.567C228.431 360.109 228.431 359.651 228.45 359.184C228.515 355.566 228.581 351.462 224.82 348.994C223.043 347.835 221.209 347.733 219.17 347.733H210.171V351.154L210.938 351.294C215.447 352.098 217.046 354.36 217.046 359.931V377.608C217.046 389.695 217.046 401.791 217.056 413.877V415.915C217.046 425.375 217.028 435.153 221.743 443.706C225.41 450.352 231.191 455.559 238.478 458.784C244.886 461.616 252.23 463 260.93 462.991C262.857 462.991 264.896 462.925 266.982 462.785C273.746 462.336 283.447 460.439 291.277 453.895C304.925 442.491 304.579 424.263 304.27 408.185C304.224 405.764 304.177 403.473 304.177 401.202H304.167Z" /><path d="M354.833 457.438C352.195 457.438 349.566 457.401 346.956 457.373C344.711 457.345 342.485 457.317 340.286 457.307V347.966H329.042V460.729H396.967L399.38 447.109L397.575 448.277C384.497 456.737 368.659 457.438 354.842 457.438H354.833Z" /></svg></a>
-    <a class="top-link" href="#accuracy">Our accuracy standard</a>
-  </div>
+<header style="border-bottom: 1px solid #E7D6C8; background: #FFFBF7">
+<div style="max-width: 1200px; margin: 0 auto; padding: 18px clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px">
+<a href="#top" aria-label="Pulse home" style="display: inline-flex; color: #191819; text-decoration: none; min-height: 44px; align-items: center">
+<svg role="img" aria-label="Pulse" xmlns="http://www.w3.org/2000/svg" viewBox="120 344.5 477 119" fill="currentColor" style="height: 26px; width: auto; display: block"><path d="M471.805 402.885C467.072 400.978 462.235 399.117 457.548 397.313C452.179 395.247 446.622 393.116 441.215 390.901C432.908 387.507 423.067 382.544 420.644 374.299C417.996 365.288 424.404 357.754 430.7 354.033C436.65 350.528 444.087 348.667 452.216 348.667C454.415 348.667 456.65 348.808 458.867 349.069C463.947 349.686 468.83 350.425 472.778 352.696C474.752 353.827 476.38 355.323 477.493 357.024C478.7 358.866 479.13 363.727 479.13 363.727L491.347 365.531L491.431 364.54C492.573 351.649 473.947 347.265 468.213 346.228C463.133 345.312 458.035 344.844 453.067 344.844C445.808 344.844 439.035 345.835 432.917 347.779C426.678 349.771 415.686 354.697 412.215 365.391C409.231 374.57 412.477 384.684 420.485 391.181C430.513 399.314 442.693 403.698 454.471 407.942C461.889 410.615 469.56 413.373 476.548 417.037C480.318 419.01 484.574 421.393 487.343 424.665C490.627 428.544 490.271 433.48 489.392 436.929C487.484 444.426 481.356 450.698 472.142 454.587C466.089 457.139 458.998 458.485 451.636 458.485C449.176 458.485 446.688 458.336 444.255 458.036C440.158 457.532 434.9 456.616 430.653 453.97C428.53 452.652 426.996 451.269 426.079 449.867C425.125 448.39 424.975 446.66 424.816 444.819C424.779 444.417 424.751 444.024 424.704 443.622L424.629 442.94L412.692 440.575L412.617 441.631C411.654 454.989 429.334 459.71 436.977 461.131C441.589 461.981 446.407 462.421 451.281 462.421C458.68 462.421 466.033 461.448 473.133 459.532C480.514 457.541 490.571 453.4 496.586 445.006C502.217 437.144 502.526 426.348 497.316 419.337C491.272 411.204 481.403 406.745 471.814 402.885H471.805Z"></path><path d="M155.67 348.63C150.3 347.938 144.818 347.92 139.514 347.892C139.514 347.892 136.605 347.882 135.585 347.882C133.564 347.882 131.544 347.882 129.523 347.892H129.42C128.588 347.892 127.718 347.854 126.848 347.826C125.931 347.789 125.005 347.761 124.088 347.761C122.797 347.761 121.749 347.826 120.795 347.976L120 348.097V460.729H131.291V414.495C143.471 414.495 156.035 414.392 167.99 410.4C178.505 406.885 185.614 400.688 188.552 392.462C192.397 381.674 190.423 368.887 183.734 361.343C176.203 352.846 164.314 349.733 155.66 348.611L155.67 348.63ZM135.707 410.849C134.247 410.886 132.779 410.924 131.319 410.97V351.453C146.661 351.453 167.139 351.762 176.306 366.914C180.198 373.355 181.002 382.394 178.402 390.508C175.988 398.042 170.516 403.455 161.676 407.054C153.462 410.4 144.435 410.625 135.707 410.849Z"></path><path d="M582.519 454.12C578.028 455.26 573.183 456.064 568.131 456.522C560.002 457.251 551.798 457.317 544.108 457.317H538.327V409.007H594.858V405.25H538.327V351.556C540.422 351.556 542.527 351.528 544.632 351.509C547.055 351.481 549.487 351.462 551.919 351.462C556.522 351.462 562.574 351.537 568.58 352.107C580.451 353.239 588.637 355.856 595.12 360.595L597.009 361.969L594.493 347.957H526.989V460.738H594.493L596.962 447.137L595.148 448.315C590.517 451.315 586.747 453.045 582.537 454.11L582.519 454.12Z"></path><path d="M304.167 401.202C304.167 398.725 304.177 396.238 304.196 393.752C304.242 385.694 304.28 377.365 303.849 369.195C303.391 360.567 300.678 349.826 290.341 347.695L289.219 347.461V360.698L290.107 360.745C300.229 361.296 300.164 374.196 300.117 382.731C300.117 383.46 300.117 384.161 300.117 384.806C300.154 393.639 300.145 402.623 300.136 411.307V419.411C300.126 427.291 299.49 435.639 294.953 443.22C291.529 448.941 286.206 453.372 279.546 456.036C274.597 458.018 268.928 459.065 263.147 459.065C251.042 459.065 240.808 454.634 235.082 446.912C230.676 440.977 228.506 433.265 228.431 423.319C228.384 416.411 228.394 409.39 228.412 402.595C228.412 399.127 228.431 395.659 228.431 392.2V360.567C228.431 360.109 228.431 359.651 228.45 359.184C228.515 355.566 228.581 351.462 224.82 348.994C223.043 347.835 221.209 347.733 219.17 347.733H210.171V351.154L210.938 351.294C215.447 352.098 217.046 354.36 217.046 359.931V377.608C217.046 389.695 217.046 401.791 217.056 413.877V415.915C217.046 425.375 217.028 435.153 221.743 443.706C225.41 450.352 231.191 455.559 238.478 458.784C244.886 461.616 252.23 463 260.93 462.991C262.857 462.991 264.896 462.925 266.982 462.785C273.746 462.336 283.447 460.439 291.277 453.895C304.925 442.491 304.579 424.263 304.27 408.185C304.224 405.764 304.177 403.473 304.177 401.202H304.167Z"></path><path d="M354.833 457.438C352.195 457.438 349.566 457.401 346.956 457.373C344.711 457.345 342.485 457.317 340.286 457.307V347.966H329.042V460.729H396.967L399.38 447.109L397.575 448.277C384.497 456.737 368.659 457.438 354.842 457.438H354.833Z"></path></svg>
+</a>
+<nav aria-label="Main" style="display: flex; flex-wrap: wrap; align-items: center; gap: 4px 28px; font-size: 14px; font-weight: 600">
+<a href="#how" style="color: #261000; text-decoration: none; padding: 10px 0">How It Works</a>
+<a href="#accuracy" style="color: #261000; text-decoration: none; padding: 10px 0">Accuracy</a>
+<a href="#privacy" style="color: #261000; text-decoration: none; padding: 10px 0">Privacy</a>
+<a href="#pros" style="color: #261000; text-decoration: none; padding: 10px 0">For Pros</a>
+<a href="#about" style="color: #261000; text-decoration: none; padding: 10px 0">Founder Story</a>
+<a href="/waitlist/" style="background: #261000; color: #FFFBF7; text-decoration: none; padding: 11px 22px; border-radius: 999px; letter-spacing: 0.02em">Join the Waitlist</a>
+</nav>
+</div>
 </header>
 
-<section class="hero" id="join">
-  <div class="wrap">
-    <div>
-      <p class="eyebrow">Early access &middot; United States</p>
-      <h1>Stop guessing what your skin <em>needs</em>.</h1>
-      <p class="lede">Pulse scans your skin, builds a routine around what it finds, and shows you whether it's actually working. Every skin concern is tested across ten skin tones, from Pearl to Onyx, before it ships.</p>
-    </div>
+<section id="top" class="pulse-hero-bg" style="position: relative; overflow: hidden; isolation: isolate; color: #FFFBF7; padding: clamp(48px, 7vw, 96px) 0 clamp(56px, 7vw, 104px)">
+<div class="pulse-glow" aria-hidden="true" style="position: absolute; right: -10%; top: -20%; width: 70%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(255,213,48,0.45) 0%, rgba(255,213,48,0) 65%); pointer-events: none"></div>
+<div style="position: relative; max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; align-items: center; gap: 56px">
+<div style="position: relative; flex: 999 1 480px; min-width: 0">
+<svg class="pulse-ripple" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="295 120 125 182" style="left: auto; right: 2%; top: 50%; width: 360px; height: 524px; margin: -262px 0 0 0"><path d="M416.203 235.545C418.208 235.545 419.833 224.99 419.833 211.97C419.833 198.95 418.208 188.395 416.203 188.395C414.199 188.395 412.573 198.95 412.573 211.97C412.573 224.99 414.199 235.545 416.203 235.545Z"></path><path d="M400.127 259.898C402.418 259.898 404.276 237.86 404.276 210.675C404.276 183.489 402.418 161.451 400.127 161.451C397.836 161.451 395.979 183.489 395.979 210.675C395.979 237.86 397.836 259.898 400.127 259.898Z"></path><path d="M382.499 275.442C385.649 275.442 388.203 246.444 388.203 210.674C388.203 174.904 385.649 145.907 382.499 145.907C379.349 145.907 376.795 174.904 376.795 210.674C376.795 246.444 379.349 275.442 382.499 275.442Z"></path><path d="M361.497 285.286C365.363 285.286 368.497 252.229 368.497 211.452C368.497 170.674 365.363 137.617 361.497 137.617C357.631 137.617 354.497 170.674 354.497 211.452C354.497 252.229 357.631 285.286 361.497 285.286Z"></path><path d="M307.83 301.867C314.703 301.867 320.274 261.155 320.274 210.934C320.274 160.712 314.703 120 307.83 120C300.957 120 295.385 160.712 295.385 210.934C295.385 261.155 300.957 301.867 307.83 301.867Z"></path><path d="M337.387 288.913C342.255 288.913 346.201 254.116 346.201 211.192C346.201 168.268 342.255 133.471 337.387 133.471C332.518 133.471 328.572 168.268 328.572 211.192C328.572 254.116 332.518 288.913 337.387 288.913Z"></path></svg>
+<p style="margin: 0 0 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #FFD530">AI skin analysis &#183; Early access</p>
+<h1 style="margin: 0 0 24px; font-family: 'Gilda Display', Didot, Georgia, serif; font-weight: 400; font-size: clamp(44px, 6.4vw, 84px); line-height: 1.0; letter-spacing: -0.01em; text-wrap: balance; color: #FFFBF7">Your skin has concerns. Now it has a <em style="color: #FFD530">plan</em>.</h1>
+<p style="margin: 0 0 36px; font-size: 19px; max-width: 32em; color: #FFF1E4">Pulse scans your face, tells you what's actually going on, builds an AM and PM routine around it, and shows you whether it's working. No guesswork, just a plan built for your skin.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center">
+<a href="/waitlist/" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 30px; border-radius: 999px; background: #261000; color: #FFFBF7; text-decoration: none; font-weight: 700; letter-spacing: 0.03em">Join the waitlist</a>
+<a href="/survey/?src=site" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 28px; border-radius: 999px; border: 1.5px solid #FFFBF7; color: #FFFBF7; text-decoration: none; font-weight: 700; letter-spacing: 0.03em">Take the skincare survey</a>
+</div>
+<p style="margin: 20px 0 0; font-size: 13px; color: #FFF1E4">Free to join. For anyone 16 and up.</p>
+</div>
 
-    <div class="card" aria-live="polite">
-      <div id="formView">
-        <h2>Join the waitlist</h2>
-        <p class="sub">Be first to scan, build your routine and see whether it's working.</p>
-        <form id="waitlist" novalidate>
-          <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input type="text" id="website" name="website" tabindex="-1" autocomplete="off"></div>
-          <label class="field" for="email">Email
-            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
-          </label>
-          <fieldset>
-            <legend>Your shade <span>(optional)</span></legend>
-            <div class="tones">
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_1" value="mst_1"><span><i style="background:#f6ede4"></i>Pearl</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_2" value="mst_2"><span><i style="background:#f3e7db"></i>Selenite</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_3" value="mst_3"><span><i style="background:#f7ead0"></i>Moonstone</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_4" value="mst_4"><span><i style="background:#eadaba"></i>Citrine</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_5" value="mst_5"><span><i style="background:#d7bd96"></i>Amber</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_6" value="mst_6"><span><i style="background:#a07e56"></i>Tiger&#x27;s Eye</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_7" value="mst_7"><span><i style="background:#825c43"></i>Bronzite</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_8" value="mst_8"><span><i style="background:#604134"></i>Smoky Quartz</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_9" value="mst_9"><span><i style="background:#3a312a"></i>Obsidian</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_10" value="mst_10"><span><i style="background:#292420"></i>Onyx</span></label>
-              <label class="tone tone-none"><input type="radio" name="tone" id="tone-prefer-not" value="prefer_not"><span><i style="background:repeating-linear-gradient(45deg,#FFF3E8 0 4px,#E7D6C8 4px 8px)"></i>Prefer not to say</span></label>
-            </div>
-          </fieldset>
-          <label class="check" for="updates">
-            <input type="checkbox" id="updates" name="updates">
-            Send me launch news and invite updates by email.
-          </label>
-          <p class="error" id="formError" hidden></p>
-          <button class="primary" type="submit" id="submitBtn">Join the waitlist</button>
-          <p class="fine">We use your email only to tell you about Pulse's launch. Your shade helps us make sure early access includes every skin tone. Unsubscribe anytime. <a href="/privacy/">Privacy notice</a></p>
-        </form>
-      </div>
+<div style="position: relative; flex: 1 1 360px; min-width: 0; display: flex; justify-content: center">
+<div style="position: relative; width: 100%; max-width: 440px; border-radius: 28px; background: rgba(255,251,247,0.1); border: 1px solid rgba(255,251,247,0.28); padding: 40px 0 26px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 20px">
+<div style="width: 290px; border-radius: 46px; background: #1A0B00; padding: 9px; box-sizing: border-box; box-shadow: 0 2px 0 1px #3A2416 inset, 0 28px 56px -28px rgba(38,16,0,0.45)">
+<div style="border-radius: 37px; overflow: hidden; background: #1A0B00; display: flex; flex-direction: column">
+<div style="height: 54px; padding: 10px 16px 0; box-sizing: border-box; background: linear-gradient(120deg, #81261A 0%, #AA5B1E 55%, #D79423 100%); display: flex; align-items: center; justify-content: center; position: relative">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFBF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 18px; top: 22px"><path d="M15 6l-6 6 6 6"></path></svg>
+<span style="font-family: 'Gilda Display', Georgia, serif; font-size: 20px; letter-spacing: 0.24em; color: #FFFBF7; padding-left: 0.24em">PULSE</span>
+</div>
+<div style="position: relative; width: 272px; height: 444px; overflow: hidden; background: #FFFBF7; color: #261000">
 
-      <div id="doneView" class="done" hidden>
-        <h2>You're on the list.</h2>
-        <p class="sub" style="margin:0">Share your link. Everyone who joins through it counts toward your early access.</p>
-        <div class="share-box">
-          <input id="shareLink" type="text" readonly aria-label="Your invite link">
-          <button class="btn-ghost" type="button" id="copyBtn">Copy</button>
-        </div>
-        <button class="primary" type="button" id="shareBtn" style="width:100%" hidden>Share with friends</button>
-        <div class="perk">
-          <b>3</b>
-          <span id="perkText">Bring three friends and you're in the first beta group, before public launch.</span>
-        </div>
-        <div class="survey-cta">
-          <p><strong>Got five minutes?</strong> Answer a few questions about your skin and routine, and help decide what Pulse checks first.</p>
-          <a class="btn-survey" href="/survey/?src=waitlist">Take the 5-minute survey</a>
-        </div>
-      </div>
-    </div>
-  </div>
+<template data-if="isScan">
+<div style="position: relative; width: 272px; height: 444px; background: #1A0B00">
+<video src="/assets/scan.mp4" poster="/assets/scan-poster.jpg" autoplay muted playsinline preload="auto" data-scan-video aria-label="A real skin scan: guided face capture, analysis, then face zones mapped" style="position: absolute; left: 0; top: 0; width: 272px; height: 444px; object-fit: cover; display: block"></video>
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 98px; padding: 10px 12px 8px; box-sizing: border-box; background: linear-gradient(180deg, rgba(26,11,0,0) 0px, #1A0B00 6px); color: #FFFBF7; display: flex; flex-direction: column; justify-content: flex-end; gap: 5px">
+<template data-if="isMapping">
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px">
+<div class="pulse-pop" style="display: flex; flex-direction: column; align-items: center; gap: 3px; animation-delay: 0s"><span style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #81261A 0%, #AA5B1E 55%, #D79423 100%); color: #FFFBF7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">73</span><span style="font-size: 8px; font-weight: 700; color: #E9DCD2; white-space: nowrap">Skin score</span></div>
+<div class="pulse-pop" style="display: flex; flex-direction: column; align-items: center; gap: 3px; animation-delay: 0.35s"><span style="width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #E4A524; box-sizing: border-box; background: rgba(255,251,247,0.08); color: #FFFBF7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">75</span><span style="font-size: 8px; font-weight: 700; color: #E9DCD2">Spots</span></div>
+<div class="pulse-pop" style="display: flex; flex-direction: column; align-items: center; gap: 3px; animation-delay: 0.7s"><span style="width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #96262C; box-sizing: border-box; background: rgba(255,251,247,0.08); color: #FFFBF7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">66</span><span style="font-size: 8px; font-weight: 700; color: #E9DCD2">Wrinkles</span></div>
+<div class="pulse-pop" style="display: flex; flex-direction: column; align-items: center; gap: 3px; animation-delay: 1.05s"><span style="width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #AB5B1E; box-sizing: border-box; background: rgba(255,251,247,0.08); color: #FFFBF7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">71</span><span style="font-size: 8px; font-weight: 700; color: #E9DCD2">Texture</span></div>
+<div class="pulse-pop" style="display: flex; flex-direction: column; align-items: center; gap: 3px; animation-delay: 1.4s"><span style="width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #E4A524; box-sizing: border-box; background: rgba(255,251,247,0.08); color: #FFFBF7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">81</span><span style="font-size: 8px; font-weight: 700; color: #E9DCD2">Redness</span></div>
+</div>
+</template>
+<template data-if="notMapping">
+<span style="font-size: 11px; color: #E9DCD2; line-height: 1.4" data-text="stepHint"></span>
+</template>
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-family: 'Gilda Display', Georgia, serif; font-size: 13px; line-height: 1.1" data-text="stepLabel"></span>
+<span style="font-size: 10px; font-weight: 700; color: #FFD530" data-text="stepCount"></span>
+</div>
+<div style="height: 4px; border-radius: 999px; background: rgba(255,251,247,0.2); overflow: hidden"><div class="pulse-progress" style="height: 4px; border-radius: 999px; background: linear-gradient(90deg, #AA5B1E 0%, #E4A524 60%, #FFD530 100%)"></div></div>
+</div>
+</div>
+</template>
+
+<template data-if="isReport">
+<div class="pulse-fade" style="width: 272px; height: 444px; overflow: hidden">
+<div class="pulse-report-scroll" style="padding: 16px 14px 24px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 12px">
+<img src="/assets/scan-thumb.jpg" alt="" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; object-position: center 30%; border: 2px solid #E4A524; display: block">
+<div style="display: flex; flex-direction: column">
+<span style="font-family: 'Gilda Display', Georgia, serif; font-size: 22px; line-height: 1.1">Your skin report</span>
+<span style="font-size: 11px; color: #5B4436">Skin type: Combination</span>
+</div>
+</div>
+<div style="border-radius: 16px; background: linear-gradient(135deg, #81261A 0%, #AA5B1E 55%, #D79423 100%); color: #FFFBF7; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: flex-end">
+<div style="display: flex; flex-direction: column"><span style="font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase">Skin score</span><span style="font-family: 'Gilda Display', Georgia, serif; font-size: 44px; line-height: 1">73</span></div>
+<span style="font-size: 11px; font-weight: 600; background: rgba(255,251,247,0.16); border-radius: 999px; padding: 5px 10px">Combination skin</span>
+</div>
+<div style="position: relative; height: 6px; border-radius: 999px; background: rgba(255,251,247,0.3)"><div style="width: 73%; height: 6px; border-radius: 999px; background: #FFFBF7"></div></div>
+<span style="font-size: 12px; font-weight: 600">Average. A few focused changes will move this.</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #96262C">Focus areas</span>
+<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Dark circles</span><span>59</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 59%; height: 6px; border-radius: 999px; background: #96262C"></div></div></div>
+<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Pores</span><span>65</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 65%; height: 6px; border-radius: 999px; background: #96262C"></div></div></div>
+<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Wrinkles</span><span>66</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 66%; height: 6px; border-radius: 999px; background: #96262C"></div></div></div>
+<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Oiliness</span><span>66</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 66%; height: 6px; border-radius: 999px; background: #96262C"></div></div></div>
+<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Moisture</span><span>67</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 67%; height: 6px; border-radius: 999px; background: #96262C"></div></div></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #AB5B1E">Doing well</span>
+<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Redness</span><span>81</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 81%; height: 6px; border-radius: 999px; background: #E4A524"></div></div></div>
+<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Firmness</span><span>81</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 81%; height: 6px; border-radius: 999px; background: #E4A524"></div></div></div>
+<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Radiance</span><span>81</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 81%; height: 6px; border-radius: 999px; background: #E4A524"></div></div></div>
+<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Acne</span><span>77</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 77%; height: 6px; border-radius: 999px; background: #E4A524"></div></div></div>
+</div>
+
+<div style="border-radius: 14px; background: #FFF3E8; padding: 14px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #5B4436">What this means</span>
+<span style="font-size: 12px; line-height: 1.5">Combination skin: oilier through the T-zone, drier on the cheeks. Lead with hydration and gentle oil control, and treat under the eyes separately.</span>
+</div>
+<div style="text-align: center; padding: 12px; border-radius: 999px; background: #261000; color: #FFFBF7; font-size: 12px; font-weight: 700">See your product picks</div>
+</div>
+</div>
+</template>
+
+<template data-if="isProducts">
+<div class="pulse-fade" style="width: 272px; height: 444px; overflow: hidden">
+<div class="pulse-products-scroll" style="padding: 16px 14px 24px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px">
+<span style="font-family: 'Gilda Display', Georgia, serif; font-size: 22px; line-height: 1.1">Picked for your scan</span>
+<span style="font-size: 11px; color: #5B4436">Matched to your focus areas</span>
+</div>
+
+<div style="display: flex; gap: 12px; padding: 12px; border: 1px solid #E7D6C8; border-radius: 14px; background: #FFFFFF">
+<div style="flex: none; width: 46px; height: 64px; border-radius: 10px; background: #FFF3E8; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-sizing: border-box"><div style="display: flex; flex-direction: column; align-items: center"><div style="width: 14px; height: 8px; border-radius: 3px 3px 0 0; background: #261000"></div><div style="width: 26px; height: 36px; border-radius: 6px; background: #96262C"></div></div></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #96262C">Dark circles &#183; 59</span>
+<span style="font-size: 13px; font-weight: 700; line-height: 1.25">Caffeine eye cream</span>
+<span style="font-size: 11px; color: #5B4436; line-height: 1.35">Depuffs and brightens under the eyes. AM and PM.</span>
+<span style="font-size: 11px; font-weight: 700; color: #261000; text-decoration: underline; text-underline-offset: 3px">View at retailers</span>
+</div>
+</div>
+
+<div style="display: flex; gap: 12px; padding: 12px; border: 1px solid #E7D6C8; border-radius: 14px; background: #FFFFFF">
+<div style="flex: none; width: 46px; height: 64px; border-radius: 10px; background: #FFF3E8; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-sizing: border-box"><div style="display: flex; flex-direction: column; align-items: center"><div style="width: 6px; height: 12px; border-radius: 3px 3px 0 0; background: #261000"></div><div style="width: 12px; height: 6px; background: #261000"></div><div style="width: 22px; height: 30px; border-radius: 5px 5px 8px 8px; background: #E4A524"></div></div></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #96262C">Pores &#183; 65 &#160;Oiliness &#183; 66</span>
+<span style="font-size: 13px; font-weight: 700; line-height: 1.25">Niacinamide serum</span>
+<span style="font-size: 11px; color: #5B4436; line-height: 1.35">Balances oil through the T-zone and refines pores. PM.</span>
+<span style="font-size: 11px; font-weight: 700; color: #261000; text-decoration: underline; text-underline-offset: 3px">View at retailers</span>
+</div>
+</div>
+
+<div style="display: flex; gap: 12px; padding: 12px; border: 1px solid #E7D6C8; border-radius: 14px; background: #FFFFFF">
+<div style="flex: none; width: 46px; height: 64px; border-radius: 10px; background: #FFF3E8; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-sizing: border-box"><div style="width: 34px; height: 24px; border-radius: 6px; background: #AB5B1E; box-shadow: inset 0 7px 0 #261000"></div></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #96262C">Moisture &#183; 67</span>
+<span style="font-size: 13px; font-weight: 700; line-height: 1.25">Hyaluronic gel-cream</span>
+<span style="font-size: 11px; color: #5B4436; line-height: 1.35">Lightweight hydration for drier cheeks without weighing down the T-zone.</span>
+<span style="font-size: 11px; font-weight: 700; color: #261000; text-decoration: underline; text-underline-offset: 3px">View at retailers</span>
+</div>
+</div>
+
+<div style="display: flex; gap: 12px; padding: 12px; border: 1px solid #E7D6C8; border-radius: 14px; background: #FFFFFF">
+<div style="flex: none; width: 46px; height: 64px; border-radius: 10px; background: #FFF3E8; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-sizing: border-box"><div style="display: flex; flex-direction: column; align-items: center"><div style="width: 6px; height: 12px; border-radius: 3px 3px 0 0; background: #261000"></div><div style="width: 12px; height: 6px; background: #261000"></div><div style="width: 22px; height: 30px; border-radius: 5px 5px 8px 8px; background: #5B4436"></div></div></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #96262C">Wrinkles &#183; 66</span>
+<span style="font-size: 13px; font-weight: 700; line-height: 1.25">Retinal night serum</span>
+<span style="font-size: 11px; color: #5B4436; line-height: 1.35">Smooths fine lines over time. Start two nights a week. PM.</span>
+<span style="font-size: 11px; font-weight: 700; color: #261000; text-decoration: underline; text-underline-offset: 3px">View at retailers</span>
+</div>
+</div>
+
+<div style="display: flex; gap: 12px; padding: 12px; border: 1px solid #E7D6C8; border-radius: 14px; background: #FFFFFF">
+<div style="flex: none; width: 46px; height: 64px; border-radius: 10px; background: #FFF3E8; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-sizing: border-box"><div style="display: flex; flex-direction: column; align-items: center"><div style="width: 22px; height: 8px; border-radius: 3px; background: #261000"></div><div style="width: 22px; height: 38px; border-radius: 4px 4px 10px 10px; background: #FFD530"></div></div></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #96262C">Every morning</span>
+<span style="font-size: 13px; font-weight: 700; line-height: 1.25">SPF 50, no white cast</span>
+<span style="font-size: 11px; color: #5B4436; line-height: 1.35">Keeps dark spots from coming back. Last step, AM.</span>
+<span style="font-size: 11px; font-weight: 700; color: #261000; text-decoration: underline; text-underline-offset: 3px">View at retailers</span>
+</div>
+</div>
+
+<div style="text-align: center; padding: 12px; border-radius: 999px; background: #96262C; color: #FFFBF7; font-size: 12px; font-weight: 700">Add to my routine</div>
+<span style="font-size: 10px; color: #5B4436; text-align: center">Pulse may earn a commission on purchases.</span>
+</div>
+</div>
+</template>
+
+</div>
+</div>
+</div>
+<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #FFF1E4">Real scan &#183; Sample product picks</span>
+</div>
+</div>
+</div>
 </section>
 
-<section class="block loop">
-  <div class="wrap">
-    <p class="kicker">How Pulse works</p>
-    <h2 class="big">A skincare strategy, built on your own skin data.</h2>
-    <div class="steps">
-      <div class="step"><div class="n">Scan</div><h3>Know what your skin needs</h3><p>A face scan finds your skin type and concerns, like dark spots, uneven tone and post-acne marks, and shows where they are.</p></div>
-      <div class="step"><div class="n">Routine</div><h3>Copy what works for skin like yours</h3><p>Get an AM and PM routine built from your scan, or copy the routines of friends and creators with similar skin.</p></div>
-      <div class="step"><div class="n">Progress</div><h3>See the difference</h3><p>Check off your routine each day and rescan to compare against your first scan, so you know what's working.</p></div>
-    </div>
-  </div>
+<section style="background: #FFF3E8; padding: clamp(64px, 8vw, 112px) 0">
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px)">
+<p style="margin: 0 0 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #AB5B1E">Why Pulse</p>
+<h2 style="margin: 0 0 48px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: clamp(34px, 4.4vw, 54px); line-height: 1.08; max-width: 16em; text-wrap: balance">Most people don't have a skincare strategy. They have a shelf.</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 40px">
+<div style="border-top: 1.5px solid #261000; padding-top: 22px">
+<h3 style="margin: 0 0 10px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: 28px; line-height: 1.15">You're guessing.</h3>
+<p style="margin: 0; color: #5B4436">You buy what's trending, based on reviews from people whose skin isn't yours, and hope it does something.</p>
+</div>
+<div style="border-top: 1.5px solid #261000; padding-top: 22px">
+<h3 style="margin: 0 0 10px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: 28px; line-height: 1.15">You can't tell if it's working.</h3>
+<p style="margin: 0; color: #5B4436">Six weeks in, you're squinting at the bathroom mirror trying to remember what your skin looked like before.</p>
+</div>
+<div style="border-top: 1.5px solid #261000; padding-top: 22px">
+<h3 style="margin: 0 0 10px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: 28px; line-height: 1.15">The tools weren't built for everyone.</h3>
+<p style="margin: 0; color: #5B4436">Skin scanners have been least accurate on deeper skin. Pulse tests every concern on every skin tone before it ships.</p>
+</div>
+</div>
+</div>
 </section>
 
-<section class="block" id="accuracy">
-  <div class="wrap">
-    <p class="kicker">The Pulse accuracy standard</p>
-    <h2 class="big">A tool that only works on some skin isn't accurate. It's lucky.</h2>
-    <p class="measure">Skin scanners have a documented accuracy gap, and Stanford researchers found it's widest on deeper skin. Pulse closes it by rule. Each skin concern is tested on a consented panel of 300 people across ten skin tones, from Pearl to Onyx, with images labeled by board-certified dermatologists. We compare three ranges of skin tones, lighter, medium and deeper, and if a concern is more than 5 points less accurate on any range than the best, it stays out of the app. Then we publish the results for all ten tones, so you can see how Pulse does on skin like yours.</p>
+<section id="how" style="padding: clamp(64px, 8vw, 112px) 0">
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px)">
+<p style="margin: 0 0 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #AB5B1E">How it works</p>
+<h2 style="margin: 0 0 48px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: clamp(34px, 4.4vw, 54px); line-height: 1.08; max-width: 16em; text-wrap: balance">Scan. Follow the routine. See the difference.</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px">
 
-    <div class="gate">
-      <div>
-        <div class="scale-wrap">
-          <div class="scale" role="group" aria-label="Accuracy by skin tone, illustration">
-            <div class="col" role="img" aria-label="Pearl" title="Pearl"><div class="bar-track"><div class="bar" style="height:92%;background:#f6ede4"></div></div><div class="swatch" style="background:#f6ede4"></div><small aria-hidden="true">Pearl</small></div>
-            <div class="col" role="img" aria-label="Selenite" title="Selenite"><div class="bar-track"><div class="bar" style="height:91.8%;background:#f3e7db"></div></div><div class="swatch" style="background:#f3e7db"></div><small aria-hidden="true"></small></div>
-            <div class="col" role="img" aria-label="Moonstone" title="Moonstone"><div class="bar-track"><div class="bar" style="height:91.5%;background:#f7ead0"></div></div><div class="swatch" style="background:#f7ead0"></div><small aria-hidden="true"></small></div>
-            <div class="col" role="img" aria-label="Citrine" title="Citrine"><div class="bar-track"><div class="bar" style="height:91%;background:#eadaba"></div></div><div class="swatch" style="background:#eadaba"></div><small aria-hidden="true"></small></div>
-            <div class="col" role="img" aria-label="Amber" title="Amber"><div class="bar-track"><div class="bar" style="height:90.5%;background:#d7bd96"></div></div><div class="swatch" style="background:#d7bd96"></div><small aria-hidden="true"></small></div>
-            <div class="col" role="img" aria-label="Tiger&#x27;s Eye" title="Tiger&#x27;s Eye"><div class="bar-track"><div class="bar" style="height:90%;background:#a07e56"></div></div><div class="swatch" style="background:#a07e56"></div><small aria-hidden="true"></small></div>
-            <div class="col" role="img" aria-label="Bronzite" title="Bronzite"><div class="bar-track"><div class="bar" style="height:89.5%;background:#825c43"></div></div><div class="swatch" style="background:#825c43"></div><small aria-hidden="true"></small></div>
-            <div class="col" role="img" aria-label="Smoky Quartz" title="Smoky Quartz"><div class="bar-track"><div class="bar" style="height:89%;background:#604134"></div></div><div class="swatch" style="background:#604134"></div><small aria-hidden="true"></small></div>
-            <div class="col" role="img" aria-label="Obsidian" title="Obsidian"><div class="bar-track"><div class="bar" style="height:88.5%;background:#3a312a"></div></div><div class="swatch" style="background:#3a312a"></div><small aria-hidden="true"></small></div>
-            <div class="col" role="img" aria-label="Onyx" title="Onyx"><div class="bar-track"><div class="bar" style="height:88%;background:#292420"></div></div><div class="swatch" style="background:#292420"></div><small aria-hidden="true">Onyx</small></div>
-          </div>
-        </div>
-        <p class="scale-label">Illustration of the rule, not test results. Pulse publishes real results by skin tone at launch and updates them every six months.</p>
-      </div>
-      <div class="rule">
-        <div class="num">The 5&#8209;point rule</div>
-        <p class="rule-lead">If it doesn't meet our bar, it doesn't ship.</p>
-        <p>If Pulse reads a skin concern correctly 90 times out of 100 on one range of skin tones, it has to get at least 85 right on every other range. If it falls short, that feature waits until it doesn't.</p>
-      </div>
-    </div>
-  </div>
+<div style="border: 1px solid #E7D6C8; border-radius: 22px; padding: 28px; background: #FFFFFF; display: flex; flex-direction: column; gap: 20px">
+<div style="height: 150px; border-radius: 14px; background: #FFF3E8; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#96262C" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3"></path><path d="M16 4h3a1 1 0 0 1 1 1v3"></path><path d="M20 16v3a1 1 0 0 1-1 1h-3"></path><path d="M8 20H5a1 1 0 0 1-1-1v-3"></path><ellipse cx="12" cy="12" rx="4" ry="5"></ellipse></svg>
+</div>
+<div>
+<p style="margin: 0 0 4px; font-family: 'Gilda Display', Georgia, serif; font-size: 18px; color: #AB5B1E">01 &#183; Scan</p>
+<h3 style="margin: 0 0 8px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.15">Know what your skin needs</h3>
+<p style="margin: 0; color: #5B4436; font-size: 15px">A guided face scan finds your skin type and concerns, like dark spots, uneven tone and post-acne marks, and shows you exactly where they are.</p>
+</div>
+</div>
+
+<div style="border: 1px solid #E7D6C8; border-radius: 22px; padding: 28px; background: #FFFFFF; display: flex; flex-direction: column; gap: 20px">
+<div style="height: 150px; border-radius: 14px; background: #FFF3E8; padding: 18px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 8px">
+<div style="display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600"><span style="width: 18px; height: 18px; border-radius: 5px; background: #96262C; display: block"></span>AM &#183; Gentle cleanser</div>
+<div style="display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600"><span style="width: 18px; height: 18px; border-radius: 5px; background: #96262C; display: block"></span>AM &#183; Vitamin C serum</div>
+<div style="display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600"><span style="width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #AB5B1E; box-sizing: border-box; display: block"></span>AM &#183; SPF 50</div>
+<div style="display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: #5B4436"><span style="width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #E7D6C8; box-sizing: border-box; display: block"></span>PM &#183; Azelaic acid</div>
+</div>
+<div>
+<p style="margin: 0 0 4px; font-family: 'Gilda Display', Georgia, serif; font-size: 18px; color: #AB5B1E">02 &#183; Routine</p>
+<h3 style="margin: 0 0 8px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.15">Get a routine that fits</h3>
+<p style="margin: 0; color: #5B4436; font-size: 15px">Pulse builds an AM and PM routine from your scan. Check it off each day, and swap in products you already own.</p>
+</div>
+</div>
+
+<div style="border: 1px solid #E7D6C8; border-radius: 22px; padding: 28px; background: #FFFFFF; display: flex; flex-direction: column; gap: 20px">
+<div style="height: 150px; border-radius: 14px; background: #FFF3E8; padding: 14px 16px 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5B4436">Dark spots score</span>
+<span style="font-size: 12px; font-weight: 700; color: #FFFBF7; background: #96262C; border-radius: 999px; padding: 2px 9px">+13</span>
+</div>
+<svg role="img" aria-label="Sample progress: dark spots score rising from 59 in week 1 to 72 in week 8" viewBox="0 0 260 92" style="width: 100%; height: 92px; display: block; overflow: visible">
+<defs><linearGradient id="progLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#81261A"></stop><stop offset="0.55" stop-color="#AA5B1E"></stop><stop offset="1" stop-color="#D79423"></stop></linearGradient><linearGradient id="progFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E4A524" stop-opacity="0.35"></stop><stop offset="1" stop-color="#E4A524" stop-opacity="0"></stop></linearGradient></defs>
+<line x1="0" y1="70" x2="260" y2="70" stroke="#E7D6C8" stroke-width="1"></line>
+<path d="M10 62 L70 55 L130 43 L190 29 L250 18 L250 70 L10 70 Z" fill="url(#progFill)"></path>
+<path d="M10 62 L70 55 L130 43 L190 29 L250 18" fill="none" stroke="url(#progLine)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+<circle cx="10" cy="62" r="4" fill="#FFFBF7" stroke="#81261A" stroke-width="2"></circle>
+<circle cx="70" cy="55" r="3" fill="#8A3A1C"></circle>
+<circle cx="130" cy="43" r="3" fill="#AA5B1E"></circle>
+<circle cx="190" cy="29" r="3" fill="#C27A21"></circle>
+<circle cx="250" cy="18" r="5" fill="#D79423" stroke="#FFFBF7" stroke-width="2"></circle>
+<text x="10" y="50" text-anchor="middle" font-size="11" font-weight="700" fill="#5B4436">59</text>
+<text x="250" y="7" text-anchor="middle" font-size="11" font-weight="700" fill="#261000">72</text>
+<text x="10" y="86" text-anchor="middle" font-size="10" font-weight="600" fill="#5B4436">Wk 1</text>
+<text x="70" y="86" text-anchor="middle" font-size="10" font-weight="600" fill="#5B4436">Wk 2</text>
+<text x="130" y="86" text-anchor="middle" font-size="10" font-weight="600" fill="#5B4436">Wk 4</text>
+<text x="190" y="86" text-anchor="middle" font-size="10" font-weight="600" fill="#5B4436">Wk 6</text>
+<text x="250" y="86" text-anchor="middle" font-size="10" font-weight="600" fill="#5B4436">Wk 8</text>
+</svg>
+</div>
+<div>
+<p style="margin: 0 0 4px; font-family: 'Gilda Display', Georgia, serif; font-size: 18px; color: #AB5B1E">03 &#183; Progress</p>
+<h3 style="margin: 0 0 8px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.15">See what's working</h3>
+<p style="margin: 0; color: #5B4436; font-size: 15px">Rescan anytime and compare against your first scan, side by side, so you know whether to keep going or change course.</p>
+</div>
+</div>
+
+</div>
+</div>
 </section>
 
-<section class="block privacy">
-  <div class="wrap">
-    <div>
-      <p class="kicker">Your face, your data</p>
-      <h2 class="big">Privacy is built in from the first scan.</h2>
-      <p class="measure" style="color:#E9DCD2">Face scans are biometric data, so Pulse asks for your written consent before any scan and holds everyone to the same strict privacy standard, wherever you live.</p>
-    </div>
-    <ul class="promises">
-      <li><b>Private by default</b><span>Scans and progress photos never appear on your profile.</span></li>
-      <li><b>Never sold</b><span>Your scans are never sold, rented or shared with brands or advertisers.</span></li>
-      <li><b>Deletable anytime</b><span>Delete a scan or your account and it's gone within 30 days.</span></li>
-      <li><b>Model training is opt-in</b><span>Only adults who choose to help improve accuracy ever contribute images.</span></li>
-    </ul>
-  </div>
+<section style="padding: 0 0 clamp(64px, 8vw, 112px)">
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px); display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px">
+
+<div style="border-radius: 22px; background: #261000; color: #FFFBF7; padding: clamp(28px, 4vw, 48px); display: flex; flex-direction: column; gap: 16px">
+<p style="margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #FFD530">Community</p>
+<h2 style="margin: 0; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.4vw, 42px); line-height: 1.1">Copy what works for skin like yours.</h2>
+<p style="margin: 0; color: #E9DCD2">Follow friends and creators with similar skin, see the routines they actually use, and copy one in a tap. Your scans and progress photos stay private unless you choose to share them.</p>
+</div>
+
+<div style="border-radius: 22px; border: 1px solid #E7D6C8; background: #FFFFFF; padding: clamp(28px, 4vw, 48px); display: flex; flex-direction: column; gap: 16px">
+<p style="margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #AB5B1E">Shopping</p>
+<h2 style="margin: 0; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.4vw, 42px); line-height: 1.1">We're not a store.</h2>
+<p style="margin: 0; color: #5B4436">Pulse tells you what to look for, then sends you to the retailers you already shop. Keep using what's on your shelf if it fits your routine.</p>
+<p style="margin: 0; font-size: 13px; color: #5B4436">Pulse may earn a commission when you buy through a Pulse link.</p>
+</div>
+
+</div>
 </section>
 
-<section class="block final">
-  <div class="wrap">
-    <h2 class="big">Skincare that works on your skin, proven by people like you.</h2>
-    <a class="cta-link" href="#join">Join the waitlist</a>
-  </div>
+<section id="accuracy" style="background: #FFF3E8; padding: clamp(64px, 8vw, 112px) 0">
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px)">
+<p style="margin: 0 0 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #AB5B1E">The Pulse accuracy standard</p>
+<h2 style="margin: 0 0 18px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: clamp(34px, 4.4vw, 54px); line-height: 1.08; max-width: 16em; text-wrap: balance">A tool that only works on some skin isn't accurate. It's lucky.</h2>
+<p style="margin: 0 0 48px; max-width: 40em; color: #5B4436">Every skin concern Pulse detects is tested across all ten shades of the Monk Skin Tone scale before it reaches the app. If it can't meet the bar on every shade, it doesn't ship.</p>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 10px; margin-bottom: 48px">
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="height: 72px; border-radius: 12px; background: #f6ede4; border: 1px solid rgba(38,16,0,0.12)"></div><span style="font-size: 13px; font-weight: 600">Pearl</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="height: 72px; border-radius: 12px; background: #f3e7db; border: 1px solid rgba(38,16,0,0.12)"></div><span style="font-size: 13px; font-weight: 600">Selenite</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="height: 72px; border-radius: 12px; background: #f7ead0; border: 1px solid rgba(38,16,0,0.12)"></div><span style="font-size: 13px; font-weight: 600">Moonstone</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="height: 72px; border-radius: 12px; background: #eadaba; border: 1px solid rgba(38,16,0,0.12)"></div><span style="font-size: 13px; font-weight: 600">Citrine</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="height: 72px; border-radius: 12px; background: #d7bd96; border: 1px solid rgba(38,16,0,0.12)"></div><span style="font-size: 13px; font-weight: 600">Amber</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="height: 72px; border-radius: 12px; background: #a07e56; border: 1px solid rgba(38,16,0,0.12)"></div><span style="font-size: 13px; font-weight: 600">Tiger's Eye</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="height: 72px; border-radius: 12px; background: #825c43; border: 1px solid rgba(38,16,0,0.12)"></div><span style="font-size: 13px; font-weight: 600">Bronzite</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="height: 72px; border-radius: 12px; background: #604134; border: 1px solid rgba(38,16,0,0.12)"></div><span style="font-size: 13px; font-weight: 600">Smoky Quartz</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="height: 72px; border-radius: 12px; background: #3a312a; border: 1px solid rgba(38,16,0,0.12)"></div><span style="font-size: 13px; font-weight: 600">Obsidian</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="height: 72px; border-radius: 12px; background: #292420; border: 1px solid rgba(38,16,0,0.12)"></div><span style="font-size: 13px; font-weight: 600">Onyx</span></div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px">
+<div>
+<div style="font-family: 'Gilda Display', Georgia, serif; font-size: 64px; line-height: 1; color: #96262C">30+</div>
+<p style="margin: 10px 0 0; color: #5B4436">consented people tested for each of the ten shades, labeled by board-certified dermatologists.</p>
+</div>
+<div>
+<div style="font-family: 'Gilda Display', Georgia, serif; font-size: 64px; line-height: 1; color: #96262C">5 pts</div>
+<p style="margin: 10px 0 0; color: #5B4436">the most any shade's accuracy may trail the best-served shade. More than that and the concern stays out.</p>
+</div>
+<div>
+<div style="font-family: 'Gilda Display', Georgia, serif; font-size: 64px; line-height: 1; color: #96262C">6 mo</div>
+<p style="margin: 10px 0 0; color: #5B4436">between public accuracy reports, broken out by shade, starting at launch.</p>
+</div>
+</div>
+</div>
 </section>
 
-<footer>
-  <div class="wrap">
-    <span>&copy; 2026 Pulse &middot; <a href="/privacy/" style="color:inherit">Privacy notice</a></span>
-    <span>Questions: <span id="contact">jelyn@pulsecosmeticsolutions.com</span></span>
-  </div>
+<section id="privacy" style="background: #261000; color: #FFFBF7; padding: clamp(64px, 8vw, 112px) 0">
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: 48px 80px">
+<div style="flex: 1 1 360px; min-width: 0">
+<p style="margin: 0 0 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #FFD530">Your face, your data</p>
+<h2 style="margin: 0 0 18px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: clamp(34px, 4.4vw, 54px); line-height: 1.08; text-wrap: balance">Privacy is built in from the first scan.</h2>
+<p style="margin: 0 0 24px; color: #E9DCD2">Face scans are biometric data. Pulse asks for your written consent before any scan and follows Illinois' biometric privacy law everywhere it operates.</p>
+<a href="/privacy/" style="color: #FFD530; font-weight: 700; text-underline-offset: 4px">Read our privacy policy</a>
+</div>
+<ul style="flex: 1 1 400px; min-width: 0; list-style: none; margin: 0; padding: 0">
+<li style="padding: 0 0 18px; border-bottom: 1px solid rgba(255,251,247,0.16)"><b style="display: block; color: #E4A524; font-weight: 700">Private by default</b><span style="color: #E9DCD2; font-size: 15px">Scans and progress photos never appear on your profile.</span></li>
+<li style="padding: 18px 0; border-bottom: 1px solid rgba(255,251,247,0.16)"><b style="display: block; color: #E4A524; font-weight: 700">Never sold</b><span style="color: #E9DCD2; font-size: 15px">Your scans are never sold, rented or shared with brands or advertisers.</span></li>
+<li style="padding: 18px 0; border-bottom: 1px solid rgba(255,251,247,0.16)"><b style="display: block; color: #E4A524; font-weight: 700">Deletable anytime</b><span style="color: #E9DCD2; font-size: 15px">Delete a scan or your account and it's gone within 30 days.</span></li>
+<li style="padding: 18px 0 0"><b style="display: block; color: #E4A524; font-weight: 700">Model training is opt-in</b><span style="color: #E9DCD2; font-size: 15px">Only adults who choose to help improve accuracy ever contribute images.</span></li>
+</ul>
+</div>
+</section>
+
+<section id="pros" style="padding: clamp(64px, 8vw, 112px) 0">
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px); display: flex; flex-direction: column; gap: 44px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px 48px">
+<div style="flex: 1 1 520px; min-width: 0">
+<p style="margin: 0 0 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #AB5B1E">Pulse for Pros</p>
+<h2 style="margin: 0 0 18px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: clamp(34px, 4.4vw, 54px); line-height: 1.08; max-width: 16em; text-wrap: balance">See your clients' skin between appointments.</h2>
+<p style="margin: 0; max-width: 38em; color: #5B4436">Pulse for Pros lets licensed estheticians, medspas and dermatology offices follow the progress of clients who choose to share it, and recommend products and treatments right inside Pulse. Your clients stay on their routine because someone they trust is following along.</p>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px">
+<div style="border: 1px solid #E7D6C8; border-radius: 20px; padding: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+<svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#96262C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 9h18"></path><path d="M8 14h3"></path><path d="M8 17h6"></path></svg>
+<h3 style="margin: 0; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: 22px; line-height: 1.2">Client dashboard</h3>
+<p style="margin: 0; font-size: 15px; color: #5B4436">Every connected client in one list, with how closely they're keeping up their routine and when they last scanned.</p>
+</div>
+<div style="border: 1px solid #E7D6C8; border-radius: 20px; padding: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+<svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#96262C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 8-8"></path><path d="M15 7h5v5"></path></svg>
+<h3 style="margin: 0; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: 22px; line-height: 1.2">Progress view</h3>
+<p style="margin: 0; font-size: 15px; color: #5B4436">The scans, results and progress photos each client chooses to share, compared over time.</p>
+</div>
+<div style="border: 1px solid #E7D6C8; border-radius: 20px; padding: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+<svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#96262C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v4l3 3v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-9l3-3z"></path><path d="M9 13h6"></path></svg>
+<h3 style="margin: 0; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: 22px; line-height: 1.2">Your recommendations</h3>
+<p style="margin: 0; font-size: 15px; color: #5B4436">Add products to a client's routine or suggest a treatment. It's always labeled as yours, and the client accepts or declines.</p>
+</div>
+<div style="border: 1px solid #E7D6C8; border-radius: 20px; padding: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+<svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#96262C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><path d="M14 14h2v2h-2z"></path><path d="M18 18h2v2h-2z"></path><path d="M14 18h2"></path></svg>
+<h3 style="margin: 0; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: 22px; line-height: 1.2">Easy invites</h3>
+<p style="margin: 0; font-size: 15px; color: #5B4436">Share a code or QR link. Clients who join through you get a 30-day Premium trial.</p>
+</div>
+</div>
+
+<div style="border-radius: 24px; background: #261000; color: #FFFBF7; padding: clamp(28px, 4vw, 44px); display: flex; flex-wrap: wrap; gap: 32px 56px; align-items: center">
+<ul style="flex: 1 1 420px; min-width: 0; list-style: none; margin: 0; padding: 0; display: grid; gap: 16px">
+<li style="display: grid; gap: 2px"><b style="color: #E4A524; font-weight: 700">Licensed and verified</b><span style="color: #E9DCD2; font-size: 15px">Every account is checked against your licensing board before it connects with clients, and re-checked every year. Verified pros get a badge.</span></li>
+<li style="display: grid; gap: 2px"><b style="color: #E4A524; font-weight: 700">Clients stay in control</b><span style="color: #E9DCD2; font-size: 15px">Clients give separate consent for each professional, pick exactly what they share, and can disconnect anytime.</span></li>
+<li style="display: grid; gap: 2px"><b style="color: #E4A524; font-weight: 700">Works with your tools</b><span style="color: #E9DCD2; font-size: 15px">Keep your booking, messaging and payments where they are. Pulse handles what happens between visits.</span></li>
+</ul>
+<div style="flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 16px; align-items: flex-start">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #FFD530">Founding pilot</span>
+<p style="margin: 0; font-family: 'Gilda Display', Georgia, serif; font-size: 26px; line-height: 1.2">We're starting with five licensed estheticians. Pilot members use Pulse for Pros free.</p>
+<p style="margin: 0; font-size: 14px; color: #E9DCD2">Medspas and dermatology offices join in later phases.</p>
+<a href="mailto:jelyn@pulsecosmeticsolutions.com?subject=Pulse%20for%20Pros%20pilot" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 28px; border-radius: 999px; background: #FFFBF7; color: #261000; text-decoration: none; font-weight: 700">Apply for the Pilot</a>
+</div>
+</div>
+</div>
+</section>
+
+<section id="about" style="background: #FFF3E8; padding: clamp(64px, 8vw, 112px) 0">
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; align-items: center; gap: 48px 72px">
+<div style="flex: 0 1 340px; min-width: 0">
+<img src="/assets/founder.jpg" alt="Jelyn Andrews, founder and CEO of Pulse" style="width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: center top; border-radius: 22px; display: block">
+</div>
+<div style="flex: 999 1 420px; min-width: 0">
+<p style="margin: 0 0 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #AB5B1E">Founder Story</p>
+<h2 style="margin: 0 0 18px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: clamp(34px, 4.4vw, 54px); line-height: 1.08; text-wrap: balance">Why I'm Building Pulse</h2>
+<p style="margin: 0 0 16px; max-width: 36em; color: #5B4436">I noticed it almost right away. People weren't choosing skincare based on their own skin. They were buying whatever someone with "good skin" used, with no idea what was going on underneath. And I'm guilty of it too. If I saw something advertised enough, if my favorite influencer mentioned it, or if the packaging was pretty, it ended up on my shelf.</p>
+<p style="margin: 0 0 16px; max-width: 36em; color: #5B4436">I've spent real money on products that didn't work, and I've gotten bad advice. What I was missing wasn't another product. It was a plan.</p>
+<p style="margin: 0 0 16px; max-width: 36em; color: #5B4436">So I'm building one. Pulse looks at your skin, builds a routine around what it actually finds, and shows you whether it's working. And nothing ships until it works on every skin tone, including the deeper tones skin tech has gotten wrong the longest.</p>
+<p style="margin: 0 0 24px; max-width: 36em; color: #261000; font-weight: 600">Building Pulse means the world to me. It's my chance to put something into the world that makes people feel better in their own skin.</p>
+<p style="margin: 0; font-size: 14px; font-weight: 600">Jelyn Andrews, Founder and CEO, Pulse Cosmetic Solutions</p>
+<p style="margin: 4px 0 0; font-size: 13px; color: #5B4436">Previously at Oracle, LinkedIn and Meta</p>
+</div>
+</div>
+</section>
+
+<section id="survey" style="padding: clamp(64px, 8vw, 112px) 0">
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px)">
+<div style="position: relative; overflow: hidden; isolation: isolate; border-radius: 28px; background: linear-gradient(135deg, #81261A 0%, #AA5B1E 52%, #D79423 100%); color: #FFFBF7; padding: clamp(36px, 6vw, 72px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 32px">
+<svg class="pulse-ripple pulse-ripple-sm" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="295 120 125 182" style="left: 82%; animation-delay: 0s"><path d="M416.203 235.545C418.208 235.545 419.833 224.99 419.833 211.97C419.833 198.95 418.208 188.395 416.203 188.395C414.199 188.395 412.573 198.95 412.573 211.97C412.573 224.99 414.199 235.545 416.203 235.545Z"></path><path d="M400.127 259.898C402.418 259.898 404.276 237.86 404.276 210.675C404.276 183.489 402.418 161.451 400.127 161.451C397.836 161.451 395.979 183.489 395.979 210.675C395.979 237.86 397.836 259.898 400.127 259.898Z"></path><path d="M382.499 275.442C385.649 275.442 388.203 246.444 388.203 210.674C388.203 174.904 385.649 145.907 382.499 145.907C379.349 145.907 376.795 174.904 376.795 210.674C376.795 246.444 379.349 275.442 382.499 275.442Z"></path><path d="M361.497 285.286C365.363 285.286 368.497 252.229 368.497 211.452C368.497 170.674 365.363 137.617 361.497 137.617C357.631 137.617 354.497 170.674 354.497 211.452C354.497 252.229 357.631 285.286 361.497 285.286Z"></path><path d="M307.83 301.867C314.703 301.867 320.274 261.155 320.274 210.934C320.274 160.712 314.703 120 307.83 120C300.957 120 295.385 160.712 295.385 210.934C295.385 261.155 300.957 301.867 307.83 301.867Z"></path><path d="M337.387 288.913C342.255 288.913 346.201 254.116 346.201 211.192C346.201 168.268 342.255 133.471 337.387 133.471C332.518 133.471 328.572 168.268 328.572 211.192C328.572 254.116 332.518 288.913 337.387 288.913Z"></path></svg>
+<div style="flex: 1 1 480px; min-width: 0">
+<h2 style="margin: 0 0 12px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: clamp(36px, 4.8vw, 60px); line-height: 1.05">Be first to scan.</h2>
+<p style="margin: 0; max-width: 30em; color: #FFF6EC; font-size: 17px">Join the waitlist for early access, or tell us how you handle your skin today. Both shape what we build first.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<a href="/waitlist/" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 30px; border-radius: 999px; background: #261000; color: #FFFBF7; text-decoration: none; font-weight: 700">Join the waitlist</a>
+<a href="/survey/?src=site" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 28px; border-radius: 999px; background: #FFFBF7; color: #261000; text-decoration: none; font-weight: 700">Take the survey</a>
+</div>
+</div>
+</div>
+</section>
+
+<footer style="border-top: 1px solid #E7D6C8; padding: 48px 0 40px">
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 32px 48px">
+<div style="flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<svg role="img" aria-label="Pulse" xmlns="http://www.w3.org/2000/svg" viewBox="120 344.5 477 119" fill="#191819" style="height: 22px; width: auto; align-self: flex-start"><path d="M471.805 402.885C467.072 400.978 462.235 399.117 457.548 397.313C452.179 395.247 446.622 393.116 441.215 390.901C432.908 387.507 423.067 382.544 420.644 374.299C417.996 365.288 424.404 357.754 430.7 354.033C436.65 350.528 444.087 348.667 452.216 348.667C454.415 348.667 456.65 348.808 458.867 349.069C463.947 349.686 468.83 350.425 472.778 352.696C474.752 353.827 476.38 355.323 477.493 357.024C478.7 358.866 479.13 363.727 479.13 363.727L491.347 365.531L491.431 364.54C492.573 351.649 473.947 347.265 468.213 346.228C463.133 345.312 458.035 344.844 453.067 344.844C445.808 344.844 439.035 345.835 432.917 347.779C426.678 349.771 415.686 354.697 412.215 365.391C409.231 374.57 412.477 384.684 420.485 391.181C430.513 399.314 442.693 403.698 454.471 407.942C461.889 410.615 469.56 413.373 476.548 417.037C480.318 419.01 484.574 421.393 487.343 424.665C490.627 428.544 490.271 433.48 489.392 436.929C487.484 444.426 481.356 450.698 472.142 454.587C466.089 457.139 458.998 458.485 451.636 458.485C449.176 458.485 446.688 458.336 444.255 458.036C440.158 457.532 434.9 456.616 430.653 453.97C428.53 452.652 426.996 451.269 426.079 449.867C425.125 448.39 424.975 446.66 424.816 444.819C424.779 444.417 424.751 444.024 424.704 443.622L424.629 442.94L412.692 440.575L412.617 441.631C411.654 454.989 429.334 459.71 436.977 461.131C441.589 461.981 446.407 462.421 451.281 462.421C458.68 462.421 466.033 461.448 473.133 459.532C480.514 457.541 490.571 453.4 496.586 445.006C502.217 437.144 502.526 426.348 497.316 419.337C491.272 411.204 481.403 406.745 471.814 402.885H471.805Z"></path><path d="M155.67 348.63C150.3 347.938 144.818 347.92 139.514 347.892C139.514 347.892 136.605 347.882 135.585 347.882C133.564 347.882 131.544 347.882 129.523 347.892H129.42C128.588 347.892 127.718 347.854 126.848 347.826C125.931 347.789 125.005 347.761 124.088 347.761C122.797 347.761 121.749 347.826 120.795 347.976L120 348.097V460.729H131.291V414.495C143.471 414.495 156.035 414.392 167.99 410.4C178.505 406.885 185.614 400.688 188.552 392.462C192.397 381.674 190.423 368.887 183.734 361.343C176.203 352.846 164.314 349.733 155.66 348.611L155.67 348.63ZM135.707 410.849C134.247 410.886 132.779 410.924 131.319 410.97V351.453C146.661 351.453 167.139 351.762 176.306 366.914C180.198 373.355 181.002 382.394 178.402 390.508C175.988 398.042 170.516 403.455 161.676 407.054C153.462 410.4 144.435 410.625 135.707 410.849Z"></path><path d="M582.519 454.12C578.028 455.26 573.183 456.064 568.131 456.522C560.002 457.251 551.798 457.317 544.108 457.317H538.327V409.007H594.858V405.25H538.327V351.556C540.422 351.556 542.527 351.528 544.632 351.509C547.055 351.481 549.487 351.462 551.919 351.462C556.522 351.462 562.574 351.537 568.58 352.107C580.451 353.239 588.637 355.856 595.12 360.595L597.009 361.969L594.493 347.957H526.989V460.738H594.493L596.962 447.137L595.148 448.315C590.517 451.315 586.747 453.045 582.537 454.11L582.519 454.12Z"></path><path d="M304.167 401.202C304.167 398.725 304.177 396.238 304.196 393.752C304.242 385.694 304.28 377.365 303.849 369.195C303.391 360.567 300.678 349.826 290.341 347.695L289.219 347.461V360.698L290.107 360.745C300.229 361.296 300.164 374.196 300.117 382.731C300.117 383.46 300.117 384.161 300.117 384.806C300.154 393.639 300.145 402.623 300.136 411.307V419.411C300.126 427.291 299.49 435.639 294.953 443.22C291.529 448.941 286.206 453.372 279.546 456.036C274.597 458.018 268.928 459.065 263.147 459.065C251.042 459.065 240.808 454.634 235.082 446.912C230.676 440.977 228.506 433.265 228.431 423.319C228.384 416.411 228.394 409.39 228.412 402.595C228.412 399.127 228.431 395.659 228.431 392.2V360.567C228.431 360.109 228.431 359.651 228.45 359.184C228.515 355.566 228.581 351.462 224.82 348.994C223.043 347.835 221.209 347.733 219.17 347.733H210.171V351.154L210.938 351.294C215.447 352.098 217.046 354.36 217.046 359.931V377.608C217.046 389.695 217.046 401.791 217.056 413.877V415.915C217.046 425.375 217.028 435.153 221.743 443.706C225.41 450.352 231.191 455.559 238.478 458.784C244.886 461.616 252.23 463 260.93 462.991C262.857 462.991 264.896 462.925 266.982 462.785C273.746 462.336 283.447 460.439 291.277 453.895C304.925 442.491 304.579 424.263 304.27 408.185C304.224 405.764 304.177 403.473 304.177 401.202H304.167Z"></path><path d="M354.833 457.438C352.195 457.438 349.566 457.401 346.956 457.373C344.711 457.345 342.485 457.317 340.286 457.307V347.966H329.042V460.729H396.967L399.38 447.109L397.575 448.277C384.497 456.737 368.659 457.438 354.842 457.438H354.833Z"></path></svg>
+<p style="margin: 0; font-size: 14px; color: #5B4436; max-width: 22em">A skincare strategy, built on your own skin data.</p>
+</div>
+<nav aria-label="Footer" style="display: flex; flex-wrap: wrap; gap: 32px 56px; font-size: 14px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #5B4436; margin-bottom: 6px">Pulse</span>
+<a href="#how" style="color: #261000; text-decoration: none; padding: 6px 0">How It Works</a>
+<a href="#accuracy" style="color: #261000; text-decoration: none; padding: 6px 0">Accuracy Standard</a>
+<a href="#pros" style="color: #261000; text-decoration: none; padding: 6px 0">For Pros</a>
+<a href="#about" style="color: #261000; text-decoration: none; padding: 6px 0">Founder Story</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #5B4436; margin-bottom: 6px">Get involved</span>
+<a href="/waitlist/" style="color: #261000; text-decoration: none; padding: 6px 0">Waitlist</a>
+<a href="/survey/?src=site" style="color: #261000; text-decoration: none; padding: 6px 0">Skincare Survey</a>
+<a href="mailto:jelyn@pulsecosmeticsolutions.com" style="color: #261000; text-decoration: none; padding: 6px 0">jelyn@pulsecosmeticsolutions.com</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #5B4436; margin-bottom: 6px">Legal</span>
+<a href="/privacy/" style="color: #261000; text-decoration: none; padding: 6px 0">Privacy Policy</a>
+</div>
+</nav>
+</div>
+<div style="max-width: 1200px; margin: 40px auto 0; padding: 20px clamp(16px, 4vw, 48px) 0; border-top: 1px solid #E7D6C8; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; font-size: 13px; color: #5B4436">
+<span>&#169; 2026 Pulse Cosmetic Solutions</span>
+<span>Pulse is for ages 16 and up. Pulse is not a medical device and doesn't diagnose skin conditions.</span>
+</div>
 </footer>
 
+</div>
 <script>
-  // ---- Settings you can change ----
-  var CONFIG = {
-    // Paste your Google Apps Script web app URL here after setup. Leave empty for preview mode.
-    endpoint: "https://script.google.com/macros/s/AKfycbxqre8bK-vNamqo9zud4tY_bEJlVosERZZ0tTNo6Nk4iCiglGLiMmII71ca7P4Nw8cr5Q/exec",
-    // The public address of this page, used to build invite links.
-    siteUrl: "https://pulseskin.co/",
-    perkText: "Bring three friends and you're in the first beta group, before public launch."
-  };
-  // ---------------------------------
+(function () {
+  var steps = [
+    { label: "Line up your face", hint: "Even light, look straight ahead. The photo takes itself." },
+    { label: "Analyzing your skin", hint: "Checking texture, tone, pores and more." },
+    { label: "Mapping your skin", hint: "Marking where each concern shows up on your face." }
+  ];
+  var state = { phase: "scan", step: 0 };
+  var timers = {};
+  function later(name, ms, fn) { clearTimeout(timers[name]); timers[name] = setTimeout(fn, ms); }
+  function clearAll() { for (var k in timers) clearTimeout(timers[k]); }
 
-  var PAGE_LOADED = Date.now();
-  (function () {
-    var $ = function (id) { return document.getElementById(id); };
-    var form = $("waitlist"), err = $("formError"), btn = $("submitBtn");
-    $("perkText").textContent = CONFIG.perkText;
-    if (!CONFIG.endpoint) $("demoNote").hidden = false;
+  function vals() {
+    var st = steps[state.step];
+    return {
+      isScan: state.phase === "scan",
+      isReport: state.phase === "report",
+      isProducts: state.phase === "products",
+      isMapping: state.step === 2,
+      notMapping: state.step !== 2,
+      stepLabel: st.label,
+      stepHint: st.hint,
+      stepCount: (state.step + 1) + " of 3"
+    };
+  }
 
-    function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
-
-    function readRef() {
-      try {
-        var p = new URLSearchParams(window.location.search).get("ref");
-        if (p && /^[A-Z0-9]{6}$/.test(p)) { store("pulse_referred_by", p); return p; }
-      } catch (e) {}
-      return store("pulse_referred_by") || "";
-    }
-    var referredBy = readRef();
-
-    function newCode() {
-      var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", out = "";
-      var arr = new Uint32Array(6);
-      (window.crypto || window.msCrypto).getRandomValues(arr);
-      for (var i = 0; i < 6; i++) out += chars[arr[i] % chars.length];
-      return out;
-    }
-
-    function baseUrl() {
-      if (CONFIG.siteUrl) return CONFIG.siteUrl.replace(/[?#].*$/, "");
-      try { return window.location.origin + window.location.pathname; } catch (e) { return "https://pulse.app/"; }
-    }
-
-    function showDone(code) {
-      var link = baseUrl() + "?ref=" + code;
-      $("shareLink").value = link;
-      $("formView").hidden = true;
-      $("doneView").hidden = false;
-      if (navigator.share) $("shareBtn").hidden = false;
-    }
-
-    var existing = store("pulse_my_code");
-    if (existing && store("pulse_joined") === "1") showDone(existing);
-
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      err.hidden = true;
-      var email = $("email").value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-        err.textContent = "Enter a full email address, like name@example.com.";
-        err.hidden = false; $("email").focus(); return;
+  function render() {
+    var v = vals();
+    for (var pass = 0; pass < 4; pass++) {
+      var changed = false;
+      var tpls = document.querySelectorAll("template[data-if]");
+      for (var i = 0; i < tpls.length; i++) {
+        var tp = tpls[i];
+        if (!tp.isConnected) continue;
+        var on = !!v[tp.getAttribute("data-if")];
+        if (on && !tp._nodes) {
+          var frag = tp.content.cloneNode(true);
+          tp._nodes = Array.prototype.slice.call(frag.childNodes);
+          tp.parentNode.insertBefore(frag, tp.nextSibling);
+          changed = true;
+        } else if (!on && tp._nodes) {
+          tp._nodes.forEach(function (n) { if (n.parentNode) n.parentNode.removeChild(n); });
+          tp._nodes = null;
+          changed = true;
+        }
       }
-      var toneEl = form.querySelector('input[name="tone"]:checked');
-      var code = store("pulse_my_code") || newCode();
-      var payload = {
-        email: email,
-        skin_tone: toneEl ? toneEl.value : "",
-        my_code: code,
-        referred_by: referredBy === code ? "" : referredBy,
-        email_updates: $("updates").checked ? "yes" : "no",
-        joined_at: new Date().toISOString(),
-        hp: document.getElementById("website").value,
-        t: Date.now() - PAGE_LOADED
-      };
-      btn.disabled = true; btn.textContent = "Joining…";
+      if (!changed) break;
+    }
+    var texts = document.querySelectorAll("[data-text]");
+    for (var j = 0; j < texts.length; j++) texts[j].textContent = v[texts[j].getAttribute("data-text")];
+    var vid = document.querySelector("video[data-scan-video]");
+    if (vid && !vid._wired) {
+      vid._wired = true;
+      vid.muted = true;
+      vid.addEventListener("ended", showReport);
+      var p = vid.play();
+      if (p && p.catch) p.catch(function () {});
+    }
+  }
 
-      function finish() {
-        store("pulse_my_code", code); store("pulse_joined", "1");
-        showDone(code);
-      }
+  function set(patch) { for (var k in patch) state[k] = patch[k]; render(); }
 
-      if (!CONFIG.endpoint) { setTimeout(finish, 400); return; }
+  function startScan() {
+    set({ phase: "scan", step: 0 });
+    later("s1", 3200, function () { set({ step: 1 }); });
+    later("s2", 7600, function () { set({ step: 2 }); });
+    later("fallback", 17000, showReport);
+  }
+  function showReport() {
+    clearAll();
+    set({ phase: "report" });
+    later("products", 11500, function () { set({ phase: "products" }); });
+    later("restart", 22000, startScan);
+  }
 
-      fetch(CONFIG.endpoint, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      }).then(finish).catch(function () {
-        btn.disabled = false; btn.textContent = "Join the waitlist";
-        err.textContent = "We couldn't reach the sign-up list. Check your connection and try again.";
-        err.hidden = false;
-      });
-    });
-
-    $("copyBtn").addEventListener("click", function () {
-      var input = $("shareLink"), b = this;
-      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1800); }
-      try {
-        navigator.clipboard.writeText(input.value).then(done, function () { input.select(); });
-      } catch (e) { input.select(); }
-    });
-
-    $("shareBtn").addEventListener("click", function () {
-      try {
-        navigator.share({
-          title: "Pulse",
-          text: "I just joined the Pulse waitlist. It tells you what your skin needs and shows you whether your routine is working, tested on every skin tone. Join through my link:",
-          url: $("shareLink").value
-        }).catch(function () {});
-      } catch (e) {}
-    });
-  })();
+  startScan();
+})();
 </script>
-
 </body>
 </html>
