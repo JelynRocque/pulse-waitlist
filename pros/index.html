@@ -195,5 +195,41 @@
   </div>
 </main>
 <footer><div class="wrap">&#169; 2026 Pulse Cosmetic Solutions &#183; <a href="/privacy/">Privacy</a></div></footer>
+<script>
+  // Paste the Google Apps Script web app URL here. Leave empty to save to Netlify only.
+  var SHEET_ENDPOINT = "";
+  (function () {
+    var form = document.querySelector('form[name="pros-pilot"]');
+    if (!form) return;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true; btn.textContent = "Submitting…";
+      var fd = new FormData(form);
+      if (!fd.get("form-name")) fd.set("form-name", "pros-pilot");
+      var data = {};
+      fd.forEach(function (v, k) { data[k] = v; });
+      var id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+      var toSheet = SHEET_ENDPOINT ? fetch(SHEET_ENDPOINT, {
+        method: "POST", mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ form_name: "pros-pilot", id: id, created_at: new Date().toISOString(), data: data })
+      }).catch(function () {}) : Promise.resolve();
+      var toNetlify = fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(fd).toString()
+      });
+      Promise.all([toNetlify, toSheet]).then(function (res) {
+        if (!res[0].ok) throw new Error("netlify");
+        window.location.href = "/pros/thanks/";
+      }).catch(function () {
+        btn.disabled = false; btn.textContent = "Submit application";
+        alert("We couldn't send your application. Check your connection and try again.");
+      });
+    });
+  })();
+</script>
+
 </body>
 </html>
