@@ -169,7 +169,8 @@
   // screen: true = answer required and can end the survey
   var QUESTIONS = [
     { id: "q1_age", type: "radio", screen: true, title: "How old are you?",
-      options: [["under_18","Under 18"],["18_21","18–21"],["22_25","22–25"],["26_30","26–30"],["31_35","31–35"],["36_45","36–45"],["46_55","46–55"],["56_plus","56 or older"]] },
+      options: [["under_16","Under 16"],["16_17","16–17"],["18_21","18–21"],["22_25","22–25"],["26_30","26–30"],["31_35","31–35"],["36_45","36–45"],["46_55","46–55"],["56_plus","56 or older"]],
+      disqualify: ["under_16"] },
     { id: "q2_us", type: "radio", screen: true, title: "Do you live in the United States?",
       options: [["yes","Yes"],["no","No"]] },
     { id: "q3_bought", type: "radio", screen: true, title: "In the last six months, have you bought any skincare product for your face?",
@@ -372,7 +373,7 @@
   }
 
   var SCREEN_REASONS = {
-    q1_age: "This survey is only open to people aged 22 and older.",
+    q1_age: "This survey is only open to people aged 16 and older.",
     q2_us: "This survey is only open to people who live in the United States.",
     q3_bought: "This survey is only open to people who have bought a skincare product for their face in the last six months."
   };
