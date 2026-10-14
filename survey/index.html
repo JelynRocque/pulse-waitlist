@@ -169,13 +169,12 @@
   // screen: true = answer required and can end the survey
   var QUESTIONS = [
     { id: "q1_age", type: "radio", screen: true, title: "How old are you?",
-      options: [["under_22","Under 22"],["22_25","22–25"],["26_30","26–30"],["31_35","31–35"],["36_45","36–45"],["46_55","46–55"],["56_plus","56 or older"]],
-      disqualify: ["under_22"] },
+      options: [["under_18","Under 18"],["18_21","18–21"],["22_25","22–25"],["26_30","26–30"],["31_35","31–35"],["36_45","36–45"],["46_55","46–55"],["56_plus","56 or older"]] },
     { id: "q2_us", type: "radio", screen: true, title: "Do you live in the United States?",
-      options: [["yes","Yes"],["no","No"]], disqualify: ["no"] },
+      options: [["yes","Yes"],["no","No"]] },
     { id: "q3_bought", type: "radio", screen: true, title: "In the last six months, have you bought any skincare product for your face?",
       help: "For example a cleanser, moisturizer, serum or sunscreen.",
-      options: [["yes","Yes"],["no","No"]], disqualify: ["no"] },
+      options: [["yes","Yes"],["no","No"]] },
     { id: "q4_shade", type: "shade", title: "Which shade is closest to the skin on your face?",
       help: "Choose the one that looks closest. There's no wrong answer." },
     { id: "q5_concerns", type: "checkbox", title: "Which skin concerns do you want to improve?",
@@ -306,7 +305,7 @@
     var isLast = position(idx) === totalVisible();
     app.innerHTML =
       '<section>' +
-      '<p class="eyebrow">' + esc(q.section || (q.screen ? "A few quick checks" : "Your skin and routine")) + '</p>' +
+      '<p class="eyebrow">' + esc(q.section || (q.screen ? "About you" : "Your skin and routine")) + '</p>' +
       (q.describe ? '<div class="desc"><b>About Pulse</b>' + esc(DESCRIPTION) + '</div>' : '') +
       '<h2 class="q" id="qtitle" tabindex="-1">' + esc(q.title) + '</h2>' +
       (q.help ? '<p class="help">' + esc(q.help) + '</p>' : '<div style="height:12px"></div>') +
