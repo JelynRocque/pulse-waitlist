@@ -23,6 +23,12 @@ Pulse is in early access (waitlist open). It's for anyone 16 and up. Pulse is no
 - [Pulse for Pros pilot](https://pulseskin.co/pros/): application for licensed estheticians
 - [Privacy notice](https://pulseskin.co/privacy/): how Pulse handles waitlist and survey information
 
+## Guides
+
+- [How to Fade Dark Spots on Darker Skin](https://pulseskin.co/learn/fade-dark-spots-darker-skin/): Why dark spots hit harder on medium and deep skin, what actually fades them, what to skip, and when to see a dermatologist.
+- [Does AI Skin Analysis Work on Dark Skin?](https://pulseskin.co/learn/ai-skin-analysis-dark-skin/): What the research says about AI skin analysis on deeper skin tones, why the gap exists, and how to tell whether a skin app was built for your skin.
+- [Skincare Routine Order: AM and PM, Step by Step](https://pulseskin.co/learn/skincare-routine-order/): The right order to apply skincare in the morning and at night, where prescriptions and serums go, and why fewer products often works better.
+
 ## Contact
 
 hello@pulsecosmeticsolutions.com
