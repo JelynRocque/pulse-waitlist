@@ -309,6 +309,8 @@
               <label class="tone"><input type="radio" name="tone" id="tone-mst_10" value="mst_10"><span><i style="background:#292420"></i>Onyx</span></label>
               <label class="tone tone-none"><input type="radio" name="tone" id="tone-prefer-not" value="prefer_not"><span><i style="background:repeating-linear-gradient(45deg,#FFF3E8 0 4px,#E7D6C8 4px 8px)"></i>Prefer not to say</span></label>
             </div>
+            <button type="button" class="sf-open" data-shade-finder="tone" aria-describedby="shadePicked" hidden>Not Sure? Find My Shade</button>
+            <p class="sf-picked" id="shadePicked" aria-live="polite"></p>
           </fieldset>
           <label class="check" for="updates">
             <input type="checkbox" id="updates" name="updates">
@@ -416,6 +418,7 @@
   </div>
 </footer>
 
+<script src="/assets/shade-finder.js" defer></script>
 <script>
   // ---- Settings you can change ----
   var CONFIG = {
