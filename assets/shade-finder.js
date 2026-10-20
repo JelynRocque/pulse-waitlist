@@ -11,6 +11,14 @@
  * skin-colorimetry measure used in dermatology research, and mapped to the
  * ten Monk shades. Shade names and swatches are read from the page.
  *
+ * Undertone (optional): the same paper-corrected color also gives a hue
+ * angle, redder for cool undertones and more golden for warm ones. Add
+ * data-shade-undertone="<radio name>" to the button, plus a
+ * <script type="application/json" id="pulse-shades"> map of
+ * { mst_N: { cool, neutral, warm, olive? } } swatch colors, and the result
+ * suggests cool, neutral or warm too. Olive is never auto-suggested: a phone
+ * camera can't tell it apart reliably, so people pick it themselves.
+ *
  * Everything runs in the browser. No image or video is saved, uploaded or
  * sent, and there is no face detection or face mapping. Only the shade the
  * person picks is submitted, the same as tapping it by hand.
@@ -35,7 +43,12 @@
     betweenMargin: 3,
     framesPerReading: 12,
     frameGapMs: 70,
-    goodChecksBeforeAuto: 2
+    goodChecksBeforeAuto: 2,
+    // Skin hue angle (CIELAB h, degrees) cut points for undertone. Below
+    // coolBelow suggests cool, above warmAbove suggests warm, between is
+    // neutral. Starting values from skin colorimetry ranges; tune after
+    // testing with people who know their undertone.
+    undertoneHue: { coolBelow: 54, warmAbove: 64 }
   };
 
   // ---------- Color math ----------
@@ -163,6 +176,12 @@
     return { best: idx, alt: alt, between: Math.min(toAbove, toBelow) < SETTINGS.betweenMargin };
   }
 
+  function classifyUndertone(lab) {
+    var h = Math.atan2(lab[2], lab[1]) * 180 / Math.PI, u = SETTINGS.undertoneHue;
+    return h < u.coolBelow ? "cool" : h > u.warmAbove ? "warm" : "neutral";
+  }
+  function titleCase(w) { return w.charAt(0).toUpperCase() + w.slice(1); }
+
   var MESSAGES = {
     dark: "It's too dark. Face a window or a bright lamp.",
     center: "Fit your face inside the oval.",
@@ -242,6 +261,18 @@
       return { input: r, name: label ? label.textContent.trim() : r.value, color: sw ? getComputedStyle(sw).backgroundColor : "#ccc" };
     });
     if (shades.length !== SETTINGS.itaCuts.length + 1) return;
+
+    // Optional undertone step
+    var utName = trigger.getAttribute("data-shade-undertone"), palette = null;
+    if (utName) {
+      try { palette = JSON.parse(document.getElementById("pulse-shades").textContent); } catch (e) { palette = null; }
+    }
+    function utInput(u) { return utName ? document.querySelector('input[type="radio"][name="' + utName + '"][value="' + u + '"]') : null; }
+    function swatchFor(shade, u) {
+      var fam = palette && palette[shade.input.value];
+      return (fam && u && fam[u]) || shade.color;
+    }
+    function fullName(shade, u) { return u ? shade.name + " " + titleCase(u) : shade.name; }
 
     var canUseCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext !== false;
     trigger.hidden = false;
@@ -396,29 +427,36 @@
         var res = combine(frames);
         if (res.issue) { setStatus(res.issue); return; }
         result = classify(res.ita);
+        result.undertone = palette && utInput("neutral") ? classifyUndertone(res.lab) : null;
         stopCamera();
         showResult();
       })();
     }
 
     function showResult() {
-      var best = shades[result.best], alt = shades[result.alt];
-      q("[data-best-dot]").style.background = best.color;
-      q("[data-best-name]").textContent = best.name;
-      q("[data-use-best]").textContent = "Use " + best.name;
-      q("[data-note]").textContent = result.between
+      var best = shades[result.best], alt = shades[result.alt], u = result.undertone;
+      var bestName = fullName(best, u), altName = fullName(alt, u);
+      q("[data-best-dot]").style.background = swatchFor(best, u);
+      q("[data-best-name]").textContent = bestName;
+      q("[data-use-best]").textContent = "Use " + bestName;
+      var note = result.between
         ? "You're right between " + best.name + " and " + alt.name + ". Go with whichever feels more like you."
         : "If another shade feels more like you, pick that one instead.";
-      q("[data-alt-dot]").style.background = alt.color;
-      q("[data-use-alt]").textContent = alt.name;
+      if (u) note += " Undertone is harder for a camera to read than depth, and olive is the hardest, so change it on the form if it doesn't feel right.";
+      q("[data-note]").textContent = note;
+      q("[data-alt-dot]").style.background = swatchFor(alt, u);
+      q("[data-use-alt]").textContent = altName;
       show("result");
       q("[data-use-best]").focus();
     }
 
     function choose(shade) {
+      var u = result && result.undertone;
       shade.input.checked = true;
       shade.input.dispatchEvent(new Event("change", { bubbles: true }));
-      if (picked) picked.textContent = "Suggested by Find My Shade: " + shade.name + ". You can change it anytime.";
+      var ui = u && utInput(u);
+      if (ui) { ui.checked = true; ui.dispatchEvent(new Event("change", { bubbles: true })); }
+      if (picked) picked.textContent = "Suggested by Find My Shade: " + fullName(shade, ui ? u : null) + ". You can change it anytime.";
       focusAfter = shade.input;
       close();
     }
@@ -466,7 +504,8 @@
     });
     document.addEventListener("visibilitychange", function () { if (document.hidden && stream) close(); });
     trigger.addEventListener("click", open);
-    radios.forEach(function (r) { r.addEventListener("change", function (e) { if (e.isTrusted && picked) picked.textContent = ""; }); });
+    var watch = radios.concat(utName ? Array.prototype.slice.call(document.querySelectorAll('input[type="radio"][name="' + utName + '"]')) : []);
+    watch.forEach(function (r) { r.addEventListener("change", function (e) { if (e.isTrusted && picked) picked.textContent = ""; }); });
   }
 
   function init() {
@@ -479,7 +518,7 @@
     });
   }
 
-  window.PulseShadeFinder = { analyzeFrame: analyzeFrame, combine: combine, classify: classify, labFromLinear: labFromLinear, ita: ita, SETTINGS: SETTINGS, FACE: FACE, SKIN: SKIN, PAPER: PAPER };
+  window.PulseShadeFinder = { analyzeFrame: analyzeFrame, combine: combine, classify: classify, classifyUndertone: classifyUndertone, labFromLinear: labFromLinear, ita: ita, SETTINGS: SETTINGS, FACE: FACE, SKIN: SKIN, PAPER: PAPER };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
