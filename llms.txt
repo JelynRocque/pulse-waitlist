@@ -1,0 +1,28 @@
+# Pulse
+
+> Pulse is an AI skin analysis mobile app from Pulse Cosmetic Solutions. It scans your face, identifies your skin type and concerns, builds an AM and PM skincare routine around what it finds, and tracks whether the routine is working over time. Every skin concern Pulse detects is tested across all ten shades of the Monk Skin Tone scale before it ships.
+
+Pulse is in early access (waitlist open). It's for anyone 16 and up. Pulse is not a medical device and does not diagnose skin conditions.
+
+## Key facts
+
+- Skin scan: guided face capture, then analysis of texture, tone, pores, dark spots, wrinkles, redness, moisture and more, mapped to where each concern appears on the face.
+- Routine: an AM and PM routine built from the scan; users can swap in products they already own.
+- Progress: rescan anytime and compare side by side against the first scan.
+- Accuracy standard: each concern tested on 30+ consented people per Monk Skin Tone shade, labeled by board-certified dermatologists; no shade's accuracy may trail the best-served shade by more than 5 points; public accuracy reports by shade every 6 months starting at launch.
+- Privacy: written consent before any scan; follows Illinois' biometric privacy law (BIPA) everywhere it operates; scans private by default, never sold, deletable anytime; model training is opt-in for adults only.
+- Shopping: Pulse is not a store. It recommends what to look for and links out to existing retailers (may earn a commission).
+- Community: follow friends and creators with similar skin and copy their routines; scans stay private unless shared.
+- Pulse for Pros: licensed estheticians, medspas and dermatology offices can follow consenting clients' progress and recommend products and treatments. Founding pilot of five licensed estheticians, free.
+- Founder: Jelyn Andrews, Founder and CEO, Pulse Cosmetic Solutions (previously at Oracle, LinkedIn and Meta).
+
+## Pages
+
+- [Home](https://pulseskin.co/): what Pulse does, accuracy standard, privacy, Pulse for Pros, founder story, FAQ
+- [Join the waitlist](https://pulseskin.co/waitlist/): early access sign-up
+- [Pulse for Pros pilot](https://pulseskin.co/pros/): application for licensed estheticians
+- [Privacy notice](https://pulseskin.co/privacy/): how Pulse handles waitlist and survey information
+
+## Contact
+
+hello@pulsecosmeticsolutions.com

@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pulse: A Plan for Your Skin</title>
+<title>Pulse: AI Skin Analysis and a Skincare Routine Built for Your Skin</title>
+<link rel="canonical" href="https://pulseskin.co/">
+<meta name="robots" content="index, follow, max-image-preview:large">
 <meta property="og:site_name" content="Pulse">
 <meta property="og:image" content="https://pulseskin.co/assets/og-image-v2.png">
 <meta property="og:image:width" content="1200">
@@ -12,7 +14,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://pulseskin.co/assets/og-image-v2.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="description" content="Pulse scans your skin, builds an AM and PM routine around what it finds, and shows you whether it's working. Tested on every skin tone before it ships.">
+<meta name="description" content="Pulse is an AI skin analysis app that scans your face, builds an AM and PM skincare routine around what it finds, and shows you whether it's working. Tested on all ten Monk Skin Tone shades before it ships.">
 <meta property="og:title" content="Pulse: A Plan for Your Skin">
 <meta property="og:description" content="Pulse scans your skin, builds a routine around what it finds, and shows you whether it's working.">
 <meta property="og:url" content="https://pulseskin.co/">
@@ -44,6 +46,134 @@ a{color:#96262C}a:hover{color:#5E1418}
 .pulse-products-scroll{animation:pulseProductsScroll 10s ease-in-out both}
 @media (prefers-reduced-motion: reduce){.pulse-report-scroll,.pulse-products-scroll{animation:none}}
 </style>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "Organization",
+   "@id": "https://pulseskin.co/#org",
+   "name": "Pulse Cosmetic Solutions",
+   "alternateName": "Pulse",
+   "url": "https://pulseskin.co/",
+   "logo": "https://pulseskin.co/apple-touch-icon.png",
+   "email": "hello@pulsecosmeticsolutions.com",
+   "founder": {
+    "@id": "https://pulseskin.co/#founder"
+   }
+  },
+  {
+   "@type": "Person",
+   "@id": "https://pulseskin.co/#founder",
+   "name": "Jelyn Andrews",
+   "jobTitle": "Founder and CEO",
+   "image": "https://pulseskin.co/assets/founder.jpg",
+   "worksFor": {
+    "@id": "https://pulseskin.co/#org"
+   }
+  },
+  {
+   "@type": "WebSite",
+   "@id": "https://pulseskin.co/#website",
+   "name": "Pulse",
+   "url": "https://pulseskin.co/",
+   "publisher": {
+    "@id": "https://pulseskin.co/#org"
+   }
+  },
+  {
+   "@type": "MobileApplication",
+   "@id": "https://pulseskin.co/#app",
+   "name": "Pulse",
+   "applicationCategory": "HealthApplication",
+   "description": "AI skin analysis app that scans your face, builds an AM and PM skincare routine around what it finds, and tracks whether it's working. Every concern is tested across all ten Monk Skin Tone shades before it ships.",
+   "url": "https://pulseskin.co/",
+   "publisher": {
+    "@id": "https://pulseskin.co/#org"
+   },
+   "image": "https://pulseskin.co/assets/og-image-v2.png"
+  },
+  {
+   "@type": "FAQPage",
+   "@id": "https://pulseskin.co/#faq",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What is Pulse?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Pulse is an AI skin analysis app. It scans your face, tells you your skin type and what's actually going on, like dark spots, uneven tone, texture or dryness, then builds an AM and PM skincare routine around it. Rescan anytime to see whether your routine is working."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does Pulse work on darker skin tones?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes, and that's the point. Every skin concern Pulse detects is tested across all ten shades of the Monk Skin Tone scale before it reaches the app, with at least 30 consented people per shade, labeled by board-certified dermatologists. If a concern can't meet the bar on every shade, it doesn't ship."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How does the Pulse skin scan work?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "A guided face scan walks you through even lighting and positioning, then the photo takes itself. Pulse checks texture, tone, pores and more, and maps where each concern shows up on your face."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is my face scan data private?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Face scans are biometric data, so Pulse asks for your written consent before any scan and follows Illinois' biometric privacy law everywhere it operates. Scans are private by default, never sold, and deletable anytime. Using your images to train the model is opt-in, and adults only."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does Pulse sell skincare products?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. Pulse isn't a store. It tells you what to look for and sends you to the retailers you already shop, and you can keep using products you already own if they fit your routine. Pulse may earn a commission when you buy through a Pulse link."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Who can use Pulse?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Anyone 16 and up who wants a real plan for their skin. It's free to join the waitlist."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What is Pulse for Pros?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Pulse for Pros lets licensed estheticians, medspas and dermatology offices follow the progress of clients who choose to share it, and recommend products and treatments inside Pulse. The founding pilot starts with five licensed estheticians, free."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is Pulse a medical device?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. Pulse isn't a medical device and doesn't diagnose skin conditions. For a medical concern, see a dermatologist."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "When does Pulse launch?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Pulse is in early access now. Join the waitlist to be first to scan when it opens."
+     }
+    }
+   ]
+  }
+ ]
+}
+</script>
 </head>
 <body>
 <div style="font-family: Raleway, 'Helvetica Neue', sans-serif; color: #261000; background: #FFFBF7; font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased">
@@ -459,6 +589,23 @@ a{color:#96262C}a:hover{color:#5E1418}
 </div>
 </section>
 
+<section id="faq" style="padding: clamp(64px, 8vw, 112px) 0 0">
+<div style="max-width: 880px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px)">
+<p style="margin: 0 0 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #AB5B1E">FAQ</p>
+<h2 style="margin: 0 0 28px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: clamp(34px, 4.4vw, 54px); line-height: 1.08">Questions About Pulse</h2>
+<details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">What is Pulse?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">Pulse is an AI skin analysis app. It scans your face, tells you your skin type and what&#x27;s actually going on, like dark spots, uneven tone, texture or dryness, then builds an AM and PM skincare routine around it. Rescan anytime to see whether your routine is working.</p></details>
+<details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">Does Pulse work on darker skin tones?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">Yes, and that&#x27;s the point. Every skin concern Pulse detects is tested across all ten shades of the Monk Skin Tone scale before it reaches the app, with at least 30 consented people per shade, labeled by board-certified dermatologists. If a concern can&#x27;t meet the bar on every shade, it doesn&#x27;t ship.</p></details>
+<details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">How does the Pulse skin scan work?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">A guided face scan walks you through even lighting and positioning, then the photo takes itself. Pulse checks texture, tone, pores and more, and maps where each concern shows up on your face.</p></details>
+<details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">Is my face scan data private?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">Face scans are biometric data, so Pulse asks for your written consent before any scan and follows Illinois&#x27; biometric privacy law everywhere it operates. Scans are private by default, never sold, and deletable anytime. Using your images to train the model is opt-in, and adults only.</p></details>
+<details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">Does Pulse sell skincare products?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">No. Pulse isn&#x27;t a store. It tells you what to look for and sends you to the retailers you already shop, and you can keep using products you already own if they fit your routine. Pulse may earn a commission when you buy through a Pulse link.</p></details>
+<details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">Who can use Pulse?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">Anyone 16 and up who wants a real plan for their skin. It&#x27;s free to join the waitlist.</p></details>
+<details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">What is Pulse for Pros?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">Pulse for Pros lets licensed estheticians, medspas and dermatology offices follow the progress of clients who choose to share it, and recommend products and treatments inside Pulse. The founding pilot starts with five licensed estheticians, free.</p></details>
+<details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">Is Pulse a medical device?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">No. Pulse isn&#x27;t a medical device and doesn&#x27;t diagnose skin conditions. For a medical concern, see a dermatologist.</p></details>
+<details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">When does Pulse launch?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">Pulse is in early access now. Join the waitlist to be first to scan when it opens.</p></details>
+<div style="border-top: 1px solid #E7D6C8"></div>
+</div>
+</section>
+
 <section id="survey" style="padding: clamp(64px, 8vw, 112px) 0">
 <div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px)">
 <div style="position: relative; overflow: hidden; isolation: isolate; border-radius: 28px; background: linear-gradient(135deg, #81261A 0%, #AA5B1E 52%, #D79423 100%); color: #FFFBF7; padding: clamp(36px, 6vw, 72px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 32px">
@@ -488,6 +635,7 @@ a{color:#96262C}a:hover{color:#5E1418}
 <a href="#accuracy" style="color: #261000; text-decoration: none; padding: 6px 0">Accuracy Standard</a>
 <a href="#pros" style="color: #261000; text-decoration: none; padding: 6px 0">For Pros</a>
 <a href="#about" style="color: #261000; text-decoration: none; padding: 6px 0">Founder Story</a>
+<a href="#faq" style="color: #261000; text-decoration: none; padding: 6px 0">FAQ</a>
 </div>
 <div style="display: flex; flex-direction: column; gap: 4px">
 <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #5B4436; margin-bottom: 6px">Get involved</span>
