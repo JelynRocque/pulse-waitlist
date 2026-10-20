@@ -136,7 +136,15 @@
     font-size: 12px; font-weight: 500; line-height: 1.25;
     padding: 10px 4px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; background: #fff;
   }
-  .tone i { width: 26px; height: 26px; border-radius: 50%; display: block; border: 1px solid rgba(38,16,0,.12); }
+  .tone i {
+    width: 34px; height: 34px; border-radius: 50%; display: block; border: 1px solid rgba(38,16,0,.12);
+    /* Soft highlight and shadow so the swatch reads like skin in natural light, not a flat dot */
+    background:
+      radial-gradient(circle at 34% 30%, rgba(255,250,240,.42) 0, rgba(255,250,240,0) 46%),
+      radial-gradient(circle at 68% 78%, rgba(40,18,6,.22) 0, rgba(40,18,6,0) 62%),
+      var(--c);
+  }
+  .tone-none i { background: repeating-linear-gradient(45deg,#FFF3E8 0 4px,#E7D6C8 4px 8px); width: 26px; height: 26px; }
   .tone input:checked + span { border-color: var(--burnt-orange); box-shadow: inset 0 0 0 1px var(--burnt-orange); background: var(--paper); }
   .tone input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
   .check { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--espresso-soft); }
@@ -297,16 +305,16 @@
           <fieldset>
             <legend>Your shade <span>(optional)</span></legend>
             <div class="tones">
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_1" value="mst_1"><span><i style="background:#f6ede4"></i>Pearl</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_2" value="mst_2"><span><i style="background:#f3e7db"></i>Selenite</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_3" value="mst_3"><span><i style="background:#f7ead0"></i>Moonstone</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_4" value="mst_4"><span><i style="background:#eadaba"></i>Citrine</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_5" value="mst_5"><span><i style="background:#d7bd96"></i>Amber</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_6" value="mst_6"><span><i style="background:#a07e56"></i>Tiger&#x27;s Eye</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_7" value="mst_7"><span><i style="background:#825c43"></i>Bronzite</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_8" value="mst_8"><span><i style="background:#604134"></i>Smoky Quartz</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_9" value="mst_9"><span><i style="background:#3a312a"></i>Obsidian</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_10" value="mst_10"><span><i style="background:#292420"></i>Onyx</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_1" value="mst_1"><span><i style="--c:#f6ede4"></i>Pearl</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_2" value="mst_2"><span><i style="--c:#f3e7db"></i>Selenite</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_3" value="mst_3"><span><i style="--c:#f7ead0"></i>Moonstone</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_4" value="mst_4"><span><i style="--c:#eadaba"></i>Citrine</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_5" value="mst_5"><span><i style="--c:#d7bd96"></i>Amber</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_6" value="mst_6"><span><i style="--c:#a07e56"></i>Tiger&#x27;s Eye</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_7" value="mst_7"><span><i style="--c:#825c43"></i>Bronzite</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_8" value="mst_8"><span><i style="--c:#604134"></i>Smoky Quartz</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_9" value="mst_9"><span><i style="--c:#3a312a"></i>Obsidian</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_10" value="mst_10"><span><i style="--c:#292420"></i>Onyx</span></label>
               <label class="tone tone-none"><input type="radio" name="tone" id="tone-prefer-not" value="prefer_not"><span><i style="background:repeating-linear-gradient(45deg,#FFF3E8 0 4px,#E7D6C8 4px 8px)"></i>Prefer not to say</span></label>
             </div>
             <button type="button" class="sf-open" data-shade-finder="tone" aria-describedby="shadePicked" hidden>Not Sure? Find My Shade</button>
