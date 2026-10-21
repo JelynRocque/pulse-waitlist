@@ -1,13 +1,14 @@
 # Pulse
 
-> Pulse is an AI skin analysis mobile app from Pulse Cosmetic Solutions. It scans your face, identifies your skin type and concerns, builds an AM and PM skincare routine around what it finds, and tracks whether the routine is working over time. Every skin concern Pulse detects is tested across all ten shades of the Monk Skin Tone scale before it ships.
+> Pulse is an AI skin analysis mobile app from Pulse Cosmetic Solutions. It scans your face, identifies your skin type and concerns, gives a routine plan (which steps, how often, why) and builds an AM and PM skincare routine from it, and tracks whether the routine is working over time. Every skin concern Pulse detects is tested across all ten shades of the Monk Skin Tone scale before it ships.
 
 Pulse is in early access (waitlist open). It's for anyone 16 and up. Pulse is not a medical device and does not diagnose skin conditions.
 
 ## Key facts
 
 - Skin scan: guided face capture, then analysis of texture, tone, pores, dark spots, wrinkles, redness, moisture and more, mapped to where each concern appears on the face.
-- Routine: an AM and PM routine built from the scan; users can swap in products they already own.
+- Routine Plan: after the scan, what to do and how often (for example, a gentle exfoliant once a week, a retinoid two nights a week to start), with the reason for each step, adjusted for skin tone, sensitivity, age and pregnancy-safe preferences.
+- Routine: an AM and PM routine built from that plan; users can swap in products they already own.
 - Progress: rescan anytime and compare side by side against the first scan.
 - Accuracy standard: each concern tested on 30+ consented people per Monk Skin Tone shade, labeled by board-certified dermatologists; no shade's accuracy may trail the best-served shade by more than 5 points; public accuracy reports by shade every 6 months starting at launch.
 - Privacy: written consent before any scan; follows Illinois' biometric privacy law (BIPA) everywhere it operates; scans private by default, never sold, deletable anytime; model training is opt-in for adults only.
