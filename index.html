@@ -92,7 +92,12 @@ a{color:#96262C}a:hover{color:#5E1418}
 @keyframes appProductsScroll{0%,18%{transform:translateY(0)}82%,100%{transform:translateY(-170px)}}
 .app-report-scroll{animation:appReportScroll 11s ease-in-out both}
 .app-products-scroll{animation:appProductsScroll 10s ease-in-out both}
-@media (prefers-reduced-motion: reduce){.app-report-scroll,.app-products-scroll,.pulse-progress-fill{animation:none}}
+@keyframes appPlanScroll{0%,16%{transform:translateY(0)}84%,100%{transform:translateY(-330px)}}
+.app-plan-scroll{animation:appPlanScroll 11s ease-in-out both}
+.app-plan-badge{display:flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:32px;background:#F6ECE2;flex:none;font-size:12px;font-weight:700;color:#882E1A;letter-spacing:.02em}
+.app-plan-when{color:#882E1A}
+.app-plan-caution{background:#FFF2CC}
+@media (prefers-reduced-motion: reduce){.app-report-scroll,.app-plan-scroll,.app-products-scroll,.pulse-progress-fill{animation:none}}
 .app-body-strong{font-size:13px;font-weight:700;line-height:19px;color:#261000}
 .app-tips{gap:13px;padding:14px 16px}
 .app-tip{display:flex;align-items:center;gap:12px}
@@ -188,7 +193,7 @@ a{color:#96262C}a:hover{color:#5E1418}
      "name": "What is Pulse?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Pulse is an AI skin analysis app. It scans your face, tells you your skin type and what's actually going on, like dark spots, uneven tone, texture or dryness, then builds an AM and PM skincare routine around it. Rescan anytime to see whether your routine is working."
+      "text": "Pulse is an AI skin analysis app. It scans your face, tells you your skin type and what's actually going on, like dark spots, uneven tone, texture or dryness, then gives you a routine plan: which steps, how often, and why, built into an AM and PM routine. Rescan anytime to see whether it's working."
      }
     },
     {
@@ -287,7 +292,7 @@ a{color:#96262C}a:hover{color:#5E1418}
 <svg class="pulse-ripple" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="295 120 125 182" style="left: auto; right: 2%; top: 50%; width: 360px; height: 524px; margin: -262px 0 0 0"><path d="M416.203 235.545C418.208 235.545 419.833 224.99 419.833 211.97C419.833 198.95 418.208 188.395 416.203 188.395C414.199 188.395 412.573 198.95 412.573 211.97C412.573 224.99 414.199 235.545 416.203 235.545Z"></path><path d="M400.127 259.898C402.418 259.898 404.276 237.86 404.276 210.675C404.276 183.489 402.418 161.451 400.127 161.451C397.836 161.451 395.979 183.489 395.979 210.675C395.979 237.86 397.836 259.898 400.127 259.898Z"></path><path d="M382.499 275.442C385.649 275.442 388.203 246.444 388.203 210.674C388.203 174.904 385.649 145.907 382.499 145.907C379.349 145.907 376.795 174.904 376.795 210.674C376.795 246.444 379.349 275.442 382.499 275.442Z"></path><path d="M361.497 285.286C365.363 285.286 368.497 252.229 368.497 211.452C368.497 170.674 365.363 137.617 361.497 137.617C357.631 137.617 354.497 170.674 354.497 211.452C354.497 252.229 357.631 285.286 361.497 285.286Z"></path><path d="M307.83 301.867C314.703 301.867 320.274 261.155 320.274 210.934C320.274 160.712 314.703 120 307.83 120C300.957 120 295.385 160.712 295.385 210.934C295.385 261.155 300.957 301.867 307.83 301.867Z"></path><path d="M337.387 288.913C342.255 288.913 346.201 254.116 346.201 211.192C346.201 168.268 342.255 133.471 337.387 133.471C332.518 133.471 328.572 168.268 328.572 211.192C328.572 254.116 332.518 288.913 337.387 288.913Z"></path></svg>
 <p style="margin: 0 0 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #FFD530">AI skin analysis &#183; Early access</p>
 <h1 style="margin: 0 0 24px; font-family: 'Gilda Display', Didot, Georgia, serif; font-weight: 400; font-size: clamp(44px, 6.4vw, 84px); line-height: 1.0; letter-spacing: -0.01em; text-wrap: balance; color: #FFFBF7">Your skin has concerns. Now it has a <em style="color: #FFD530">plan</em>.</h1>
-<p style="margin: 0 0 36px; font-size: 19px; max-width: 32em; color: #FFF1E4">Pulse scans your face, tells you what's actually going on, builds an AM and PM routine around it, and shows you whether it's working. No guesswork, just a plan built for your skin.</p>
+<p style="margin: 0 0 36px; font-size: 19px; max-width: 32em; color: #FFF1E4">Pulse scans your face, tells you what's actually going on, gives you a plan for what to do and how often, builds your AM and PM routine from it, and shows you whether it's working. No guesswork, just a plan built for your skin.</p>
 <div style="display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center">
 <a href="/waitlist/" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 30px; border-radius: 999px; background: #261000; color: #FFFBF7; text-decoration: none; font-weight: 700; letter-spacing: 0.03em">Join the waitlist</a>
 <a href="/survey/?src=site" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 28px; border-radius: 999px; border: 1.5px solid #FFFBF7; color: #FFFBF7; text-decoration: none; font-weight: 700; letter-spacing: 0.03em">Take the skincare survey</a>
@@ -405,6 +410,20 @@ a{color:#96262C}a:hover{color:#5E1418}
 </div></div>
 </template>
 
+<template data-if="isPlan">
+<div class="app-scroll pulse-fade"><div class="app-content app-plan-scroll">
+<div class="app-topbar"><span class="app-back"><img src="/assets/app-ui/icon-back.svg" alt="" width="18" height="18"></span><span class="app-display-l">Your Routine Plan</span></div>
+<p class="app-body-l">What to do and how often, built from your scan. Products come next.</p>
+<div class="app-card app-product"><span class="app-label app-brand">FOCUS &#183; DARK CIRCLES 59 &#183; PORES 65 &#183; WRINKLES 66</span><span class="app-product-row"><span class="app-plan-badge">DAILY</span><span class="app-col"><b class="app-body-l-strong">Wash with a gentle gel cleanser</b><span class="app-caption">Clears oil from pores without stripping, so the actives after it are tolerated.</span><b class="app-caption-strong app-plan-when">Morning and night</b></span></span></div>
+<div class="app-card app-product"><span class="app-label app-brand">MORNING &#183; DARK CIRCLES</span><span class="app-product-row"><span class="app-plan-badge">DAILY</span><span class="app-col"><b class="app-body-l-strong">Caffeine eye cream, then SPF 30+</b><span class="app-caption">Caffeine constricts the vessels that show through thin under-eye skin; SPF keeps under-eye pigment from darkening.</span><b class="app-caption-strong app-plan-when">Every morning</b></span></span></div>
+<div class="app-card app-product"><span class="app-label app-brand">EVENING &#183; WRINKLES</span><span class="app-product-row"><span class="app-plan-badge">2&#215;/WK</span><span class="app-col"><b class="app-body-l-strong">Retinoid at night, two nights a week to start</b><span class="app-caption">Best-evidenced ingredient for fine lines. Build to three nights once there is no peeling.</span><b class="app-caption-strong app-plan-when">Twice a week, then 3 times</b></span></span></div>
+<div class="app-card app-product"><span class="app-label app-brand">EVENING &#183; PORES</span><span class="app-product-row"><span class="app-plan-badge">1&#215;/WK</span><span class="app-col"><b class="app-body-l-strong">Exfoliate with a gentle BHA</b><span class="app-caption">Salicylic acid 2% clears what makes pores look large. Once a week to start, never on a retinoid night.</span><b class="app-caption-strong app-plan-when">Once a week, then twice</b></span></span></div>
+<div class="app-card app-product app-plan-caution"><span class="app-label app-brand">BEFORE YOU START</span><span class="app-caption">&#8226; Gentle acids only: on deeper skin tones irritation turns into dark marks.</span><span class="app-caption">&#8226; One new product at a time, three to four days apart.</span><span class="app-caption">&#8226; Rescan in 14 days and the plan adjusts.</span></div>
+<span class="app-btn-primary">See Products for This Plan</span>
+<p class="app-caption" style="text-align: center; margin: 0">Pulse suggests routines from your scan and skin profile; it is not medical advice.</p>
+</div></div>
+</template>
+
 <template data-if="isProducts">
 <div class="app-scroll pulse-fade"><div class="app-content app-products-scroll">
 <div class="app-topbar"><span class="app-back"><img src="/assets/app-ui/icon-back.svg" alt="" width="18" height="18"></span><span class="app-display-l">Your Picks</span></div>
@@ -421,7 +440,7 @@ a{color:#96262C}a:hover{color:#5E1418}
 </div>
 </div>
 </div>
-<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #FFF1E4">Real scan &#183; Sample product picks</span>
+<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #FFF1E4">Real scan &#183; Sample plan and product picks</span>
 </div>
 </div>
 </div>
@@ -474,8 +493,8 @@ a{color:#96262C}a:hover{color:#5E1418}
 </div>
 <div>
 <p style="margin: 0 0 4px; font-family: 'Gilda Display', Georgia, serif; font-size: 18px; color: #AB5B1E">02 &#183; Routine</p>
-<h3 style="margin: 0 0 8px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.15">Get a routine that fits</h3>
-<p style="margin: 0; color: #5B4436; font-size: 15px">Pulse builds an AM and PM routine from your scan. Check it off each day, and swap in products you already own.</p>
+<h3 style="margin: 0 0 8px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.15">Get a plan, then a routine that fits</h3>
+<p style="margin: 0; color: #5B4436; font-size: 15px">Pulse tells you what to do and how often, like exfoliating once a week with a gentle acid, then builds your AM and PM routine from that plan. Check it off each day, and swap in products you already own.</p>
 </div>
 </div>
 
@@ -658,7 +677,7 @@ a{color:#96262C}a:hover{color:#5E1418}
 <div style="max-width: 880px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px)">
 <p style="margin: 0 0 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #AB5B1E">FAQ</p>
 <h2 style="margin: 0 0 28px; font-family: 'Gilda Display', Georgia, serif; font-weight: 400; font-size: clamp(34px, 4.4vw, 54px); line-height: 1.08">Questions About Pulse</h2>
-<details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">What is Pulse?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">Pulse is an AI skin analysis app. It scans your face, tells you your skin type and what&#x27;s actually going on, like dark spots, uneven tone, texture or dryness, then builds an AM and PM skincare routine around it. Rescan anytime to see whether your routine is working.</p></details>
+<details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">What is Pulse?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">Pulse is an AI skin analysis app. It scans your face, tells you your skin type and what&#x27;s actually going on, like dark spots, uneven tone, texture or dryness, then gives you a routine plan: which steps, how often, and why, built into an AM and PM routine. Rescan anytime to see whether it's working.</p></details>
 <details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">Does Pulse work on darker skin tones?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">Yes, and that&#x27;s the point. Every skin concern Pulse detects is tested across all ten shades of the Monk Skin Tone scale before it reaches the app, with at least 30 consented people per shade, labeled by board-certified dermatologists. If a concern can&#x27;t meet the bar on every shade, it doesn&#x27;t ship.</p></details>
 <details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">How does the Pulse skin scan work?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">A guided face scan walks you through even lighting and positioning, then the photo takes itself. Pulse checks texture, tone, pores and more, and maps where each concern shows up on your face.</p></details>
 <details style="border-top: 1px solid #E7D6C8; padding: 6px 0"><summary style="cursor: pointer; list-style-position: outside; padding: 14px 0; font-weight: 700; font-size: 17px; color: #261000">Is my face scan data private?</summary><p style="margin: 0 0 16px; max-width: 46em; color: #5B4436">Face scans are biometric data, so Pulse asks for your written consent before any scan and follows Illinois&#x27; biometric privacy law everywhere it operates. Scans are private by default, never sold, and deletable anytime. Using your images to train the model is opt-in, and adults only.</p></details>
@@ -766,6 +785,7 @@ a{color:#96262C}a:hover{color:#5E1418}
     return {
       isScan: state.phase === "scan",
       isReport: state.phase === "report",
+      isPlan: state.phase === "plan",
       isProducts: state.phase === "products",
       isLineUp: state.step === 0,
       isAnalyzing: state.step === 1,
@@ -856,8 +876,9 @@ a{color:#96262C}a:hover{color:#5E1418}
     var on = document.querySelectorAll(".app-spot.on");
     for (var q = 0; q < on.length; q++) on[q].classList.remove("on");
     set({ phase: "report" });
-    later("products", 11500, function () { set({ phase: "products" }); });
-    later("restart", 22000, startScan);
+    later("plan", 11500, function () { set({ phase: "plan" }); });
+    later("products", 23000, function () { set({ phase: "products" }); });
+    later("restart", 33500, startScan);
   }
 
   startScan();
