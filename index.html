@@ -23,7 +23,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%22295%20120%20125%20182%22%20fill%3D%22%2396262C%22%3E%3Cpath%20d%3D%22M416.203%20235.545C418.208%20235.545%20419.833%20224.99%20419.833%20211.97C419.833%20198.95%20418.208%20188.395%20416.203%20188.395C414.199%20188.395%20412.573%20198.95%20412.573%20211.97C412.573%20224.99%20414.199%20235.545%20416.203%20235.545Z%22%20/%3E%3Cpath%20d%3D%22M400.127%20259.898C402.418%20259.898%20404.276%20237.86%20404.276%20210.675C404.276%20183.489%20402.418%20161.451%20400.127%20161.451C397.836%20161.451%20395.979%20183.489%20395.979%20210.675C395.979%20237.86%20397.836%20259.898%20400.127%20259.898Z%22%20/%3E%3Cpath%20d%3D%22M382.499%20275.442C385.649%20275.442%20388.203%20246.444%20388.203%20210.674C388.203%20174.904%20385.649%20145.907%20382.499%20145.907C379.349%20145.907%20376.795%20174.904%20376.795%20210.674C376.795%20246.444%20379.349%20275.442%20382.499%20275.442Z%22%20/%3E%3Cpath%20d%3D%22M361.497%20285.286C365.363%20285.286%20368.497%20252.229%20368.497%20211.452C368.497%20170.674%20365.363%20137.617%20361.497%20137.617C357.631%20137.617%20354.497%20170.674%20354.497%20211.452C354.497%20252.229%20357.631%20285.286%20361.497%20285.286Z%22%20/%3E%3Cpath%20d%3D%22M307.83%20301.867C314.703%20301.867%20320.274%20261.155%20320.274%20210.934C320.274%20160.712%20314.703%20120%20307.83%20120C300.957%20120%20295.385%20160.712%20295.385%20210.934C295.385%20261.155%20300.957%20301.867%20307.83%20301.867Z%22%20/%3E%3Cpath%20d%3D%22M337.387%20288.913C342.255%20288.913%20346.201%20254.116%20346.201%20211.192C346.201%20168.268%20342.255%20133.471%20337.387%20133.471C332.518%20133.471%20328.572%20168.268%20328.572%20211.192C328.572%20254.116%20332.518%20288.913%20337.387%20288.913Z%22%20/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&amp;family=Raleway:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&amp;family=Playfair+Display&amp;family=Raleway:wght@400;500;600;700&amp;display=swap">
 <style>
 body{margin:0;background:#FFFBF7}
 a{color:#96262C}a:hover{color:#5E1418}
@@ -36,16 +36,66 @@ a{color:#96262C}a:hover{color:#5E1418}
 .pulse-ripple-sm{width:200px;height:291px;margin:-145px 0 0 -100px}
 @keyframes pulseRipple{0%,100%{transform:scale(1);opacity:.08}50%{transform:scale(1.06);opacity:.18}}
 @media (prefers-reduced-motion: reduce){.pulse-hero-bg,.pulse-glow,.pulse-ripple{animation:none}}
-@keyframes pulseReportScroll{0%,14%{transform:translateY(0)}86%,100%{transform:translateY(-330px)}}
-@keyframes pulseProductsScroll{0%,16%{transform:translateY(0)}84%,100%{transform:translateY(-250px)}}
-@keyframes pulseProgress{from{width:0}to{width:100%}}
-.pulse-progress{animation:pulseProgress 14.2s linear both}
 @keyframes pulsePop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
 .pulse-pop{animation:pulsePop .45s cubic-bezier(.2,.9,.3,1.3) both}
 .pulse-fade{animation:pulseFade .5s ease both}
-.pulse-report-scroll{animation:pulseReportScroll 11s ease-in-out both}
-.pulse-products-scroll{animation:pulseProductsScroll 10s ease-in-out both}
-@media (prefers-reduced-motion: reduce){.pulse-report-scroll,.pulse-products-scroll{animation:none}}
+/* App mockup: built at the Figma frame size (440 wide) and scaled into the phone */
+.app-viewport{position:relative;width:272px;height:498px;border-radius:37px;overflow:hidden;background:#FFFBF7}
+.app-screen{position:absolute;left:0;top:0;width:440px;height:806px;transform:scale(.61818);transform-origin:0 0;background:#FFFBF7;color:#261000;font-family:Raleway,'Helvetica Neue',Arial,sans-serif;text-align:left}
+.app-status{position:relative;z-index:2;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 24px 0 28px;background:#FFFBF7;font-size:13px;font-weight:700;line-height:19px}
+.app-status img{display:block}
+.app-content{display:flex;flex-direction:column;gap:16px;padding:8px 24px 40px;box-sizing:border-box;width:440px}
+.app-scroll{position:absolute;left:0;top:44px;width:440px;height:762px;overflow:hidden}
+.app-topbar{display:flex;align-items:center;gap:12px;height:56px;padding:0 24px;flex:none}
+.app-back{position:relative;width:32px;height:32px;box-sizing:border-box;border:1px solid #261000;border-radius:16px;background:#FFFFFF;flex:none}
+.app-back img{position:absolute;left:6px;top:6px;display:block}
+.app-display-l{font-family:'Playfair Display',Georgia,serif;font-size:32px;line-height:38px;white-space:nowrap}
+.app-display-m{font-family:'Playfair Display',Georgia,serif;font-size:24px;line-height:30px;flex:1 0 0;min-width:0}
+.app-display-xl{font-family:'Playfair Display',Georgia,serif;font-size:42px;line-height:48px;color:#FFFFFF;flex:1 0 0}
+.app-title{font-size:20px;font-weight:500;line-height:26px;flex:1 0 0}
+.app-body{margin:0;font-size:13px;line-height:19px;color:#595959}
+.app-body-l{margin:0;font-size:15px;line-height:22px;color:#595959}
+.app-body-l-strong{font-size:15px;font-weight:700;line-height:22px;color:#261000}
+.app-caption{font-size:12px;line-height:17px;color:#595959}
+.app-caption-strong{font-size:12px;font-weight:700;line-height:17px;color:#261000}
+.app-label{font-size:11px;font-weight:700;line-height:14px;color:#FFFFFF}
+.app-brand{color:#882E1A}
+.app-step-count{font-size:12px;font-weight:700;line-height:17px;color:#882E1A;white-space:nowrap}
+.app-row{display:flex;align-items:center;gap:8px;width:100%}
+.app-col{display:flex;flex-direction:column;gap:2px;flex:1 0 0;min-width:0}
+.app-camera{position:relative;width:392px;height:430px;border-radius:24px;overflow:hidden;background:#2A1F18;flex:none}
+.app-camera video{position:absolute;left:0;top:0;width:100%;height:102%;object-fit:cover;object-position:50% 0;display:block}
+.app-oval{position:absolute;left:81px;top:50px;display:block}
+.app-chips{position:absolute;left:0;right:0;top:380px;display:flex;justify-content:center;gap:6px}
+.app-chip{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.18);color:#FFFFFF;font-size:12px;font-weight:700;line-height:17px;white-space:nowrap}
+.app-camera .app-chip{background:rgba(42,31,24,.55);box-shadow:inset 0 0 0 999px rgba(255,255,255,.18)}
+.app-pill{position:absolute;padding:6px 10px;border-radius:999px;background:rgba(136,46,26,.9);color:#FFFFFF;font-size:12px;font-weight:700;line-height:17px;white-space:nowrap}
+.app-bar-block{display:flex;flex-direction:column;gap:6px;width:100%}
+.app-bar-row{display:flex;align-items:center;gap:8px;font-size:13px;line-height:19px}
+.app-bar-row span{flex:1 0 0}
+.app-bar-row b{font-weight:700}
+.app-track{position:relative;height:6px;border-radius:3px;background:#EEDCCD;overflow:hidden}
+.app-fill{position:absolute;left:0;top:0;height:6px;border-radius:3px;background:#882E1A}
+.app-fill-gold{background:#E4A524}
+.app-avatar-row{display:flex;align-items:center;gap:12px}
+.app-avatar{width:44px;height:44px;box-sizing:border-box;border:1.5px solid #E4A524;border-radius:22px;background:#EEDCCD;color:#882E1A;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.app-score-card{display:flex;flex-direction:column;gap:8px;padding:20px;border-radius:16px;background:linear-gradient(90deg,#882E1A,#E5A625)}
+.app-card{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid #261000;border-radius:16px;background:#FFFFFF}
+.app-product{gap:8px}
+.app-product-row{display:flex;align-items:center;gap:12px}
+.app-product-img{width:64px;height:64px;border-radius:12px;background:#EEDCCD;flex:none}
+.app-text-btn{font-size:13px;font-weight:700;line-height:19px;color:#882E1A}
+.app-means-card{display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid #E4A524;border-radius:16px;background:linear-gradient(90deg,#FCEFE2,#F3D7A0)}
+.app-btn-primary,.app-btn-secondary{display:flex;align-items:center;justify-content:center;padding:15px 24px;border-radius:999px;font-size:15px;font-weight:500;line-height:22px}
+.app-btn-primary{background:linear-gradient(90deg,#882E1A,#E5A625);color:#FFFFFF}
+.app-btn-secondary{background:#FFFFFF;border:1.2px solid #882E1A;color:#261000}
+@keyframes appProgress{from{width:0}to{width:100%}}
+.pulse-progress-fill{animation:appProgress 4.3s linear both}
+@keyframes appReportScroll{0%,14%{transform:translateY(0)}86%,100%{transform:translateY(-450px)}}
+@keyframes appProductsScroll{0%,18%{transform:translateY(0)}82%,100%{transform:translateY(-200px)}}
+.app-report-scroll{animation:appReportScroll 11s ease-in-out both}
+.app-products-scroll{animation:appProductsScroll 10s ease-in-out both}
+@media (prefers-reduced-motion: reduce){.app-report-scroll,.app-products-scroll,.pulse-progress-fill{animation:none}}
 </style>
 <script type="application/ld+json">
 {
@@ -220,145 +270,84 @@ a{color:#96262C}a:hover{color:#5E1418}
 <div style="position: relative; flex: 1 1 360px; min-width: 0; display: flex; justify-content: center">
 <div style="position: relative; width: 100%; max-width: 440px; border-radius: 28px; background: rgba(255,251,247,0.1); border: 1px solid rgba(255,251,247,0.28); padding: 40px 0 26px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 20px">
 <div style="width: 290px; border-radius: 46px; background: #1A0B00; padding: 9px; box-sizing: border-box; box-shadow: 0 2px 0 1px #3A2416 inset, 0 28px 56px -28px rgba(38,16,0,0.45)">
-<div style="border-radius: 37px; overflow: hidden; background: #1A0B00; display: flex; flex-direction: column">
-<div style="height: 54px; padding: 10px 16px 0; box-sizing: border-box; background: linear-gradient(120deg, #81261A 0%, #AA5B1E 55%, #D79423 100%); display: flex; align-items: center; justify-content: center; position: relative">
-<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFBF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 18px; top: 22px"><path d="M15 6l-6 6 6 6"></path></svg>
-<span style="font-family: 'Gilda Display', Georgia, serif; font-size: 20px; letter-spacing: 0.24em; color: #FFFBF7; padding-left: 0.24em">PULSE</span>
-</div>
-<div style="position: relative; width: 272px; height: 444px; overflow: hidden; background: #FFFBF7; color: #261000">
+<div class="app-viewport">
+<div class="app-screen">
+
+<div class="app-status"><span>9:41</span><img src="/assets/app-ui/status-indicators.svg" alt="" width="66" height="12"></div>
 
 <template data-if="isScan">
-<div style="position: relative; width: 272px; height: 444px; background: #1A0B00">
-<video src="/assets/scan.mp4" poster="/assets/scan-poster.jpg" autoplay muted playsinline preload="auto" data-scan-video aria-label="A real skin scan: guided face capture, analysis, then face zones mapped" style="position: absolute; left: 0; top: 0; width: 272px; height: 444px; object-fit: cover; display: block"></video>
-<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 98px; padding: 10px 12px 8px; box-sizing: border-box; background: linear-gradient(180deg, rgba(26,11,0,0) 0px, #1A0B00 6px); color: #FFFBF7; display: flex; flex-direction: column; justify-content: flex-end; gap: 5px">
+<div class="app-content">
+<div class="app-topbar"><span class="app-back"><img src="/assets/app-ui/icon-back.svg" alt="" width="18" height="18"></span><span class="app-display-l">Face Scan</span></div>
+<div class="app-camera">
+<video poster="/assets/scan-card-poster.jpg" autoplay muted playsinline preload="auto" data-scan-video aria-label="A real skin scan: guided face capture, analysis, then face zones mapped"><source src="/assets/scan-card.mp4" type="video/mp4"><source src="/assets/scan-card.webm" type="video/webm"></video>
+<img class="app-oval" src="/assets/app-ui/scan-oval.png" alt="" width="230" height="310">
+<template data-if="isLineUp">
+<div class="app-chips"><span class="app-chip">Lighting &#10003;</span><span class="app-chip">Look Straight</span><span class="app-chip">Come Closer</span></div>
+</template>
+<template data-if="isAnalyzing">
+<div class="app-chips"><span class="app-chip">Photo Captured &#183; Hold Still</span></div>
+</template>
 <template data-if="isMapping">
-<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px">
-<div class="pulse-pop" style="display: flex; flex-direction: column; align-items: center; gap: 3px; animation-delay: 0s"><span style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #81261A 0%, #AA5B1E 55%, #D79423 100%); color: #FFFBF7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">73</span><span style="font-size: 8px; font-weight: 700; color: #E9DCD2; white-space: nowrap">Skin score</span></div>
-<div class="pulse-pop" style="display: flex; flex-direction: column; align-items: center; gap: 3px; animation-delay: 0.35s"><span style="width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #E4A524; box-sizing: border-box; background: rgba(255,251,247,0.08); color: #FFFBF7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">75</span><span style="font-size: 8px; font-weight: 700; color: #E9DCD2">Spots</span></div>
-<div class="pulse-pop" style="display: flex; flex-direction: column; align-items: center; gap: 3px; animation-delay: 0.7s"><span style="width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #96262C; box-sizing: border-box; background: rgba(255,251,247,0.08); color: #FFFBF7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">66</span><span style="font-size: 8px; font-weight: 700; color: #E9DCD2">Wrinkles</span></div>
-<div class="pulse-pop" style="display: flex; flex-direction: column; align-items: center; gap: 3px; animation-delay: 1.05s"><span style="width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #AB5B1E; box-sizing: border-box; background: rgba(255,251,247,0.08); color: #FFFBF7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">71</span><span style="font-size: 8px; font-weight: 700; color: #E9DCD2">Texture</span></div>
-<div class="pulse-pop" style="display: flex; flex-direction: column; align-items: center; gap: 3px; animation-delay: 1.4s"><span style="width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #E4A524; box-sizing: border-box; background: rgba(255,251,247,0.08); color: #FFFBF7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">81</span><span style="font-size: 8px; font-weight: 700; color: #E9DCD2">Redness</span></div>
+<span class="app-pill pulse-pop" style="left: 150px; top: 90px; animation-delay: 0s">Redness 81</span>
+<span class="app-pill pulse-pop" style="left: 40px; top: 150px; animation-delay: .3s">Dark Circles 59</span>
+<span class="app-pill pulse-pop" style="left: 250px; top: 190px; animation-delay: .6s">Pores 65</span>
+<span class="app-pill pulse-pop" style="left: 60px; top: 270px; animation-delay: .9s">Spots 75</span>
+<span class="app-pill pulse-pop" style="left: 245px; top: 290px; animation-delay: 1.2s">Texture 71</span>
+</template>
+</div>
+<div class="app-row"><span class="app-display-m" data-text="stepLabel"></span><span class="app-step-count" data-text="stepCount"></span></div>
+<p class="app-body" data-text="stepHint"></p>
+<template data-if="isAnalyzing">
+<div class="app-bar-block">
+<div class="app-bar-row"><span>Progress</span><b data-count-up="4300">0</b></div>
+<div class="app-track"><div class="app-fill app-fill-gold pulse-progress-fill"></div></div>
 </div>
 </template>
-<template data-if="notMapping">
-<span style="font-size: 11px; color: #E9DCD2; line-height: 1.4" data-text="stepHint"></span>
-</template>
-<div style="display: flex; justify-content: space-between; align-items: baseline">
-<span style="font-family: 'Gilda Display', Georgia, serif; font-size: 13px; line-height: 1.1" data-text="stepLabel"></span>
-<span style="font-size: 10px; font-weight: 700; color: #FFD530" data-text="stepCount"></span>
-</div>
-<div style="height: 4px; border-radius: 999px; background: rgba(255,251,247,0.2); overflow: hidden"><div class="pulse-progress" style="height: 4px; border-radius: 999px; background: linear-gradient(90deg, #AA5B1E 0%, #E4A524 60%, #FFD530 100%)"></div></div>
-</div>
 </div>
 </template>
 
 <template data-if="isReport">
-<div class="pulse-fade" style="width: 272px; height: 444px; overflow: hidden">
-<div class="pulse-report-scroll" style="padding: 16px 14px 24px; display: flex; flex-direction: column; gap: 14px">
-<div style="display: flex; align-items: center; gap: 12px">
-<img src="/assets/scan-thumb.jpg" alt="" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; object-position: center 30%; border: 2px solid #E4A524; display: block">
-<div style="display: flex; flex-direction: column">
-<span style="font-family: 'Gilda Display', Georgia, serif; font-size: 22px; line-height: 1.1">Your skin report</span>
-<span style="font-size: 11px; color: #5B4436">Skin type: Combination</span>
+<div class="app-scroll pulse-fade"><div class="app-content app-report-scroll">
+<div class="app-topbar"><span class="app-back"><img src="/assets/app-ui/icon-back.svg" alt="" width="18" height="18"></span><span class="app-display-l">Skin Report</span></div>
+<div class="app-avatar-row"><span class="app-avatar">JA</span><span class="app-col"><span class="app-display-m">Your Skin Report</span><span class="app-caption">Skin type: Combination &#183; today, 9:41 AM</span></span></div>
+<div class="app-score-card">
+<span class="app-label">SKIN SCORE</span>
+<span class="app-row"><span class="app-display-xl">73</span><span class="app-chip">Combination Skin</span></span>
+<span class="app-body" style="color: #FFFFFF">Average. A few focused changes will move this.</span>
 </div>
+<div class="app-card">
+<div class="app-row"><span class="app-title">Focus Areas</span><span class="app-caption">Lowest first</span></div>
+<div class="app-bar-block"><div class="app-bar-row"><span>Dark Circles</span><b>59</b></div><div class="app-track"><div class="app-fill" style="width: 59%"></div></div></div>
+<div class="app-bar-block"><div class="app-bar-row"><span>Pores</span><b>65</b></div><div class="app-track"><div class="app-fill" style="width: 65%"></div></div></div>
+<div class="app-bar-block"><div class="app-bar-row"><span>Wrinkles</span><b>66</b></div><div class="app-track"><div class="app-fill" style="width: 66%"></div></div></div>
+<div class="app-bar-block"><div class="app-bar-row"><span>Oiliness</span><b>66</b></div><div class="app-track"><div class="app-fill" style="width: 66%"></div></div></div>
+<div class="app-bar-block"><div class="app-bar-row"><span>Moisture</span><b>67</b></div><div class="app-track"><div class="app-fill" style="width: 67%"></div></div></div>
 </div>
-<div style="border-radius: 16px; background: linear-gradient(135deg, #81261A 0%, #AA5B1E 55%, #D79423 100%); color: #FFFBF7; padding: 16px; display: flex; flex-direction: column; gap: 12px">
-<div style="display: flex; justify-content: space-between; align-items: flex-end">
-<div style="display: flex; flex-direction: column"><span style="font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase">Skin score</span><span style="font-family: 'Gilda Display', Georgia, serif; font-size: 44px; line-height: 1">73</span></div>
-<span style="font-size: 11px; font-weight: 600; background: rgba(255,251,247,0.16); border-radius: 999px; padding: 5px 10px">Combination skin</span>
+<div class="app-card">
+<div class="app-row"><span class="app-title">Doing Well</span><span class="app-caption">Keep it up</span></div>
+<div class="app-bar-block"><div class="app-bar-row"><span>Redness</span><b>81</b></div><div class="app-track"><div class="app-fill app-fill-gold" style="width: 81%"></div></div></div>
+<div class="app-bar-block"><div class="app-bar-row"><span>Firmness</span><b>81</b></div><div class="app-track"><div class="app-fill app-fill-gold" style="width: 81%"></div></div></div>
+<div class="app-bar-block"><div class="app-bar-row"><span>Radiance</span><b>81</b></div><div class="app-track"><div class="app-fill app-fill-gold" style="width: 81%"></div></div></div>
+<div class="app-bar-block"><div class="app-bar-row"><span>Acne</span><b>77</b></div><div class="app-track"><div class="app-fill app-fill-gold" style="width: 77%"></div></div></div>
 </div>
-<div style="position: relative; height: 6px; border-radius: 999px; background: rgba(255,251,247,0.3)"><div style="width: 73%; height: 6px; border-radius: 999px; background: #FFFBF7"></div></div>
-<span style="font-size: 12px; font-weight: 600">Average. A few focused changes will move this.</span>
-</div>
-
-<div style="display: flex; flex-direction: column; gap: 10px">
-<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #96262C">Focus areas</span>
-<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Dark circles</span><span>59</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 59%; height: 6px; border-radius: 999px; background: #96262C"></div></div></div>
-<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Pores</span><span>65</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 65%; height: 6px; border-radius: 999px; background: #96262C"></div></div></div>
-<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Wrinkles</span><span>66</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 66%; height: 6px; border-radius: 999px; background: #96262C"></div></div></div>
-<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Oiliness</span><span>66</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 66%; height: 6px; border-radius: 999px; background: #96262C"></div></div></div>
-<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Moisture</span><span>67</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 67%; height: 6px; border-radius: 999px; background: #96262C"></div></div></div>
-</div>
-
-<div style="display: flex; flex-direction: column; gap: 10px">
-<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #AB5B1E">Doing well</span>
-<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Redness</span><span>81</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 81%; height: 6px; border-radius: 999px; background: #E4A524"></div></div></div>
-<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Firmness</span><span>81</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 81%; height: 6px; border-radius: 999px; background: #E4A524"></div></div></div>
-<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Radiance</span><span>81</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 81%; height: 6px; border-radius: 999px; background: #E4A524"></div></div></div>
-<div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600"><span>Acne</span><span>77</span></div><div style="height: 6px; border-radius: 999px; background: #E7D6C8"><div style="width: 77%; height: 6px; border-radius: 999px; background: #E4A524"></div></div></div>
-</div>
-
-<div style="border-radius: 14px; background: #FFF3E8; padding: 14px; display: flex; flex-direction: column; gap: 6px">
-<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #5B4436">What this means</span>
-<span style="font-size: 12px; line-height: 1.5">Combination skin: oilier through the T-zone, drier on the cheeks. Lead with hydration and gentle oil control, and treat under the eyes separately.</span>
-</div>
-<div style="text-align: center; padding: 12px; border-radius: 999px; background: #261000; color: #FFFBF7; font-size: 12px; font-weight: 700">See your product picks</div>
-</div>
-</div>
+<div class="app-means-card"><span class="app-title">What This Means</span><span class="app-body" style="color: #261000">Combination skin: oilier through the T-zone, drier on the cheeks. Lead with hydration and gentle oil control, and treat under the eyes separately.</span></div>
+<span class="app-btn-primary">See My Routine</span>
+<span class="app-btn-secondary">See Accuracy for My Shade</span>
+<p class="app-caption" style="text-align: center; margin: 0">Scores run 0&#8211;100, higher is better. Pulse is not a medical device and does not diagnose skin conditions.</p>
+</div></div>
 </template>
 
 <template data-if="isProducts">
-<div class="pulse-fade" style="width: 272px; height: 444px; overflow: hidden">
-<div class="pulse-products-scroll" style="padding: 16px 14px 24px; display: flex; flex-direction: column; gap: 10px">
-<div style="display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px">
-<span style="font-family: 'Gilda Display', Georgia, serif; font-size: 22px; line-height: 1.1">Picked for your scan</span>
-<span style="font-size: 11px; color: #5B4436">Matched to your focus areas</span>
-</div>
-
-<div style="display: flex; gap: 12px; padding: 12px; border: 1px solid #E7D6C8; border-radius: 14px; background: #FFFFFF">
-<div style="flex: none; width: 46px; height: 64px; border-radius: 10px; background: #FFF3E8; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-sizing: border-box"><div style="display: flex; flex-direction: column; align-items: center"><div style="width: 14px; height: 8px; border-radius: 3px 3px 0 0; background: #261000"></div><div style="width: 26px; height: 36px; border-radius: 6px; background: #96262C"></div></div></div>
-<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
-<span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #96262C">Dark circles &#183; 59</span>
-<span style="font-size: 13px; font-weight: 700; line-height: 1.25">Caffeine eye cream</span>
-<span style="font-size: 11px; color: #5B4436; line-height: 1.35">Depuffs and brightens under the eyes. AM and PM.</span>
-<span style="font-size: 11px; font-weight: 700; color: #261000; text-decoration: underline; text-underline-offset: 3px">View at retailers</span>
-</div>
-</div>
-
-<div style="display: flex; gap: 12px; padding: 12px; border: 1px solid #E7D6C8; border-radius: 14px; background: #FFFFFF">
-<div style="flex: none; width: 46px; height: 64px; border-radius: 10px; background: #FFF3E8; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-sizing: border-box"><div style="display: flex; flex-direction: column; align-items: center"><div style="width: 6px; height: 12px; border-radius: 3px 3px 0 0; background: #261000"></div><div style="width: 12px; height: 6px; background: #261000"></div><div style="width: 22px; height: 30px; border-radius: 5px 5px 8px 8px; background: #E4A524"></div></div></div>
-<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
-<span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #96262C">Pores &#183; 65 &#160;Oiliness &#183; 66</span>
-<span style="font-size: 13px; font-weight: 700; line-height: 1.25">Niacinamide serum</span>
-<span style="font-size: 11px; color: #5B4436; line-height: 1.35">Balances oil through the T-zone and refines pores. PM.</span>
-<span style="font-size: 11px; font-weight: 700; color: #261000; text-decoration: underline; text-underline-offset: 3px">View at retailers</span>
-</div>
-</div>
-
-<div style="display: flex; gap: 12px; padding: 12px; border: 1px solid #E7D6C8; border-radius: 14px; background: #FFFFFF">
-<div style="flex: none; width: 46px; height: 64px; border-radius: 10px; background: #FFF3E8; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-sizing: border-box"><div style="width: 34px; height: 24px; border-radius: 6px; background: #AB5B1E; box-shadow: inset 0 7px 0 #261000"></div></div>
-<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
-<span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #96262C">Moisture &#183; 67</span>
-<span style="font-size: 13px; font-weight: 700; line-height: 1.25">Hyaluronic gel-cream</span>
-<span style="font-size: 11px; color: #5B4436; line-height: 1.35">Lightweight hydration for drier cheeks without weighing down the T-zone.</span>
-<span style="font-size: 11px; font-weight: 700; color: #261000; text-decoration: underline; text-underline-offset: 3px">View at retailers</span>
-</div>
-</div>
-
-<div style="display: flex; gap: 12px; padding: 12px; border: 1px solid #E7D6C8; border-radius: 14px; background: #FFFFFF">
-<div style="flex: none; width: 46px; height: 64px; border-radius: 10px; background: #FFF3E8; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-sizing: border-box"><div style="display: flex; flex-direction: column; align-items: center"><div style="width: 6px; height: 12px; border-radius: 3px 3px 0 0; background: #261000"></div><div style="width: 12px; height: 6px; background: #261000"></div><div style="width: 22px; height: 30px; border-radius: 5px 5px 8px 8px; background: #5B4436"></div></div></div>
-<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
-<span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #96262C">Wrinkles &#183; 66</span>
-<span style="font-size: 13px; font-weight: 700; line-height: 1.25">Retinal night serum</span>
-<span style="font-size: 11px; color: #5B4436; line-height: 1.35">Smooths fine lines over time. Start two nights a week. PM.</span>
-<span style="font-size: 11px; font-weight: 700; color: #261000; text-decoration: underline; text-underline-offset: 3px">View at retailers</span>
-</div>
-</div>
-
-<div style="display: flex; gap: 12px; padding: 12px; border: 1px solid #E7D6C8; border-radius: 14px; background: #FFFFFF">
-<div style="flex: none; width: 46px; height: 64px; border-radius: 10px; background: #FFF3E8; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-sizing: border-box"><div style="display: flex; flex-direction: column; align-items: center"><div style="width: 22px; height: 8px; border-radius: 3px; background: #261000"></div><div style="width: 22px; height: 38px; border-radius: 4px 4px 10px 10px; background: #FFD530"></div></div></div>
-<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
-<span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #96262C">Every morning</span>
-<span style="font-size: 13px; font-weight: 700; line-height: 1.25">SPF 50, no white cast</span>
-<span style="font-size: 11px; color: #5B4436; line-height: 1.35">Keeps dark spots from coming back. Last step, AM.</span>
-<span style="font-size: 11px; font-weight: 700; color: #261000; text-decoration: underline; text-underline-offset: 3px">View at retailers</span>
-</div>
-</div>
-
-<div style="text-align: center; padding: 12px; border-radius: 999px; background: #96262C; color: #FFFBF7; font-size: 12px; font-weight: 700">Add to my routine</div>
-<span style="font-size: 10px; color: #5B4436; text-align: center">Pulse may earn a commission on purchases.</span>
-</div>
-</div>
+<div class="app-scroll pulse-fade"><div class="app-content app-products-scroll">
+<div class="app-topbar"><span class="app-back"><img src="/assets/app-ui/icon-back.svg" alt="" width="18" height="18"></span><span class="app-display-l">Your Picks</span></div>
+<p class="app-body-l">Picked for your scan, matched to your focus areas.</p>
+<div class="app-card app-product"><span class="app-label app-brand">DARK CIRCLES &#183; 59</span><span class="app-product-row"><span class="app-product-img"></span><span class="app-col"><b class="app-body-l-strong">Caffeine Eye Cream</b><span class="app-caption">Depuffs and brightens under the eyes.</span><b class="app-caption-strong">AM and PM</b></span></span><span class="app-text-btn">View at Retailers</span></div>
+<div class="app-card app-product"><span class="app-label app-brand" style="white-space: pre-wrap">PORES &#183; 65  OILINESS &#183; 66</span><span class="app-product-row"><span class="app-product-img"></span><span class="app-col"><b class="app-body-l-strong">Niacinamide Serum</b><span class="app-caption">Balances oil through the T-zone and refines pores.</span><b class="app-caption-strong">PM</b></span></span><span class="app-text-btn">View at Retailers</span></div>
+<div class="app-card app-product"><span class="app-label app-brand">MOISTURE &#183; 67</span><span class="app-product-row"><span class="app-product-img"></span><span class="app-col"><b class="app-body-l-strong">Hyaluronic Gel-Cream</b><span class="app-caption">Lightweight hydration for drier cheeks.</span><b class="app-caption-strong">AM and PM</b></span></span><span class="app-text-btn">View at Retailers</span></div>
+<div class="app-card app-product"><span class="app-label app-brand">EVERY MORNING</span><span class="app-product-row"><span class="app-product-img"></span><span class="app-col"><b class="app-body-l-strong">SPF 50, No White Cast</b><span class="app-caption">Keeps dark spots from coming back.</span><b class="app-caption-strong">Last step, AM</b></span></span><span class="app-text-btn">View at Retailers</span></div>
+<span class="app-btn-primary">Add to My Routine</span>
+<p class="app-caption" style="text-align: center; margin: 0">Pulse may earn a commission when you buy through a Pulse link. Commission never changes what we recommend. Keep using what you own.</p>
+</div></div>
 </template>
 
 </div>
@@ -667,9 +656,9 @@ a{color:#96262C}a:hover{color:#5E1418}
 <script>
 (function () {
   var steps = [
-    { label: "Line up your face", hint: "Even light, look straight ahead. The photo takes itself." },
-    { label: "Analyzing your skin", hint: "Checking texture, tone, pores and more." },
-    { label: "Mapping your skin", hint: "Marking where each concern shows up on your face." }
+    { label: "Line Up Your Face", hint: "Even light, look straight ahead. The photo takes itself." },
+    { label: "Analyzing Your Skin", hint: "Checking texture, tone, pores and more." },
+    { label: "Mapping Your Skin", hint: "Higher is better. Your full report is almost ready." }
   ];
   var state = { phase: "scan", step: 0 };
   var timers = {};
@@ -682,8 +671,9 @@ a{color:#96262C}a:hover{color:#5E1418}
       isScan: state.phase === "scan",
       isReport: state.phase === "report",
       isProducts: state.phase === "products",
+      isLineUp: state.step === 0,
+      isAnalyzing: state.step === 1,
       isMapping: state.step === 2,
-      notMapping: state.step !== 2,
       stepLabel: st.label,
       stepHint: st.hint,
       stepCount: (state.step + 1) + " of 3"
@@ -714,6 +704,21 @@ a{color:#96262C}a:hover{color:#5E1418}
     }
     var texts = document.querySelectorAll("[data-text]");
     for (var j = 0; j < texts.length; j++) texts[j].textContent = v[texts[j].getAttribute("data-text")];
+    var counters = document.querySelectorAll("[data-count-up]");
+    for (var c = 0; c < counters.length; c++) {
+      var el = counters[c];
+      if (el._started) continue;
+      el._started = Date.now();
+      (function (el, ms) {
+        var tick = function () {
+          if (!el.isConnected) return;
+          var t = Math.min(1, (Date.now() - el._started) / ms);
+          el.textContent = Math.round(t * 100);
+          if (t < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      })(el, parseInt(el.getAttribute("data-count-up"), 10) || 4000);
+    }
     var vid = document.querySelector("video[data-scan-video]");
     if (vid && !vid._wired) {
       vid._wired = true;
