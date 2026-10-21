@@ -40,12 +40,12 @@ a{color:#96262C}a:hover{color:#5E1418}
 .pulse-pop{animation:pulsePop .45s cubic-bezier(.2,.9,.3,1.3) both}
 .pulse-fade{animation:pulseFade .5s ease both}
 /* App mockup: built at the Figma frame size (440 wide) and scaled into the phone */
-.app-viewport{position:relative;width:272px;height:498px;border-radius:37px;overflow:hidden;background:#FFFBF7}
-.app-screen{position:absolute;left:0;top:0;width:440px;height:806px;transform:scale(.61818);transform-origin:0 0;background:#FFFBF7;color:#261000;font-family:Raleway,'Helvetica Neue',Arial,sans-serif;text-align:left}
+.app-viewport{position:relative;width:272px;height:560px;border-radius:37px;overflow:hidden;background:#FFFBF7}
+.app-screen{position:absolute;left:0;top:0;width:440px;height:906px;transform:scale(.61818);transform-origin:0 0;background:#FFFBF7;color:#261000;font-family:Raleway,'Helvetica Neue',Arial,sans-serif;text-align:left}
 .app-status{position:relative;z-index:2;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 24px 0 28px;background:#FFFBF7;font-size:13px;font-weight:700;line-height:19px}
 .app-status img{display:block}
 .app-content{display:flex;flex-direction:column;gap:16px;padding:8px 24px 40px;box-sizing:border-box;width:440px}
-.app-scroll{position:absolute;left:0;top:44px;width:440px;height:762px;overflow:hidden}
+.app-scroll{position:absolute;left:0;top:44px;width:440px;height:862px;overflow:hidden}
 .app-topbar{display:flex;align-items:center;gap:12px;height:56px;padding:0 24px;flex:none}
 .app-back{position:relative;width:32px;height:32px;box-sizing:border-box;border:1px solid #261000;border-radius:16px;background:#FFFFFF;flex:none}
 .app-back img{position:absolute;left:6px;top:6px;display:block}
@@ -65,11 +65,9 @@ a{color:#96262C}a:hover{color:#5E1418}
 .app-col{display:flex;flex-direction:column;gap:2px;flex:1 0 0;min-width:0}
 .app-camera{position:relative;width:392px;height:430px;border-radius:24px;overflow:hidden;background:#2A1F18;flex:none}
 .app-camera video{position:absolute;left:0;top:0;width:100%;height:102%;object-fit:cover;object-position:50% 0;display:block}
-.app-oval{position:absolute;left:81px;top:50px;display:block}
 .app-chips{position:absolute;left:0;right:0;top:380px;display:flex;justify-content:center;gap:6px}
 .app-chip{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.18);color:#FFFFFF;font-size:12px;font-weight:700;line-height:17px;white-space:nowrap}
 .app-camera .app-chip{background:rgba(42,31,24,.55);box-shadow:inset 0 0 0 999px rgba(255,255,255,.18)}
-.app-pill{position:absolute;padding:6px 10px;border-radius:999px;background:rgba(136,46,26,.9);color:#FFFFFF;font-size:12px;font-weight:700;line-height:17px;white-space:nowrap}
 .app-bar-block{display:flex;flex-direction:column;gap:6px;width:100%}
 .app-bar-row{display:flex;align-items:center;gap:8px;font-size:13px;line-height:19px}
 .app-bar-row span{flex:1 0 0}
@@ -83,19 +81,49 @@ a{color:#96262C}a:hover{color:#5E1418}
 .app-card{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid #261000;border-radius:16px;background:#FFFFFF}
 .app-product{gap:8px}
 .app-product-row{display:flex;align-items:center;gap:12px}
-.app-product-img{width:64px;height:64px;border-radius:12px;background:#EEDCCD;flex:none}
 .app-text-btn{font-size:13px;font-weight:700;line-height:19px;color:#882E1A}
 .app-means-card{display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid #E4A524;border-radius:16px;background:linear-gradient(90deg,#FCEFE2,#F3D7A0)}
 .app-btn-primary,.app-btn-secondary{display:flex;align-items:center;justify-content:center;padding:15px 24px;border-radius:999px;font-size:15px;font-weight:500;line-height:22px}
 .app-btn-primary{background:linear-gradient(90deg,#882E1A,#E5A625);color:#FFFFFF}
 .app-btn-secondary{background:#FFFFFF;border:1.2px solid #882E1A;color:#261000}
 @keyframes appProgress{from{width:0}to{width:100%}}
-.pulse-progress-fill{animation:appProgress 4.3s linear both}
-@keyframes appReportScroll{0%,14%{transform:translateY(0)}86%,100%{transform:translateY(-450px)}}
-@keyframes appProductsScroll{0%,18%{transform:translateY(0)}82%,100%{transform:translateY(-200px)}}
+.pulse-progress-fill{animation:appProgress 3.2s linear both}
+@keyframes appReportScroll{0%,14%{transform:translateY(0)}86%,100%{transform:translateY(-350px)}}
+@keyframes appProductsScroll{0%,18%{transform:translateY(0)}82%,100%{transform:translateY(-170px)}}
 .app-report-scroll{animation:appReportScroll 11s ease-in-out both}
 .app-products-scroll{animation:appProductsScroll 10s ease-in-out both}
 @media (prefers-reduced-motion: reduce){.app-report-scroll,.app-products-scroll,.pulse-progress-fill{animation:none}}
+.app-body-strong{font-size:13px;font-weight:700;line-height:19px;color:#261000}
+.app-tips{gap:13px;padding:14px 16px}
+.app-tip{display:flex;align-items:center;gap:12px}
+.app-tip img{display:block;flex:none}
+.app-checks{gap:14px}
+.app-check{display:flex;align-items:center;gap:12px;font-size:13px;line-height:19px;animation:appCheckOn .4s ease both}
+@keyframes appCheckOn{from{opacity:.35}to{opacity:1}}
+.app-check-dot{position:relative;width:20px;height:20px;box-sizing:border-box;border-radius:50%;border:1.5px solid #E4A524;flex:none;animation:appDotOn .4s ease both;animation-delay:inherit}
+.app-check-dot::after{content:"";position:absolute;left:5.5px;top:2px;width:5px;height:9px;border:solid #FFFFFF;border-width:0 2px 2px 0;transform:rotate(45deg)}
+@keyframes appDotOn{from{background:#FFFFFF}to{background:#E4A524}}
+.app-spotlight{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.app-spot{opacity:0;transition:opacity .45s ease}
+.app-spot.on{opacity:1}
+.app-spot ellipse{fill:none;stroke:#E4A524;stroke-width:2.5;stroke-dasharray:7 6}
+.app-scores{width:392px;overflow:hidden;padding:8px 0 2px;flex:none;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%)}
+.app-score-track{display:flex;gap:14px;padding:0 6px;transition:transform .5s cubic-bezier(.3,.7,.2,1)}
+.app-score{display:flex;flex-direction:column;align-items:center;gap:8px;width:66px;flex:none}
+.app-score-ring{width:60px;height:60px;box-sizing:border-box;border-radius:50%;border:3px solid #E4A524;background:#FFFFFF;display:flex;align-items:center;justify-content:center;transition:transform .3s ease,background .3s ease,color .3s ease;color:#261000}
+.app-score.is-focus .app-score-ring{border-color:#882E1A}
+.app-score.is-hero .app-score-ring{border:0;background:linear-gradient(135deg,#882E1A,#E5A625);color:#FFFFFF}
+.app-score-ring b{font-size:18px;font-weight:700;line-height:22px}
+.app-score-name{font-size:11px;font-weight:700;line-height:14px;color:#595959;white-space:nowrap}
+.app-score.active .app-score-ring{transform:scale(1.1);background:#E4A524;color:#FFFFFF}
+.app-score.is-focus.active .app-score-ring{background:#882E1A}
+.app-score.is-hero.active .app-score-ring{background:linear-gradient(135deg,#882E1A,#E5A625)}
+.app-score.active .app-score-name{color:#261000}
+.app-score-detail{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:16px;background:linear-gradient(90deg,#FCEFE2,#F8E6CC);border:1px solid #EEDCCD}
+.app-score-detail b{font-size:15px;font-weight:700;line-height:22px}
+.app-score-detail span{font-size:13px;line-height:19px;color:#595959}
+.app-product-img{display:block;width:64px;height:64px;border-radius:12px;background:#F6ECE2;flex:none}
+.app-product-meta{font-size:11px;font-weight:700;line-height:14px;color:#595959;letter-spacing:.02em}
 </style>
 <script type="application/ld+json">
 {
@@ -280,28 +308,68 @@ a{color:#96262C}a:hover{color:#5E1418}
 <div class="app-topbar"><span class="app-back"><img src="/assets/app-ui/icon-back.svg" alt="" width="18" height="18"></span><span class="app-display-l">Face Scan</span></div>
 <div class="app-camera">
 <video poster="/assets/scan-card-poster.jpg" autoplay muted playsinline preload="auto" data-scan-video aria-label="A real skin scan: guided face capture, analysis, then face zones mapped"><source src="/assets/scan-card.mp4" type="video/mp4"><source src="/assets/scan-card.webm" type="video/webm"></video>
-<img class="app-oval" src="/assets/app-ui/scan-oval.png" alt="" width="230" height="310">
+<svg class="app-spotlight" viewBox="0 0 392 430" aria-hidden="true">
+<defs>
+<mask id="spot-dark"><rect width="392" height="430" fill="#fff"/><ellipse cx="129" cy="228" rx="44" ry="22" fill="#000"/><ellipse cx="276" cy="228" rx="44" ry="22" fill="#000"/></mask>
+<mask id="spot-pores"><rect width="392" height="430" fill="#fff"/><ellipse cx="200" cy="262" rx="34" ry="46" fill="#000"/></mask>
+<mask id="spot-wrinkles"><rect width="392" height="430" fill="#fff"/><ellipse cx="200" cy="108" rx="92" ry="40" fill="#000"/></mask>
+<mask id="spot-texture"><rect width="392" height="430" fill="#fff"/><ellipse cx="200" cy="262" rx="34" ry="46" fill="#000"/><ellipse cx="200" cy="392" rx="56" ry="30" fill="#000"/></mask>
+<mask id="spot-spots"><rect width="392" height="430" fill="#fff"/><ellipse cx="116" cy="294" rx="50" ry="44" fill="#000"/><ellipse cx="283" cy="294" rx="50" ry="44" fill="#000"/></mask>
+<mask id="spot-redness"><rect width="392" height="430" fill="#fff"/><ellipse cx="128" cy="290" rx="46" ry="40" fill="#000"/><ellipse cx="272" cy="290" rx="46" ry="40" fill="#000"/><ellipse cx="200" cy="262" rx="30" ry="40" fill="#000"/></mask>
+</defs>
+<g class="app-spot" data-spot="dark"><rect width="392" height="430" fill="rgba(26,15,10,.55)" mask="url(#spot-dark)"/><ellipse cx="129" cy="228" rx="44" ry="22"/><ellipse cx="276" cy="228" rx="44" ry="22"/></g>
+<g class="app-spot" data-spot="pores"><rect width="392" height="430" fill="rgba(26,15,10,.55)" mask="url(#spot-pores)"/><ellipse cx="200" cy="262" rx="34" ry="46"/></g>
+<g class="app-spot" data-spot="wrinkles"><rect width="392" height="430" fill="rgba(26,15,10,.55)" mask="url(#spot-wrinkles)"/><ellipse cx="200" cy="108" rx="92" ry="40"/></g>
+<g class="app-spot" data-spot="texture"><rect width="392" height="430" fill="rgba(26,15,10,.55)" mask="url(#spot-texture)"/><ellipse cx="200" cy="262" rx="34" ry="46"/><ellipse cx="200" cy="392" rx="56" ry="30"/></g>
+<g class="app-spot" data-spot="spots"><rect width="392" height="430" fill="rgba(26,15,10,.55)" mask="url(#spot-spots)"/><ellipse cx="116" cy="294" rx="50" ry="44"/><ellipse cx="283" cy="294" rx="50" ry="44"/></g>
+<g class="app-spot" data-spot="redness"><rect width="392" height="430" fill="rgba(26,15,10,.55)" mask="url(#spot-redness)"/><ellipse cx="128" cy="290" rx="46" ry="40"/><ellipse cx="272" cy="290" rx="46" ry="40"/><ellipse cx="200" cy="262" rx="30" ry="40"/></g>
+</svg>
 <template data-if="isLineUp">
 <div class="app-chips"><span class="app-chip">Lighting &#10003;</span><span class="app-chip">Look Straight</span><span class="app-chip">Come Closer</span></div>
 </template>
 <template data-if="isAnalyzing">
 <div class="app-chips"><span class="app-chip">Photo Captured &#183; Hold Still</span></div>
 </template>
-<template data-if="isMapping">
-<span class="app-pill pulse-pop" style="left: 150px; top: 90px; animation-delay: 0s">Redness 81</span>
-<span class="app-pill pulse-pop" style="left: 40px; top: 150px; animation-delay: .3s">Dark Circles 59</span>
-<span class="app-pill pulse-pop" style="left: 250px; top: 190px; animation-delay: .6s">Pores 65</span>
-<span class="app-pill pulse-pop" style="left: 60px; top: 270px; animation-delay: .9s">Spots 75</span>
-<span class="app-pill pulse-pop" style="left: 245px; top: 290px; animation-delay: 1.2s">Texture 71</span>
-</template>
 </div>
 <div class="app-row"><span class="app-display-m" data-text="stepLabel"></span><span class="app-step-count" data-text="stepCount"></span></div>
 <p class="app-body" data-text="stepHint"></p>
+
+<template data-if="isLineUp">
+<div class="app-card app-tips pulse-fade">
+<div class="app-tip"><img src="/assets/app-ui/icon-sun.svg" alt="" width="22" height="22"><span class="app-col"><b class="app-body-strong">Soft, Even Light</b><span class="app-caption">A window is perfect. Avoid backlight.</span></span></div>
+<div class="app-tip"><img src="/assets/app-ui/icon-face.svg" alt="" width="22" height="22"><span class="app-col"><b class="app-body-strong">Bare, Clean Skin</b><span class="app-caption">No makeup, glasses off, hair back.</span></span></div>
+<div class="app-tip"><img src="/assets/app-ui/icon-phone.svg" alt="" width="22" height="22"><span class="app-col"><b class="app-body-strong">Phone at Eye Level</b><span class="app-caption">Neutral face, about an arm&#8217;s length away.</span></span></div>
+<div class="app-tip"><img src="/assets/app-ui/icon-pin.svg" alt="" width="22" height="22"><span class="app-col"><b class="app-body-strong">Same Spot Every Rescan</b><span class="app-caption">So progress compares fairly.</span></span></div>
+</div>
+</template>
+
 <template data-if="isAnalyzing">
-<div class="app-bar-block">
-<div class="app-bar-row"><span>Progress</span><b data-count-up="4300">0</b></div>
+<div class="app-bar-block pulse-fade">
+<div class="app-bar-row"><span>Progress</span><b data-count-up="3200">0</b></div>
 <div class="app-track"><div class="app-fill app-fill-gold pulse-progress-fill"></div></div>
 </div>
+<div class="app-card app-checks pulse-fade">
+<div class="app-row"><span class="app-title">What Pulse Checks</span><span class="app-caption">10 shades tested</span></div>
+<div class="app-check" style="animation-delay: .2s"><span class="app-check-dot"></span><span>Texture and Pores</span></div>
+<div class="app-check" style="animation-delay: .9s"><span class="app-check-dot"></span><span>Tone, Spots and Redness</span></div>
+<div class="app-check" style="animation-delay: 1.6s"><span class="app-check-dot"></span><span>Fine Lines and Firmness</span></div>
+<div class="app-check" style="animation-delay: 2.3s"><span class="app-check-dot"></span><span>Under-Eye Area</span></div>
+</div>
+</template>
+
+<template data-if="isMapping">
+<div class="app-scores pulse-fade">
+<div class="app-score-track" data-score-track>
+<span class="app-score is-hero" data-spot-key=""><span class="app-score-ring"><b>73</b></span><span class="app-score-name">Skin Score</span></span>
+<span class="app-score is-focus" data-spot-key="dark"><span class="app-score-ring"><b>59</b></span><span class="app-score-name">Dark Circles</span></span>
+<span class="app-score is-focus" data-spot-key="pores"><span class="app-score-ring"><b>65</b></span><span class="app-score-name">Pores</span></span>
+<span class="app-score is-focus" data-spot-key="wrinkles"><span class="app-score-ring"><b>66</b></span><span class="app-score-name">Wrinkles</span></span>
+<span class="app-score" data-spot-key="texture"><span class="app-score-ring"><b>71</b></span><span class="app-score-name">Texture</span></span>
+<span class="app-score" data-spot-key="spots"><span class="app-score-ring"><b>75</b></span><span class="app-score-name">Spots</span></span>
+<span class="app-score" data-spot-key="redness"><span class="app-score-ring"><b>81</b></span><span class="app-score-name">Redness</span></span>
+</div>
+</div>
+<div class="app-score-detail pulse-fade"><b data-text="scoreTitle"></b><span data-text="scoreNote"></span></div>
 </template>
 </div>
 </template>
@@ -341,10 +409,10 @@ a{color:#96262C}a:hover{color:#5E1418}
 <div class="app-scroll pulse-fade"><div class="app-content app-products-scroll">
 <div class="app-topbar"><span class="app-back"><img src="/assets/app-ui/icon-back.svg" alt="" width="18" height="18"></span><span class="app-display-l">Your Picks</span></div>
 <p class="app-body-l">Picked for your scan, matched to your focus areas.</p>
-<div class="app-card app-product"><span class="app-label app-brand">DARK CIRCLES &#183; 59</span><span class="app-product-row"><span class="app-product-img"></span><span class="app-col"><b class="app-body-l-strong">Caffeine Eye Cream</b><span class="app-caption">Depuffs and brightens under the eyes.</span><b class="app-caption-strong">AM and PM</b></span></span><span class="app-text-btn">View at Retailers</span></div>
-<div class="app-card app-product"><span class="app-label app-brand" style="white-space: pre-wrap">PORES &#183; 65  OILINESS &#183; 66</span><span class="app-product-row"><span class="app-product-img"></span><span class="app-col"><b class="app-body-l-strong">Niacinamide Serum</b><span class="app-caption">Balances oil through the T-zone and refines pores.</span><b class="app-caption-strong">PM</b></span></span><span class="app-text-btn">View at Retailers</span></div>
-<div class="app-card app-product"><span class="app-label app-brand">MOISTURE &#183; 67</span><span class="app-product-row"><span class="app-product-img"></span><span class="app-col"><b class="app-body-l-strong">Hyaluronic Gel-Cream</b><span class="app-caption">Lightweight hydration for drier cheeks.</span><b class="app-caption-strong">AM and PM</b></span></span><span class="app-text-btn">View at Retailers</span></div>
-<div class="app-card app-product"><span class="app-label app-brand">EVERY MORNING</span><span class="app-product-row"><span class="app-product-img"></span><span class="app-col"><b class="app-body-l-strong">SPF 50, No White Cast</b><span class="app-caption">Keeps dark spots from coming back.</span><b class="app-caption-strong">Last step, AM</b></span></span><span class="app-text-btn">View at Retailers</span></div>
+<div class="app-card app-product"><span class="app-label app-brand">DARK CIRCLES &#183; 59</span><span class="app-product-row"><img class="app-product-img" src="/assets/app-ui/product-eye-cream.svg" alt="" width="64" height="64"><span class="app-col"><span class="app-product-meta">Lumae &#183; Eye Cream &#183; $24</span><b class="app-body-l-strong">Caffeine Eye Cream</b><span class="app-caption">Depuffs and brightens under the eyes.</span><b class="app-caption-strong">AM and PM</b></span></span><span class="app-text-btn">View at Retailers</span></div>
+<div class="app-card app-product"><span class="app-label app-brand" style="white-space: pre-wrap">PORES &#183; 65  OILINESS &#183; 66</span><span class="app-product-row"><img class="app-product-img" src="/assets/app-ui/product-serum.svg" alt="" width="64" height="64"><span class="app-col"><span class="app-product-meta">Ostra &#183; Serum &#183; $18</span><b class="app-body-l-strong">Niacinamide Serum</b><span class="app-caption">Balances oil through the T-zone and refines pores.</span><b class="app-caption-strong">PM</b></span></span><span class="app-text-btn">View at Retailers</span></div>
+<div class="app-card app-product"><span class="app-label app-brand">MOISTURE &#183; 67</span><span class="app-product-row"><img class="app-product-img" src="/assets/app-ui/product-gel-cream.svg" alt="" width="64" height="64"><span class="app-col"><span class="app-product-meta">Halden &amp; Co. &#183; Moisturizer &#183; $28</span><b class="app-body-l-strong">Hyaluronic Gel-Cream</b><span class="app-caption">Lightweight hydration for drier cheeks.</span><b class="app-caption-strong">AM and PM</b></span></span><span class="app-text-btn">View at Retailers</span></div>
+<div class="app-card app-product"><span class="app-label app-brand">EVERY MORNING</span><span class="app-product-row"><img class="app-product-img" src="/assets/app-ui/product-spf.svg" alt="" width="64" height="64"><span class="app-col"><span class="app-product-meta">Solenne &#183; Sunscreen &#183; $22</span><b class="app-body-l-strong">SPF 50, No White Cast</b><span class="app-caption">Keeps dark spots from coming back.</span><b class="app-caption-strong">Last step, AM</b></span></span><span class="app-text-btn">View at Retailers</span></div>
 <span class="app-btn-primary">Add to My Routine</span>
 <p class="app-caption" style="text-align: center; margin: 0">Pulse may earn a commission when you buy through a Pulse link. Commission never changes what we recommend. Keep using what you own.</p>
 </div></div>
@@ -660,7 +728,35 @@ a{color:#96262C}a:hover{color:#5E1418}
     { label: "Analyzing Your Skin", hint: "Checking texture, tone, pores and more." },
     { label: "Mapping Your Skin", hint: "Higher is better. Your full report is almost ready." }
   ];
-  var state = { phase: "scan", step: 0 };
+  var SCORES = [
+    { key: "", title: "Skin Score \u00b7 73", note: "Average overall. A few focused changes will move this." },
+    { key: "dark", title: "Dark Circles \u00b7 59", note: "Under the eyes. One of your focus areas." },
+    { key: "pores", title: "Pores \u00b7 65", note: "Around the nose. One of your focus areas." },
+    { key: "wrinkles", title: "Wrinkles \u00b7 66", note: "Across the forehead. One of your focus areas." },
+    { key: "texture", title: "Texture \u00b7 71", note: "Nose and chin. Doing well." },
+    { key: "spots", title: "Spots \u00b7 75", note: "Across the cheeks. Doing well." },
+    { key: "redness", title: "Redness \u00b7 81", note: "Cheeks and nose. Doing well." }
+  ];
+  var state = { phase: "scan", step: 0, score: 0 };
+  function showScore(i) {
+    state.score = i;
+    var items = document.querySelectorAll("[data-spot-key]");
+    for (var n = 0; n < items.length; n++) items[n].classList.toggle("active", n === i);
+    var spots = document.querySelectorAll("[data-spot]");
+    for (var m = 0; m < spots.length; m++) spots[m].classList.toggle("on", spots[m].getAttribute("data-spot") === SCORES[i].key && SCORES[i].key !== "");
+    var track = document.querySelector("[data-score-track]");
+    if (track) {
+      var x = Math.max(0, Math.min(i * 80 + 33 - 196, 154));
+      track.style.transform = "translateX(" + (-x) + "px)";
+    }
+    var texts = document.querySelectorAll("[data-text=scoreTitle],[data-text=scoreNote]");
+    for (var t = 0; t < texts.length; t++) texts[t].textContent = SCORES[i][texts[t].getAttribute("data-text") === "scoreTitle" ? "title" : "note"];
+  }
+  function cycleScores(i) {
+    if (state.phase !== "scan" || state.step !== 2) return;
+    showScore(i);
+    if (i < SCORES.length - 1) later("score", 900, function () { cycleScores(i + 1); });
+  }
   var timers = {};
   function later(name, ms, fn) { clearTimeout(timers[name]); timers[name] = setTimeout(fn, ms); }
   function clearAll() { for (var k in timers) clearTimeout(timers[k]); }
@@ -676,7 +772,9 @@ a{color:#96262C}a:hover{color:#5E1418}
       isMapping: state.step === 2,
       stepLabel: st.label,
       stepHint: st.hint,
-      stepCount: (state.step + 1) + " of 3"
+      stepCount: (state.step + 1) + " of 3",
+      scoreTitle: SCORES[state.score || 0].title,
+      scoreNote: SCORES[state.score || 0].note
     };
   }
 
@@ -731,14 +829,32 @@ a{color:#96262C}a:hover{color:#5E1418}
 
   function set(patch) { for (var k in patch) state[k] = patch[k]; render(); }
 
+  // Steps follow the footage: capture ends at 4.2s, mapping appears at 7.9s.
+  function stepAt(t) { return t >= 7.9 ? 2 : t >= 4.2 ? 1 : 0; }
+  function goStep(n) {
+    if (state.phase !== "scan" || n <= state.step) return;
+    if (n === 2) { set({ step: 2, score: 0 }); cycleScores(0); }
+    else set({ step: n });
+  }
   function startScan() {
-    set({ phase: "scan", step: 0 });
-    later("s1", 3200, function () { set({ step: 1 }); });
-    later("s2", 7600, function () { set({ step: 2 }); });
+    set({ phase: "scan", step: 0, score: 0 });
+    var vid = document.querySelector("video[data-scan-video]");
+    if (vid && !vid._synced) {
+      vid._synced = true;
+      vid.addEventListener("timeupdate", function () {
+        clearTimeout(timers.s1); clearTimeout(timers.s2);
+        goStep(stepAt(vid.currentTime));
+      });
+    }
+    // Fallback if the video can't play (the steps still advance on a timer)
+    later("s1", 4300, function () { goStep(1); });
+    later("s2", 8000, function () { goStep(2); });
     later("fallback", 17000, showReport);
   }
   function showReport() {
     clearAll();
+    var on = document.querySelectorAll(".app-spot.on");
+    for (var q = 0; q < on.length; q++) on[q].classList.remove("on");
     set({ phase: "report" });
     later("products", 11500, function () { set({ phase: "products" }); });
     later("restart", 22000, startScan);

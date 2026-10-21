@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<defs><linearGradient id="t" x1="0" x2="1"><stop offset="0" stop-color="#F7EFE6"/><stop offset=".55" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E9DCCD"/></linearGradient>
+<linearGradient id="c" x1="0" x2="1"><stop offset="0" stop-color="#8E3A22"/><stop offset=".5" stop-color="#B0583A"/><stop offset="1" stop-color="#7A2E1A"/></linearGradient></defs>
+<ellipse cx="64" cy="114" rx="26" ry="4" fill="#261000" opacity=".12"/>
+<path d="M44 20 h40 l-4 70 h-32 z" fill="url(#t)" stroke="#D8C6B3" stroke-width="1"/>
+<rect x="44" y="16" width="40" height="7" rx="2" fill="#E4D5C4"/>
+<rect x="48" y="90" width="32" height="22" rx="4" fill="url(#c)"/>
+<text x="64" y="46" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#882E1A" letter-spacing="1.5">LUMAE</text>
+<rect x="54" y="51" width="20" height="1" fill="#882E1A" opacity=".5"/>
+<text x="64" y="62" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="5.2" fill="#5B4436" letter-spacing=".6">CAFFEINE</text>
+<text x="64" y="69" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="5.2" fill="#5B4436" letter-spacing=".6">EYE CREAM</text>
+</svg>
