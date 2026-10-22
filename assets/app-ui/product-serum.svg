@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#7A3A12"/><stop offset=".35" stop-color="#C47A2C"/><stop offset=".6" stop-color="#A65A1E"/><stop offset="1" stop-color="#6A2F0E"/></linearGradient>
+<linearGradient id="d" x1="0" x2="1"><stop offset="0" stop-color="#1F1410"/><stop offset=".5" stop-color="#4A3830"/><stop offset="1" stop-color="#1F1410"/></linearGradient></defs>
+<ellipse cx="64" cy="115" rx="24" ry="4" fill="#261000" opacity=".14"/>
+<path d="M56 12 q8 -6 16 0 v20 h-16 z" fill="url(#d)"/>
+<rect x="54" y="32" width="20" height="8" rx="1.5" fill="#2A1F18"/>
+<path d="M50 40 h28 q8 0 8 8 v56 q0 8 -8 8 h-28 q-8 0 -8 -8 v-56 q0 -8 8 -8 z" fill="url(#g)"/>
+<rect x="47" y="58" width="34" height="34" rx="2" fill="#FFFBF7"/>
+<text x="64" y="70" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" fill="#261000" letter-spacing="1.2">OSTRA</text>
+<text x="64" y="79" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="4.6" fill="#5B4436" letter-spacing=".5">NIACINAMIDE</text>
+<text x="64" y="86" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="4.6" fill="#5B4436" letter-spacing=".5">10% SERUM</text>
+<rect x="49" y="44" width="4" height="60" rx="2" fill="#FFFFFF" opacity=".25"/>
+</svg>
