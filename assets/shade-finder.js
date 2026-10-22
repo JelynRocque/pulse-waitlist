@@ -8,8 +8,15 @@
  * cheek skin with the eye whites cancels out the camera's brightness changes.
  *
  * The comparison becomes an Individual Typology Angle (ITA), the standard
- * skin-colorimetry measure used in dermatology research, which maps to the
- * ten Monk shades.
+ * skin-colorimetry measure used in dermatology research.
+ *
+ * Shade baseline: the 36 shades of Pat McGrath Labs Skin Fetish: Sublime
+ * Perfection Foundation (REFERENCE below). Each of Pulse's ten gemstone
+ * shades is defined as a run of those shades, lightest to deepest. The
+ * reading is matched to the nearest of the 36 and reported as its gemstone.
+ * Colors were sampled from the brand's official smear swatch photos on
+ * patmcgrath.com (Oct 2026); undertones are the brand's own descriptions.
+ * Pulse isn't affiliated with Pat McGrath Labs.
  *
  * Face tracking (MediaPipe Face Mesh, Apache 2.0, served from /assets/vendor)
  * runs on the device to find the cheeks and eyes. No image, video or face
@@ -31,15 +38,29 @@
     // camera's own white balance, 1 = treat eye whites as pure white).
     // Eye whites are often slightly yellow, so this stays partial.
     whiteBalanceFromEyes: 0.75,
-    // ITA cut points between Monk shades, lightest to deepest. Based on the
-    // published ITA skin categories (very light > 55, light 41-55,
-    // intermediate 28-41, tan 10-28, brown -30-10, dark < -30), split to ten.
-    itaCuts: [62, 55, 48, 41, 28, 10, -10, -30, -50],
+    // Within this many ITA degrees of the nearest shade in a neighboring
+    // gemstone, the result says it's between the two.
     betweenMargin: 3,
     framesPerReading: 8,
     goodChecksBeforeAuto: 2,
     analysisWidth: 720
   };
+
+  // Pat McGrath Skin Fetish shades -> Pulse gemstone (0 = Pearl ... 9 = Onyx).
+  // [number, name, undertone, swatch hex, gemstone]
+  var REFERENCE = [
+    [1, "Light 1", "pink", "#f8e1d4", 0], [2, "Light 2", "neutral yellow", "#f6dcca", 0], [3, "Light 3", "yellow", "#edd8be", 0],
+    [4, "Light 4", "peach", "#f6d2b9", 1], [5, "Light 5", "yellow neutral", "#e8c5a7", 1], [6, "Light 6", "pink neutral", "#efc8ae", 1], [7, "Light 7", "yellow peach", "#ecccaf", 1],
+    [8, "Light Medium 8", "peach", "#f0c5a4", 2], [9, "Light Medium 9", "pink neutral", "#e8baa1", 2], [10, "Light Medium 10", "peach neutral", "#e6b997", 2],
+    [11, "Light Medium 11", "peach", "#e7b592", 3], [12, "Light Medium 12", "peach", "#ebb28f", 3], [13, "Light Medium 13", "yellow neutral", "#e4b388", 3],
+    [14, "Light Medium 14", "neutral olive", "#d3a275", 4], [15, "Medium 15", "golden neutral", "#ca9e70", 4], [16, "Medium 16", "peach", "#d09f69", 4], [17, "Medium 17", "neutral peach", "#c88c5a", 4],
+    [18, "Medium 18", "neutral olive", "#b1845a", 5], [19, "Medium 19", "golden", "#b47749", 5], [20, "Medium 20", "golden red", "#b4724a", 5], [21, "Medium 21", "neutral olive", "#a67341", 5],
+    [22, "Medium Deep 22", "neutral red", "#a36945", 6], [23, "Medium Deep 23", "golden olive", "#a46e3a", 6], [24, "Medium Deep 24", "golden neutral", "#a56436", 6], [25, "Medium Deep 25", "neutral red", "#a15a31", 6],
+    [26, "Medium Deep 26", "olive", "#9a5b27", 7], [27, "Medium Deep 27", "golden red", "#945e36", 7], [28, "Medium Deep 28", "red", "#965b39", 7], [29, "Deep 29", "golden", "#885737", 7], [30, "Deep 30", "neutral olive", "#905b3c", 7],
+    [31, "Deep 31", "neutral red", "#89512f", 8], [32, "Deep 32", "neutral golden", "#7e4527", 8], [33, "Deep 33", "neutral red", "#773f23", 8],
+    [34, "Deep 34", "neutral olive", "#5c3421", 9], [35, "Deep 35", "red neutral", "#4f2719", 9], [36, "Deep 36", "neutral", "#492d1e", 9]
+  ];
+  var GEMSTONES = 10;
 
   var BASE = (function () {
     var s = document.currentScript && document.currentScript.src;
@@ -195,18 +216,27 @@
     return { issue: null, ita: ita(lab), lab: lab, deeperThan: eyesClipped };
   }
 
+  // ITA of each reference shade, worked out once from its swatch.
+  REFERENCE.forEach(function (r) {
+    var h = r[3];
+    r.ita = ita(labFromLinear(LIN[parseInt(h.substr(1, 2), 16)], LIN[parseInt(h.substr(3, 2), 16)], LIN[parseInt(h.substr(5, 2), 16)]));
+  });
+
+  // Finds the nearest reference shade and returns its gemstone, plus the
+  // closest neighboring gemstone as the runner-up.
   function classify(itaValue, deeperThan) {
-    var cuts = SETTINGS.itaCuts, n = cuts.length, idx = n;
-    for (var c = 0; c < n; c++) if (itaValue > cuts[c]) { idx = c; break; }
+    var ranked = REFERENCE.slice().sort(function (a, b) { return Math.abs(a.ita - itaValue) - Math.abs(b.ita - itaValue); });
+    var near = ranked[0], best = near[4];
     if (deeperThan) {
-      var deeper = Math.min(n, idx + 1);
-      return { best: deeper, alt: deeper > 0 ? deeper - 1 : 1, between: true };
+      // The eye whites were too bright to read, so the skin is at least this deep.
+      var deeper = Math.min(GEMSTONES - 1, best + 1);
+      return { best: deeper, alt: deeper === best ? best - 1 : best, between: true, reference: near };
     }
-    var above = idx > 0 ? cuts[idx - 1] : Infinity, below = idx < n ? cuts[idx] : -Infinity;
-    var toAbove = above - itaValue, toBelow = itaValue - below;
-    var alt = toAbove < toBelow ? idx - 1 : idx + 1;
-    if (alt < 0) alt = 1; if (alt > n) alt = n - 1;
-    return { best: idx, alt: alt, between: Math.min(toAbove, toBelow) < SETTINGS.betweenMargin };
+    var other = null;
+    for (var i = 1; i < ranked.length; i++) if (ranked[i][4] !== best) { other = ranked[i]; break; }
+    var alt = other ? other[4] : (best > 0 ? best - 1 : 1);
+    var between = !!other && Math.abs(other.ita - itaValue) - Math.abs(near.ita - itaValue) < SETTINGS.betweenMargin;
+    return { best: best, alt: alt, between: between, reference: near };
   }
 
   var MESSAGES = {
@@ -315,7 +345,7 @@
       var cs = sw ? getComputedStyle(sw) : null;
       return { input: r, name: label ? label.textContent.trim() : r.value, color: cs ? (cs.getPropertyValue("--c").trim() || cs.backgroundColor) : "#ccc" };
     });
-    if (shades.length !== SETTINGS.itaCuts.length + 1) return;
+    if (shades.length !== GEMSTONES) return;
 
     var canUseCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext !== false && typeof WebAssembly === "object";
     trigger.hidden = false;
@@ -535,7 +565,7 @@
     });
   }
 
-  window.PulseShadeFinder = { analyzeFrame: analyzeFrame, combine: combine, classify: classify, loadMesh: loadMesh, SETTINGS: SETTINGS, labFromLinear: labFromLinear, ita: ita };
+  window.PulseShadeFinder = { REFERENCE: REFERENCE, analyzeFrame: analyzeFrame, combine: combine, classify: classify, loadMesh: loadMesh, SETTINGS: SETTINGS, labFromLinear: labFromLinear, ita: ita };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
