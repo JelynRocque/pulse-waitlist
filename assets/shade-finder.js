@@ -121,14 +121,15 @@
     function px(x, y) { var i = ((y | 0) * w + (x | 0)) * 4; return [frame[i], frame[i + 1], frame[i + 2]]; }
 
     // Skin: four cheek patches
-    var rad = faceW * 0.055, patches = [];
+    var rad = faceW * 0.055, patches = [], skinTried = 0, skinClipped = 0;
     CHEEKS.forEach(function (idx) {
       var c = lm[idx], vals = [];
       for (var y = Math.max(0, c[1] - rad); y < Math.min(h, c[1] + rad); y++) {
         for (var x = Math.max(0, c[0] - rad); x < Math.min(w, c[0] + rad); x++) {
           if ((x - c[0]) * (x - c[0]) + (y - c[1]) * (y - c[1]) > rad * rad) continue;
           var v = px(x, y);
-          if (v[0] >= 250 || v[1] >= 250 || v[2] >= 250) continue;
+          skinTried++;
+          if (v[0] >= 250 || v[1] >= 250 || v[2] >= 250) { skinClipped++; continue; }
           var R = LIN[v[0]], G = LIN[v[1]], B = LIN[v[2]];
           if (R <= B) continue;
           vals.push([R, G, B, lum(R, G, B)]);
@@ -140,6 +141,7 @@
       for (var k = lo; k < hi; k++) { s[0] += vals[k][0]; s[1] += vals[k][1]; s[2] += vals[k][2]; n++; }
       patches.push([s[0] / n, s[1] / n, s[2] / n]);
     });
+    out.skinClipped = skinTried ? skinClipped / skinTried : 0;
     var good = patches.filter(Boolean);
     if (good.length >= 2) {
       out.skin = [0, 1, 2].map(function (c) { return median(good.map(function (q) { return q[c]; })); });
@@ -191,6 +193,8 @@
     if (off > 0.18) return { issue: "noFace" };
     var withSkin = withFace.filter(function (f) { return f.skin; });
     if (withSkin.length < withFace.length / 2) return { issue: "noFace" };
+    // Skin washed out to pure white by the light hides real color, and hides shadowed-side differences too.
+    if (median(withFace.map(function (f) { return f.skinClipped || 0; })) > 0.08) return { issue: "glare" };
     if (median(withSkin.map(function (f) { return f.sideRatio; })) > 1.6) return { issue: "uneven" };
     var open = median(withFace.map(function (f) { return f.eyeOpen; }));
     var count = median(withFace.map(function (f) { return f.whiteCount; }));
@@ -247,6 +251,7 @@
     noFace: "Center your face in the oval.",
     far: "Bring your phone a little closer.",
     eyes: "Look straight at the camera with your eyes open. Glasses off if you can.",
+    glare: "The light is too strong on your face. Step out of direct sun, or turn so the light is soft and in front of you.",
     eyeShadow: "Your eyes are in shadow. Face the light straight on instead of having it overhead.",
     uneven: "One side of your face is in shadow. Turn so the light hits you straight on.",
     ok: "Perfect. Hold still…"
@@ -361,7 +366,7 @@
         '<div data-step="intro" class="sf-step">' +
           '<p>Your camera finds the closest of the ten shades in a few seconds.</p>' +
           '<ul>' +
-            '<li><b>1</b><span>Face a window or a bright light.</span></li>' +
+            '<li><b>1</b><span>Face a window in daylight, out of direct sun, so your whole face is evenly lit.</span></li>' +
             '<li><b>2</b><span>Look straight at the camera with your eyes open. Glasses off if you can.</span></li>' +
             '<li><b>3</b><span>Hold still. Your shade shows up on its own.</span></li>' +
           '</ul>' +
