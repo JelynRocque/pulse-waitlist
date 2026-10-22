@@ -338,7 +338,7 @@
             <p class="sf-picked" id="shadePicked" aria-live="polite"></p>
             <div class="ut" id="undertoneStep" role="radiogroup" aria-labelledby="utLabel" hidden>
               <p class="ut-label" id="utLabel">Your Undertone <span>(optional)</span></p>
-              <p class="ut-help">Each option shows real foundation shades in your gemstone. Pick the one you wear or the one that looks most like you.</p>
+              <p class="ut-help">Pick the undertone that looks most like your skin. Each swatch shows your gemstone with that undertone.</p>
               <div class="ut-opts" id="undertoneOpts"></div>
             </div>
           </fieldset>
@@ -452,21 +452,13 @@
 <script src="/assets/shade-finder.js" defer></script>
 <script>
 /* Undertone step: lists the undertone families inside the picked gemstone,
-   each with real foundation shades from the shade library. */
+   each with a swatch of the gemstone at that undertone. */
 document.addEventListener("DOMContentLoaded", function () {
   var lib = window.PULSE_SHADES; if (!lib) return;
   var step = document.getElementById("undertoneStep"), opts = document.getElementById("undertoneOpts");
   var NAMES = { cool: "Cool", neutral: "Neutral", warm: "Warm", olive: "Olive", red: "Red" };
   var HINTS = { cool: "Pink or rosy", neutral: "Neither pink nor golden", warm: "Golden, peach or bronze", olive: "Green-gray or olive", red: "Red or deep copper" };
-  var BRAND = { "Pat McGrath": "Pat McGrath", "Fenty": "Fenty", "Juvia's Place": "Juvia's Place" };
   function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
-  function examples(g, fam) {
-    var list = lib.shades.filter(function (r) { return r[6] === g && r[3] === fam; });
-    var seen = {}, pick = [];
-    list.forEach(function (r) { if (!seen[r[0]] && pick.length < 3) { seen[r[0]] = 1; pick.push(r); } });
-    list.forEach(function (r) { if (pick.length < 3 && pick.indexOf(r) < 0) pick.push(r); });
-    return pick.map(function (r) { return BRAND[r[0]] + " " + r[1]; }).join(" · ");
-  }
   function render() {
     var t = document.querySelector('input[name="tone"]:checked');
     var m = t && /^mst_(\d+)$/.exec(t.value);
@@ -475,7 +467,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var html = "";
     ["cool", "neutral", "warm", "olive", "red"].forEach(function (f) {
       if (!gem.families[f]) return;
-      html += '<label class="ut-opt"><input type="radio" name="undertone" value="' + f + '"' + (prev === f ? " checked" : "") + '><span><i style="--c:' + gem.families[f] + '"></i><b>' + NAMES[f] + ' <small>· ' + HINTS[f] + '</small></b><small>Like ' + esc(examples(g, f)) + '</small></span></label>';
+      html += '<label class="ut-opt"><input type="radio" name="undertone" value="' + f + '"' + (prev === f ? " checked" : "") + '><span><i style="--c:' + gem.families[f] + '"></i><b>' + NAMES[f] + ' <small>· ' + HINTS[f] + '</small></b></span></label>';
     });
     html += '<label class="ut-opt"><input type="radio" name="undertone" value="unsure"' + (prev === "unsure" ? " checked" : "") + '><span><i class="ut-unsure"></i><b>Not Sure</b><small>That\'s fine. Pulse can help you figure it out in the app.</small></span></label>';
     opts.innerHTML = html;
