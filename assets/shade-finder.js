@@ -31,9 +31,11 @@
   "use strict";
 
   var SETTINGS = {
-    // Typical light reflected by the whites of the eyes. Lower this if
-    // results run too deep across the board; raise it if they run too light.
-    scleraReflectance: 0.55,
+    // Light reflected by the whites of the eyes, as the camera sees them
+    // (lids and lashes shade them). Sets the overall light-to-deep scale.
+    // Calibrated Oct 22, 2026 on one person who wears Pat McGrath Medium
+    // Deep 24. Lower it if results run too light; raise it if too deep.
+    scleraReflectance: 0.30,
     // How much to trust the eye whites for color balance (0 = trust the
     // camera's own white balance, 1 = treat eye whites as pure white).
     // Eye whites are often slightly yellow, so this stays partial.
