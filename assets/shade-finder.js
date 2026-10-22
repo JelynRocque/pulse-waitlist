@@ -1,23 +1,33 @@
 /*
- * Pulse "Find My Shade" camera helper (v3: eye-white reference, nothing to hold).
+ * Pulse "Find My Shade" camera matcher (v4: white paper reference + jawline check).
  *
- * Why the eyes: phone cameras brighten or darken every face so it looks
- * "normal", which made v1 give most people the same middle shade. The whites
- * of the eyes are in the same light as the skin and go through the same
- * camera adjustments, and they're close to white on everyone. Comparing
- * cheek skin with the eye whites cancels out the camera's brightness changes.
+ * How it reads depth: the person holds a sheet of plain white paper flat in the
+ * box beside their face. The paper sits in the same light as their cheek and
+ * goes through the same camera adjustments, and plain printer paper reflects
+ * about the same amount of light everywhere, so cheek ÷ paper cancels the
+ * camera's auto-brightness and gives the skin's true depth (CIELAB L*). The
+ * depth picks the gemstone from the shared bands in assets/shade-library.js.
  *
- * The comparison gives the skin's depth (CIELAB lightness, L*). Each gemstone
- * is a band of depth, shared with the shade library (assets/shade-library.js),
- * where 126 foundation shades from Pat McGrath, Fenty and Juvia's Place sit in
- * the same bands. The camera picks the gemstone; the person picks their
- * undertone, because lighting tints color too much for a camera to judge
- * warm versus cool reliably.
+ * Why not the eye whites any more (v3): tested Oct 22, 2026 they read deeper
+ * skin as lighter. A friend with deep skin (glasses, indoor light) got
+ * Moonstone, and on the Monk Skin Tone Examples set (Google/TONL, testing use
+ * only) the eye-white reading was about two gemstones off on average. Eye
+ * whites are a few dozen pixels on a phone, partly hidden by lids, lashes and
+ * glasses; a sheet of paper is thousands of pixels, flat and fully visible.
+ *
+ * Then the jawline check: the screen fills with the gemstone the camera found.
+ * Holding the phone to their jawline in a mirror, the person answers Lighter,
+ * A Match or Deeper, and the color steps one gemstone at a time until it
+ * matches. The camera does the heavy lifting; the check catches anything the
+ * light or camera got wrong.
  *
  * Face tracking (MediaPipe Face Mesh, Apache 2.0, served from /assets/vendor)
- * runs on the device to find the cheeks and eyes. No image, video or face
- * measurement is saved, uploaded or sent anywhere. Only the shade the person
- * picks is submitted, the same as tapping it by hand.
+ * runs on the device to find the cheeks. No image, video or measurement is
+ * saved, uploaded or sent anywhere. Only the shade the person picks is
+ * submitted, the same as tapping it by hand.
+ *
+ * Testing: add ?sfdebug=1 to the page URL to show the measured depth and the
+ * cheek and paper readings on the result screen.
  *
  * Use: add a button with data-shade-finder="<radio name>" next to a group of
  * ten shade radios, lightest first. Each radio's label needs an <i> swatch and
@@ -27,27 +37,26 @@
   "use strict";
 
   var SETTINGS = {
-    // Light reflected by the whites of the eyes, as the camera sees them
-    // (lids and lashes shade them). Sets the overall light-to-deep scale.
-    // Calibrated Oct 22, 2026 on one person who wears Pat McGrath Medium
-    // Deep 24 and Fenty 486W (both depth ~49, Tiger's Eye).
-    // Lower it if results run too light; raise it if too deep.
-    scleraReflectance: 0.34,
-    // How much to trust the eye whites for color balance (0 = trust the
-    // camera's own white balance, 1 = treat eye whites as pure white).
-    // Eye whites are often slightly yellow, so this stays partial.
-    whiteBalanceFromEyes: 0.75,
-    // Within this much depth of a gemstone boundary, the result says it's
-    // between the two gemstones.
+    // Light plain white printer paper reflects (0-1). Sets the light-to-deep
+    // scale. Lower it if results run too deep; raise it if too light.
+    paperReflectance: 0.88,
+    // How much to trust the paper for color balance (1 = paper is pure white).
+    whiteBalanceFromPaper: 0.9,
+    // Within this much depth of a gemstone boundary, the result says it's between two.
     betweenMargin: 1.5,
     framesPerReading: 8,
     goodChecksBeforeAuto: 2,
     analysisWidth: 720
   };
 
+  // Guide shapes in the 300 x 400 viewfinder, as the person sees it (mirrored).
+  var OVAL = { cx: 112, cy: 182, rx: 84, ry: 114 };
+  var PAPER = { x: 208, y: 112, w: 80, h: 150 };
+
   // Lower depth limit of gemstones 1-9 (Pearl is open above, Onyx open below).
   var EDGES = (window.PULSE_SHADES && window.PULSE_SHADES.edges) || [83, 76, 69, 62, 55, 48, 41, 34, 27];
   var GEMSTONES = EDGES.length + 1;
+  var DEBUG = /[?&]sfdebug=1/.test(location.search);
 
   var BASE = (function () {
     var s = document.currentScript && document.currentScript.src;
@@ -74,57 +83,75 @@
     return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
   }
 
-  // ---------- Face mesh landmark indices ----------
-  var EYE_L = [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246];
-  var EYE_R = [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398];
-  var IRIS_L = [468, 469, 470, 471, 472], IRIS_R = [473, 474, 475, 476, 477];
   var CHEEKS = [50, 280, 205, 425]; // upper and lower cheeks, both sides
   var FACE_SIDES = [234, 454];
 
-  function pointInPoly(x, y, poly) {
-    var inside = false;
-    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      var xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
-      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
-    }
-    return inside;
+  // Viewfinder (mirrored, object-fit: cover) -> frame pixels.
+  // view = {u0, v0, uw, vh}: the part of the frame the viewfinder shows, as fractions.
+  function toFrame(view, w, h, x, y) {
+    var u = x / 300, v = y / 400;
+    return [(view.u0 + (1 - u) * view.uw) * w, (view.v0 + v * view.vh) * h];
   }
 
-  // Reads skin and eye whites from one frame. lm = face landmarks scaled to pixels.
-  function analyzeFrame(ctx, w, h, lm) {
+  // Reads cheek skin and the paper from one frame. lm = face landmarks in pixels.
+  function analyzeFrame(ctx, w, h, lm, view) {
     var out = { face: !!lm };
     var frame = ctx.getImageData(0, 0, w, h).data;
     var fs = 0, fc = 0;
     for (var p = 0; p < frame.length; p += 64) { fs += (frame[p] + frame[p + 1] + frame[p + 2]) / 3; fc++; }
     out.frameMean = fs / fc;
+    function px(x, y) { var i = ((y | 0) * w + (x | 0)) * 4; return [frame[i], frame[i + 1], frame[i + 2]]; }
+
+    // Paper: the middle of the guide box (a margin in from the edges, so fingers and edges stay out)
+    var a = toFrame(view, w, h, PAPER.x + PAPER.w * 0.15, PAPER.y + PAPER.h * 0.12);
+    var b = toFrame(view, w, h, PAPER.x + PAPER.w * 0.85, PAPER.y + PAPER.h * 0.88);
+    var x0 = Math.max(0, Math.min(a[0], b[0])), x1 = Math.min(w - 1, Math.max(a[0], b[0]));
+    var y0 = Math.max(0, Math.min(a[1], b[1])), y1 = Math.min(h - 1, Math.max(a[1], b[1]));
+    var paper = [], clipped = 0, sats = [];
+    for (var y = Math.ceil(y0); y <= y1; y += 2) for (var x = Math.ceil(x0); x <= x1; x += 2) {
+      var v = px(x, y), mx = Math.max(v[0], v[1], v[2]);
+      if (mx >= 250) { clipped++; continue; }
+      sats.push(mx ? (mx - Math.min(v[0], v[1], v[2])) / mx : 1);
+      paper.push([LIN[v[0]], LIN[v[1]], LIN[v[2]], lum(LIN[v[0]], LIN[v[1]], LIN[v[2]])]);
+    }
+    var total = paper.length + clipped;
+    out.paperClipped = total ? clipped / total : 0;
+    if (paper.length >= 40) {
+      paper.sort(function (p1, p2) { return p1[3] - p2[3]; });
+      out.paperSpread = paper[Math.floor(paper.length * 0.9)][3] / Math.max(1e-4, paper[Math.floor(paper.length * 0.1)][3]);
+      out.paperSat = median(sats);
+      var lo = Math.floor(paper.length * 0.25), hi = Math.ceil(paper.length * 0.75), s3 = [0, 0, 0], n3 = 0;
+      for (var k = lo; k < hi; k++) { s3[0] += paper[k][0]; s3[1] += paper[k][1]; s3[2] += paper[k][2]; n3++; }
+      out.paper = [s3[0] / n3, s3[1] / n3, s3[2] / n3];
+    }
     if (!lm) return out;
 
     var faceW = Math.hypot(lm[FACE_SIDES[0]][0] - lm[FACE_SIDES[1]][0], lm[FACE_SIDES[0]][1] - lm[FACE_SIDES[1]][1]);
-    var cx = (lm[FACE_SIDES[0]][0] + lm[FACE_SIDES[1]][0]) / 2;
-    out.faceShare = faceW / w;
-    out.offCenter = Math.abs(cx / w - 0.5);
-    function px(x, y) { var i = ((y | 0) * w + (x | 0)) * 4; return [frame[i], frame[i + 1], frame[i + 2]]; }
+    var cx = (lm[FACE_SIDES[0]][0] + lm[FACE_SIDES[1]][0]) / 2, cy = (lm[FACE_SIDES[0]][1] + lm[FACE_SIDES[1]][1]) / 2;
+    var oc = toFrame(view, w, h, OVAL.cx, OVAL.cy);
+    out.faceShare = faceW / (view.uw * w);
+    out.offCenter = Math.hypot(cx - oc[0], cy - oc[1]) / (view.uw * w);
 
     // Skin: four cheek patches
     var rad = faceW * 0.055, patches = [], skinTried = 0, skinClipped = 0, spreads = [];
     CHEEKS.forEach(function (idx) {
       var c = lm[idx], vals = [];
-      for (var y = Math.max(0, c[1] - rad); y < Math.min(h, c[1] + rad); y++) {
-        for (var x = Math.max(0, c[0] - rad); x < Math.min(w, c[0] + rad); x++) {
-          if ((x - c[0]) * (x - c[0]) + (y - c[1]) * (y - c[1]) > rad * rad) continue;
-          var v = px(x, y);
+      for (var yy = Math.max(0, c[1] - rad); yy < Math.min(h, c[1] + rad); yy++) {
+        for (var xx = Math.max(0, c[0] - rad); xx < Math.min(w, c[0] + rad); xx++) {
+          if ((xx - c[0]) * (xx - c[0]) + (yy - c[1]) * (yy - c[1]) > rad * rad) continue;
+          var q = px(xx, yy);
           skinTried++;
-          if (v[0] >= 250 || v[1] >= 250 || v[2] >= 250) { skinClipped++; continue; }
-          var R = LIN[v[0]], G = LIN[v[1]], B = LIN[v[2]];
+          if (q[0] >= 250 || q[1] >= 250 || q[2] >= 250) { skinClipped++; continue; }
+          var R = LIN[q[0]], G = LIN[q[1]], B = LIN[q[2]];
           if (R <= B) continue;
           vals.push([R, G, B, lum(R, G, B)]);
         }
       }
       if (vals.length < 20) { patches.push(null); return; }
-      vals.sort(function (a, b) { return a[3] - b[3]; });
+      vals.sort(function (p1, p2) { return p1[3] - p2[3]; });
       spreads.push(vals[Math.floor(vals.length * 0.9)][3] / Math.max(1e-4, vals[Math.floor(vals.length * 0.1)][3]));
-      var lo = Math.floor(vals.length * 0.25), hi = Math.ceil(vals.length * 0.75), s = [0, 0, 0], n = 0;
-      for (var k = lo; k < hi; k++) { s[0] += vals[k][0]; s[1] += vals[k][1]; s[2] += vals[k][2]; n++; }
+      var l2 = Math.floor(vals.length * 0.25), h2 = Math.ceil(vals.length * 0.75), s = [0, 0, 0], n = 0;
+      for (var k2 = l2; k2 < h2; k2++) { s[0] += vals[k2][0]; s[1] += vals[k2][1]; s[2] += vals[k2][2]; n++; }
       patches.push([s[0] / n, s[1] / n, s[2] / n]);
     });
     out.skinClipped = skinTried ? skinClipped / skinTried : 0;
@@ -135,98 +162,47 @@
       var sideL = patches[0] || patches[2], sideR = patches[1] || patches[3];
       out.sideRatio = sideL && sideR ? Math.max(lum.apply(null, sideL), lum.apply(null, sideR)) / Math.max(1e-4, Math.min(lum.apply(null, sideL), lum.apply(null, sideR))) : 1;
     }
-
-    // Eye whites: inside each eye outline, outside the iris
-    var white = [], clipped = 0, openness = [];
-    [[EYE_L, IRIS_L], [EYE_R, IRIS_R]].forEach(function (pair) {
-      var poly = pair[0].map(function (i) { return lm[i]; });
-      var ic = lm[pair[1][0]], ir = 0;
-      for (var k = 1; k < 5; k++) ir = Math.max(ir, Math.hypot(lm[pair[1][k]][0] - ic[0], lm[pair[1][k]][1] - ic[1]));
-      ir *= 1.15;
-      var xs = poly.map(function (q) { return q[0]; }), ys = poly.map(function (q) { return q[1]; });
-      var x0 = Math.max(0, Math.min.apply(null, xs)), x1 = Math.min(w - 1, Math.max.apply(null, xs));
-      var y0 = Math.max(0, Math.min.apply(null, ys)), y1 = Math.min(h - 1, Math.max.apply(null, ys));
-      openness.push((y1 - y0) / Math.max(1, x1 - x0));
-      var eyePx = [];
-      for (var y = Math.ceil(y0); y <= y1; y++) for (var x = Math.ceil(x0); x <= x1; x++) {
-        if (!pointInPoly(x, y, poly)) continue;
-        if (Math.hypot(x - ic[0], y - ic[1]) < ir) continue;
-        var v = px(x, y), mx = Math.max(v[0], v[1], v[2]);
-        eyePx.push([v[0], v[1], v[2], lum(LIN[v[0]], LIN[v[1]], LIN[v[2]]), mx ? (mx - Math.min(v[0], v[1], v[2])) / mx : 1]);
-      }
-      // Eye whites are the least colorful part of the eye (eyelid skin, lashes
-      // and the iris edge all carry color), then the brighter half of those.
-      // Picking by color, not brightness, keeps light eyelid skin out on fair faces.
-      eyePx.sort(function (a, b) { return a[4] - b[4]; });
-      var plain = eyePx.slice(0, Math.ceil(eyePx.length * 0.5));
-      plain.sort(function (a, b) { return b[3] - a[3]; });
-      plain.slice(0, Math.ceil(plain.length * 0.6)).forEach(function (q) {
-        if (q[0] >= 250 || q[1] >= 250 || q[2] >= 250) { clipped++; return; }
-        white.push([LIN[q[0]], LIN[q[1]], LIN[q[2]]]);
-      });
-    });
-    out.eyeOpen = Math.min.apply(null, openness);
-    out.whiteCount = white.length + clipped;
-    out.whiteClipped = out.whiteCount ? clipped / out.whiteCount : 0;
-    if (white.length >= 6) out.white = [0, 1, 2].map(function (c) { return median(white.map(function (q) { return q[c]; })); });
     return out;
   }
 
-  // Combines frames, checks conditions, returns the skin's ITA.
+  // Combines frames, checks conditions, returns the skin's depth.
   function combine(frames) {
     var withFace = frames.filter(function (f) { return f.face; });
-    var frameMean = median(frames.map(function (f) { return f.frameMean; }));
-    if (frameMean < 28) return { issue: "dark" };
+    if (median(frames.map(function (f) { return f.frameMean; })) < 28) return { issue: "dark" };
     if (withFace.length < frames.length / 2) return { issue: "noFace" };
-    var share = median(withFace.map(function (f) { return f.faceShare; }));
-    var off = median(withFace.map(function (f) { return f.offCenter; }));
-    if (share < 0.28) return { issue: "far" };
-    if (off > 0.18) return { issue: "noFace" };
+    if (median(withFace.map(function (f) { return f.faceShare; })) < 0.3) return { issue: "far" };
+    if (median(withFace.map(function (f) { return f.offCenter; })) > 0.2) return { issue: "noFace" };
     var withSkin = withFace.filter(function (f) { return f.skin; });
     if (withSkin.length < withFace.length / 2) return { issue: "noFace" };
-    // Skin washed out to pure white by the light hides real color, and hides shadowed-side differences too.
     if (median(withFace.map(function (f) { return f.skinClipped || 0; })) > 0.08) return { issue: "glare" };
-    // Hard, direct light throws strong highlights and shadows across the cheeks
-    // (soft window light measures about 2-3 here; direct sun 14+).
+    // Soft window light measures about 2-3 here; direct sun 14+.
     if (median(withFace.map(function (f) { return f.skinSpread || 1; })) > 6) return { issue: "glare" };
     if (median(withSkin.map(function (f) { return f.sideRatio; })) > 1.6) return { issue: "uneven" };
-    var open = median(withFace.map(function (f) { return f.eyeOpen; }));
-    var count = median(withFace.map(function (f) { return f.whiteCount; }));
-    if (open < 0.2 || count < 12) return { issue: "eyes" };
 
     var skin = [0, 1, 2].map(function (c) { return median(withSkin.map(function (f) { return f.skin[c]; })); });
-    var clippedShare = median(withFace.map(function (f) { return f.whiteClipped; }));
-    var withWhite = withFace.filter(function (f) { return f.white; });
-    var R = SETTINGS.scleraReflectance, white, eyesClipped = clippedShare > 0.3 || withWhite.length < withFace.length / 2;
-    if (!eyesClipped) {
-      white = [0, 1, 2].map(function (c) { return median(withWhite.map(function (f) { return f.white[c]; })); });
-    } else {
-      // Eye whites blown out: they're at least as bright as the camera can record.
-      white = [1, 1, 1];
-    }
-    var wl = lum(white[0], white[1], white[2]);
-    // On fair skin the cheeks can look brighter than the eye whites (lids shade
-    // them), so only refuse when the eyes are far darker than any skin allows.
-    if (!eyesClipped && wl < lum(skin[0], skin[1], skin[2]) * 0.4) return { issue: "eyeShadow" };
-    var k = SETTINGS.whiteBalanceFromEyes;
+    var sl = lum(skin[0], skin[1], skin[2]);
+    var withPaper = withSkin.filter(function (f) { return f.paper; });
+    if (median(withSkin.map(function (f) { return f.paperClipped; })) > 0.04) return { issue: "paperBright" };
+    if (withPaper.length < withSkin.length / 2) return { issue: "noPaper" };
+    var paper = [0, 1, 2].map(function (c) { return median(withPaper.map(function (f) { return f.paper[c]; })); });
+    var pl = lum(paper[0], paper[1], paper[2]);
+    // Paper is plain and even: low color, no shadow across it, and brighter than any skin.
+    if (median(withPaper.map(function (f) { return f.paperSat; })) > 0.3 || pl < sl * 1.1) return { issue: "noPaper" };
+    if (median(withPaper.map(function (f) { return f.paperSpread; })) > 1.6) return { issue: "paperShadow" };
+
+    var k = SETTINGS.whiteBalanceFromPaper, R = SETTINGS.paperReflectance;
     var refl = [0, 1, 2].map(function (c) {
-      var balance = Math.pow(wl / Math.max(1e-4, white[c]), k);
-      return Math.min(1, skin[c] * balance * R / wl);
+      var balance = Math.pow(pl / Math.max(1e-4, paper[c]), k);
+      return Math.min(1, skin[c] * balance * R / pl);
     });
     var lab = labFromLinear(refl[0], refl[1], refl[2]);
-    // If the eye whites were blown out, the true skin is at least this deep.
-    return { issue: null, depth: lab[0], ita: ita(lab), lab: lab, deeperThan: eyesClipped };
+    return { issue: null, depth: lab[0], ita: ita(lab), lab: lab, skinLum: sl, paperLum: pl };
   }
 
   // Depth -> gemstone (0 = Pearl ... 9 = Onyx), plus the nearer neighbor as runner-up.
-  function classify(depth, deeperThan) {
+  function classify(depth) {
     var best = GEMSTONES - 1;
     for (var i = 0; i < EDGES.length; i++) if (depth >= EDGES[i]) { best = i; break; }
-    if (deeperThan) {
-      // The eye whites were too bright to read, so the skin is at least this deep.
-      var deeper = Math.min(GEMSTONES - 1, best + 1);
-      return { best: deeper, alt: deeper === best ? best - 1 : best, between: true, depth: depth };
-    }
     var top = best > 0 ? EDGES[best - 1] : Infinity, bottom = best < EDGES.length ? EDGES[best] : -Infinity;
     var toLighter = top - depth, toDeeper = depth - bottom;
     var alt = toLighter < toDeeper ? best - 1 : best + 1;
@@ -234,14 +210,29 @@
     return { best: best, alt: alt, between: Math.min(toLighter, toDeeper) < SETTINGS.betweenMargin, depth: depth };
   }
 
+  // Jawline check: one answer. c = {cur, came} (came = the answer that led here).
+  // Returns {cur, came} to show next, {pair:[a,b]} to choose between, or {done, best, alt}.
+  function checkStep(c, answer) {
+    if (answer === "match") return { done: true, best: c.cur, alt: c.cur === 0 ? 1 : c.cur === GEMSTONES - 1 ? GEMSTONES - 2 : (c.came === "lighter" ? c.cur + 1 : c.cur - 1) };
+    if (answer === "lighter") {
+      if (c.came === "deeper") return { pair: [c.cur - 1, c.cur] };      // deeper than the last one, lighter than this
+      if (c.cur === 0) return { done: true, best: 0, alt: 1 };
+      return { cur: c.cur - 1, came: "lighter" };
+    }
+    if (c.came === "lighter") return { pair: [c.cur, c.cur + 1] };
+    if (c.cur === GEMSTONES - 1) return { done: true, best: GEMSTONES - 1, alt: GEMSTONES - 2 };
+    return { cur: c.cur + 1, came: "deeper" };
+  }
+
   var MESSAGES = {
     loading: "Getting things ready…",
     dark: "It's too dark. Face a window or a bright lamp.",
-    noFace: "Center your face in the oval.",
+    noFace: "Fit your face in the oval.",
     far: "Bring your phone a little closer.",
-    eyes: "Look straight at the camera with your eyes open. Glasses off if you can.",
+    noPaper: "Hold a sheet of plain white paper flat in the box, right beside your cheek.",
+    paperBright: "The paper is too bright for the camera. Step back from the window a little, or turn so the light is softer.",
+    paperShadow: "Part of the paper is in shadow. Hold it flat, facing the camera, in the same light as your face.",
     glare: "The light is too strong on your face. Step out of direct sun, or turn so the light is soft and in front of you.",
-    eyeShadow: "Your eyes are in shadow. Face the light straight on instead of having it overhead.",
     uneven: "One side of your face is in shadow. Turn so the light hits you straight on.",
     ok: "Perfect. Hold still…"
   };
@@ -322,6 +313,20 @@
     ".sf-alt{display:flex;align-items:center;gap:10px;font-size:14px}" +
     ".sf-alt i{width:24px;height:24px;border-radius:50%;display:block;border:1px solid rgba(38,16,0,.15);flex:none}" +
     ".sf-alt button{font:inherit;font-weight:600;font-size:14px;color:var(--auburn,#96262C);background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}" +
+    ".sf-view .sf-paper-label{font:700 11px/1 var(--body,Raleway,Arial,sans-serif);letter-spacing:.12em;fill:#FFFBF7}" +
+    "dialog.sf.sf-full .sf-body{padding:0;gap:0;height:100%}" +
+    ".sf-cmp{position:relative;display:grid;grid-template-rows:auto 1fr auto;min-height:min(640px,100dvh);height:100%}" +
+    ".sf-cmp-top{display:flex;justify-content:space-between;align-items:center;padding:14px 14px 0 20px;gap:12px}" +
+    ".sf-cmp-top span{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;border-radius:999px;background:rgba(255,251,247,.86);color:#261000}" +
+    ".sf-cmp-top .sf-x{background:rgba(255,251,247,.86);color:#261000}" +
+    ".sf-colors{display:grid;grid-auto-flow:column;grid-auto-columns:1fr}" +
+    ".sf-colors button{border:0;margin:0;padding:0 0 18px;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;font:inherit;font-weight:700;font-size:15px;background:transparent}" +
+    ".sf-colors button span{background:rgba(255,251,247,.92);color:#261000;padding:10px 16px;border-radius:999px}" +
+    ".sf-ask{background:var(--warm-white,#FFFBF7);padding:16px 18px 20px;display:grid;gap:10px}" +
+    ".sf-ask p{text-align:center;color:var(--espresso,#261000);font-size:15px;font-weight:600}" +
+    ".sf-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}" +
+    ".sf-ask .sf-btn{padding:13px 8px;font-size:14px;letter-spacing:.01em}" +
+    ".sf-debug{font:12px/1.4 ui-monospace,Menlo,monospace;background:#261000;color:#FFFBF7;border-radius:10px;padding:10px;white-space:pre-wrap}" +
     ".sf [hidden]{display:none !important}";
 
   var ICON_CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
@@ -350,41 +355,57 @@
     var dlg = el("dialog", { "class": "sf", "aria-labelledby": "sfTitle" });
     dlg.innerHTML =
       '<div class="sf-body">' +
-        '<div class="sf-head"><h2 id="sfTitle">Find My Shade</h2><button type="button" class="sf-x" data-close aria-label="Close">&times;</button></div>' +
-
         '<div data-step="intro" class="sf-step">' +
-          '<p>Your camera finds your shade in a few seconds. Then you pick your undertone.</p>' +
+          '<div class="sf-head"><h2 id="sfTitle">Find My Shade</h2><button type="button" class="sf-x" data-close aria-label="Close">&times;</button></div>' +
+          '<p>Your camera reads your shade in a few seconds, then you check it against your jawline. You\'ll need a sheet of plain white paper.</p>' +
           '<ul>' +
-            '<li><b>1</b><span>Face a window in daylight, out of direct sun, so your whole face is evenly lit.</span></li>' +
-            '<li><b>2</b><span>Look straight at the camera with your eyes open. Glasses off if you can.</span></li>' +
-            '<li><b>3</b><span>Hold still. Your shade shows up on its own.</span></li>' +
+            '<li><b>1</b><span>Face a window in daylight, out of direct sun, so your face is evenly lit.</span></li>' +
+            '<li><b>2</b><span>Hold the paper flat beside your cheek, facing the camera, inside the box on screen.</span></li>' +
+            '<li><b>3</b><span>Hold still. Your shade shows up on its own. Glasses are fine.</span></li>' +
           '</ul>' +
           '<label class="sf-consent"><input type="checkbox" data-consent><span>I agree to let Pulse map my face on this device to find my shade. The image and face measurements stay on my phone and are never saved or sent.</span></label>' +
           '<button type="button" class="sf-btn" data-start disabled>Start Camera</button>' +
         '</div>' +
 
         '<div data-step="camera" hidden class="sf-step">' +
+          '<div class="sf-head"><h2>Find My Shade</h2><button type="button" class="sf-x" data-close aria-label="Close">&times;</button></div>' +
           '<div class="sf-view">' +
             '<video playsinline muted autoplay></video>' +
             '<svg viewBox="0 0 300 400" preserveAspectRatio="none" aria-hidden="true">' +
-              '<defs><mask id="sfMask"><rect width="300" height="400" fill="#fff"/><ellipse cx="150" cy="180" rx="100" ry="135" fill="#000"/></mask></defs>' +
+              '<defs><mask id="sfMask"><rect width="300" height="400" fill="#fff"/>' +
+                '<ellipse cx="' + OVAL.cx + '" cy="' + OVAL.cy + '" rx="' + OVAL.rx + '" ry="' + OVAL.ry + '" fill="#000"/>' +
+                '<rect x="' + PAPER.x + '" y="' + PAPER.y + '" width="' + PAPER.w + '" height="' + PAPER.h + '" rx="6" fill="#000"/></mask></defs>' +
               '<rect width="300" height="400" fill="rgba(38,16,0,.45)" mask="url(#sfMask)"/>' +
-              '<ellipse cx="150" cy="180" rx="100" ry="135" fill="none" stroke="#FFFBF7" stroke-width="2" stroke-dasharray="6 6"/>' +
+              '<ellipse cx="' + OVAL.cx + '" cy="' + OVAL.cy + '" rx="' + OVAL.rx + '" ry="' + OVAL.ry + '" fill="none" stroke="#FFFBF7" stroke-width="2" stroke-dasharray="6 6"/>' +
+              '<rect x="' + PAPER.x + '" y="' + PAPER.y + '" width="' + PAPER.w + '" height="' + PAPER.h + '" rx="6" fill="none" stroke="#E4A524" stroke-width="2" stroke-dasharray="6 6"/>' +
+              '<text class="sf-paper-label" x="' + (PAPER.x + PAPER.w / 2) + '" y="' + (PAPER.y - 8) + '" text-anchor="middle">PAPER</text>' +
             '</svg>' +
             '<div class="sf-status" role="status" aria-live="polite"></div>' +
           '</div>' +
           '<button type="button" class="sf-btn" data-capture disabled>Get My Shade</button>' +
         '</div>' +
 
+        '<div data-step="check" hidden class="sf-cmp">' +
+          '<div class="sf-cmp-top"><span data-progress></span><button type="button" class="sf-x" data-close aria-label="Close">&times;</button></div>' +
+          '<div class="sf-colors" data-colors></div>' +
+          '<div class="sf-ask">' +
+            '<p data-question></p>' +
+            '<div class="sf-row3" data-three><button type="button" class="sf-btn ghost" data-answer="lighter">Lighter</button><button type="button" class="sf-btn" data-answer="match">A Match</button><button type="button" class="sf-btn ghost" data-answer="deeper">Deeper</button></div>' +
+          '</div>' +
+        '</div>' +
+
         '<div data-step="result" hidden class="sf-step">' +
+          '<div class="sf-head"><h2>Find My Shade</h2><button type="button" class="sf-x" data-close aria-label="Close">&times;</button></div>' +
           '<div class="sf-result"><i data-best-dot></i><div><small>Your Shade</small><strong data-best-name></strong></div></div>' +
           '<p data-note></p>' +
           '<div class="sf-alt"><i data-alt-dot></i><span>Also close: <button type="button" data-use-alt></button></span></div>' +
           '<button type="button" class="sf-btn" data-use-best></button>' +
           '<div class="sf-row"><button type="button" class="sf-btn ghost" data-retry>Try Again</button><button type="button" class="sf-btn ghost" data-close>Pick Myself</button></div>' +
+          '<div class="sf-debug" data-debug hidden></div>' +
         '</div>' +
 
         '<div data-step="error" hidden class="sf-step">' +
+          '<div class="sf-head"><h2>Find My Shade</h2><button type="button" class="sf-x" data-close aria-label="Close">&times;</button></div>' +
           '<p data-error></p>' +
           '<p>To pick by eye: in daylight, hold your phone up to a mirror next to your jawline and choose the shade that blends in best.</p>' +
           '<button type="button" class="sf-btn" data-close>Pick Myself</button>' +
@@ -396,12 +417,13 @@
     var video = q("video"), status = q(".sf-status"), captureBtn = q("[data-capture]"), startBtn = q("[data-start]"), consent = q("[data-consent]");
     var canvas = document.createElement("canvas");
     var ctx = canvas.getContext("2d", { willReadFrequently: true });
-    var stream = null, mesh = null, liveTimer = null, busy = false, result = null, focusAfter = null, goodChecks = 0, session = 0;
+    var stream = null, mesh = null, liveTimer = null, busy = false, reading = null, check = null, result = null, focusAfter = null, goodChecks = 0, session = 0, exposureLowered = false;
 
     consent.addEventListener("change", function () { startBtn.disabled = !consent.checked; });
 
     function show(step) {
-      ["intro", "camera", "result", "error"].forEach(function (s) { q('[data-step="' + s + '"]').hidden = s !== step; });
+      ["intro", "camera", "check", "result", "error"].forEach(function (s) { q('[data-step="' + s + '"]').hidden = s !== step; });
+      dlg.classList.toggle("sf-full", step === "check");
     }
     function stopCamera() {
       session++;
@@ -415,17 +437,34 @@
     }
     function fail(msg) { q("[data-error]").textContent = msg; show("error"); }
 
-    // Grabs the current frame and finds the face. Resolves to a frame reading.
+    // Which part of the frame the viewfinder shows (object-fit: cover), as fractions of the frame.
+    function viewOf(vw, vh) {
+      var r = video.getBoundingClientRect(), bw = r.width || 3, bh = r.height || 4;
+      var s = Math.max(bw / vw, bh / vh), visW = bw / s, visH = bh / s;
+      return { u0: (vw - visW) / 2 / vw, uw: visW / vw, v0: (vh - visH) / 2 / vh, vh: visH / vh };
+    }
+
+    // Some phones let the page turn exposure down; when the paper washes out, try that once.
+    function lowerExposure() {
+      if (exposureLowered || !stream) return;
+      exposureLowered = true;
+      try {
+        var t = stream.getVideoTracks()[0], c = t.getCapabilities ? t.getCapabilities() : {};
+        if (c.exposureCompensation) t.applyConstraints({ advanced: [{ exposureCompensation: Math.max(c.exposureCompensation.min, -1) }] }).catch(function () {});
+      } catch (e) { /* not supported */ }
+    }
+
     function readFrame() {
       var vw = video.videoWidth, vh = video.videoHeight;
       if (!vw || !vh || !mesh) return Promise.resolve(null);
       var sc = Math.min(1, SETTINGS.analysisWidth / vw), w = Math.round(vw * sc), h = Math.round(vh * sc);
       if (canvas.width !== w) { canvas.width = w; canvas.height = h; }
       ctx.drawImage(video, 0, 0, w, h);
+      var view = viewOf(vw, vh);
       return mesh.detect(canvas).then(function (r) {
         var f = r && r.multiFaceLandmarks && r.multiFaceLandmarks[0];
-        var lm = f && f.length >= 478 ? f.map(function (p) { return [p.x * w, p.y * h]; }) : null;
-        return analyzeFrame(ctx, w, h, lm);
+        var lm = f && f.length >= 468 ? f.map(function (p) { return [p.x * w, p.y * h]; }) : null;
+        return analyzeFrame(ctx, w, h, lm, view);
       });
     }
 
@@ -436,6 +475,7 @@
         if (my !== session || busy) return;
         if (fr) {
           var res = combine([fr]);
+          if (res.issue === "paperBright") lowerExposure();
           setStatus(res.issue);
           goodChecks = res.issue ? 0 : goodChecks + 1;
           if (goodChecks >= SETTINGS.goodChecksBeforeAuto) { capture(); return; }
@@ -447,7 +487,7 @@
     function startCamera() {
       show("camera");
       setStatus("loading"); status.classList.remove("ok");
-      captureBtn.disabled = true; goodChecks = 0;
+      captureBtn.disabled = true; goodChecks = 0; exposureLowered = false;
       var my = ++session;
       var cam = navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } } });
       Promise.all([cam, loadMesh().catch(function () { return null; })]).then(function (arr) {
@@ -484,11 +524,50 @@
           busy = false; captureBtn.disabled = false;
           var res = combine(frames);
           if (res.issue) { setStatus(res.issue); loop(my); return; }
-          result = classify(res.depth, res.deeperThan);
+          reading = res;
+          var c = classify(res.depth);
           stopCamera();
-          showResult();
+          check = { cur: c.best, came: null, camera: c };
+          showCheck();
         }, function () { busy = false; captureBtn.disabled = false; loop(my); });
       })();
+    }
+
+    // ---------- Jawline check ----------
+    function showCheck() {
+      var box = q('[data-step="check"]'), colors = q("[data-colors]");
+      colors.innerHTML = "";
+      if (check.pair) {
+        var a = check.pair[0], b = check.pair[1];
+        box.style.background = "linear-gradient(90deg," + shades[a].color + " 50%," + shades[b].color + " 50%)";
+        check.pair.forEach(function (i) {
+          var btn = el("button", { type: "button", "data-pick": String(i), "aria-label": shades[i].name });
+          btn.appendChild(el("span", null, shades[i].name));
+          colors.appendChild(btn);
+        });
+        q("[data-question]").textContent = "You're between these two. Hold each half to your jawline and tap the closer one.";
+        q("[data-three]").hidden = true;
+        q("[data-progress]").textContent = "Last step";
+      } else {
+        box.style.background = shades[check.cur].color;
+        colors.appendChild(el("div", { role: "img", "aria-label": shades[check.cur].name }));
+        q("[data-question]").textContent = check.came
+          ? "Compared with " + shades[check.cur].name + ", your skin is…"
+          : "Your camera found " + shades[check.cur].name + ". Hold your phone to your jawline in a mirror. Your skin is…";
+        q("[data-three]").hidden = false;
+        q("[data-progress]").textContent = "Check your shade";
+      }
+      show("check");
+    }
+    function answer(a) {
+      var n = checkStep(check, a);
+      if (n.done) { result = { best: n.best, alt: n.alt, between: false }; showResult(); return; }
+      if (n.pair) { check = { pair: n.pair, camera: check.camera }; showCheck(); return; }
+      check = { cur: n.cur, came: n.came, camera: check.camera }; showCheck();
+    }
+    function pick(i) {
+      result = { best: i, alt: check.pair[0] === i ? check.pair[1] : check.pair[0], between: true };
+      showResult();
     }
 
     function showResult() {
@@ -497,10 +576,17 @@
       q("[data-best-name]").textContent = best.name;
       q("[data-use-best]").textContent = "Use " + best.name;
       q("[data-note]").textContent = result.between
-        ? "You're right between " + best.name + " and " + alt.name + ". Go with whichever feels more like you."
+        ? "You're between " + best.name + " and " + alt.name + ". Go with whichever feels more like you."
         : "If another shade feels more like you, pick that one instead.";
       q("[data-alt-dot]").style.background = alt.color;
       q("[data-use-alt]").textContent = alt.name;
+      var dbg = q("[data-debug]");
+      if (DEBUG && reading) {
+        dbg.hidden = false;
+        dbg.textContent = "depth " + reading.depth.toFixed(1) + " → camera " + shades[check.camera.best].name +
+          "\nfinal " + best.name + "\ncheek Y " + reading.skinLum.toFixed(4) + "  paper Y " + reading.paperLum.toFixed(4) +
+          "\nLab " + reading.lab.map(function (x) { return x.toFixed(1); }).join(", ");
+      } else dbg.hidden = true;
       show("result");
       q("[data-use-best]").focus();
     }
@@ -514,7 +600,7 @@
     }
 
     function open() {
-      result = null;
+      result = null; reading = null; check = null;
       if (!canUseCamera) {
         fail(window.isSecureContext === false ? "The camera only works on the secure (https) version of this page." : "This browser can't use the camera. Try Safari or Chrome.");
       } else {
@@ -532,6 +618,7 @@
     dlg.addEventListener("close", function () {
       stopCamera();
       document.documentElement.style.overflow = "";
+      dlg.classList.remove("sf-full");
       var target = focusAfter || trigger; focusAfter = null;
       try { target.focus({ preventScroll: true }); } catch (e) { target.focus(); }
       var lbl = target.closest && target.closest("label");
@@ -543,6 +630,8 @@
       if (t.hasAttribute("data-close")) close();
       else if (t.hasAttribute("data-start") || t.hasAttribute("data-retry")) startCamera();
       else if (t.hasAttribute("data-capture")) capture();
+      else if (t.hasAttribute("data-answer")) answer(t.getAttribute("data-answer"));
+      else if (t.hasAttribute("data-pick")) pick(parseInt(t.getAttribute("data-pick"), 10));
       else if (t.hasAttribute("data-use-best")) choose(shades[result.best]);
       else if (t.hasAttribute("data-use-alt")) choose(shades[result.alt]);
     });
@@ -561,7 +650,7 @@
     });
   }
 
-  window.PulseShadeFinder = { EDGES: EDGES, analyzeFrame: analyzeFrame, combine: combine, classify: classify, loadMesh: loadMesh, SETTINGS: SETTINGS, labFromLinear: labFromLinear, ita: ita };
+  window.PulseShadeFinder = { EDGES: EDGES, analyzeFrame: analyzeFrame, combine: combine, classify: classify, checkStep: checkStep, loadMesh: loadMesh, SETTINGS: SETTINGS, labFromLinear: labFromLinear, ita: ita, OVAL: OVAL, PAPER: PAPER, toFrame: toFrame };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
