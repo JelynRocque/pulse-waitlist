@@ -357,28 +357,9 @@
         <p class="already" id="alreadyRow"><a href="#update" id="alreadyLink">Already on the waitlist? Add or update your shade.</a></p>
       </div>
 
-      <div id="linkView" hidden>
-        <h2>Update your shade</h2>
-        <p class="sub">Enter the email you joined with. We'll send you a private link to add or update your shade and undertone.</p>
-        <form id="linkForm" novalidate>
-          <div class="hp" aria-hidden="true"><label for="website2">Leave this empty</label><input type="text" id="website2" name="website2" tabindex="-1" autocomplete="off"></div>
-          <label class="field" for="linkEmail">Email
-            <input id="linkEmail" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
-          </label>
-          <p class="error" id="linkError" hidden></p>
-          <button class="primary" type="submit" id="linkBtn">Email Me a Link</button>
-        </form>
-        <p class="already"><a href="#join" id="backToJoin">New here? Join the waitlist.</a></p>
-      </div>
-
-      <div id="linkSentView" class="done" hidden>
-        <h2>Check your inbox.</h2>
-        <p class="sub" style="margin:0">If that email is on the waitlist, a link to update your shade is on its way. It can take a few minutes, so check your spam folder too.</p>
-      </div>
-
       <div id="savedView" class="done" hidden>
         <h2>Your shade is saved.</h2>
-        <p class="sub" style="margin:0">Thank you. Your spot on the waitlist and your invite link stay the same.</p>
+        <p class="sub" style="margin:0" id="savedText">Thank you. Your spot on the waitlist and your invite link stay the same.</p>
         <div class="survey-cta">
           <p><strong>Got five minutes?</strong> Answer a few questions about your skin and routine, and help decide what Pulse checks first.</p>
           <a class="btn-survey" href="/survey/?src=shade-update">Take the 5-minute survey</a>
@@ -568,7 +549,24 @@ document.addEventListener("DOMContentLoaded", function () {
     var updating = !!(updToken && /^[A-Za-z0-9_-]{16,64}$/.test(updToken) && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(updEmail));
 
     function show(id) {
-      ["formView", "doneView", "linkView", "linkSentView", "savedView"].forEach(function (v) { $(v).hidden = v !== id; });
+      ["formView", "doneView", "savedView"].forEach(function (v) { $(v).hidden = v !== id; });
+    }
+
+    // Already on the list: same form, just email + shade. The sheet updates their existing row
+    // (or adds them if they weren't on it yet). No email link needed.
+    var updatingDirect = false;
+    function enterUpdateMode() {
+      updatingDirect = true;
+      show("formView");
+      $("formView").querySelector("h2").textContent = "Update your shade";
+      $("formView").querySelector(".sub").textContent = "Enter the email you joined with, pick your shade and undertone, and save. Your spot and invite link stay the same.";
+      $("updates").closest("label").style.display = "none";
+      $("joinFine").innerHTML = 'Your shade helps us make sure early access includes every skin tone. <a href="/privacy/">Privacy notice</a>';
+      $("alreadyRow").innerHTML = '<a href="#join" id="backToJoin">New here? Join the waitlist.</a>';
+      $("backToJoin").addEventListener("click", function (e) { e.preventDefault(); window.location.hash = ""; window.location.reload(); });
+      form.querySelector("legend span").textContent = "";
+      btn.textContent = "Save My Shade";
+      $("email").focus();
     }
 
     if (updating) {
@@ -588,30 +586,11 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
       var existing = store("pulse_my_code");
       if (existing && store("pulse_joined") === "1") showDone(existing);
-      if (window.location.hash === "#update") show("linkView");
+      if (window.location.hash === "#update") enterUpdateMode();
     }
 
     ["alreadyLink", "alreadyLink2"].forEach(function (id) {
-      $(id).addEventListener("click", function (e) { e.preventDefault(); show("linkView"); $("linkEmail").focus(); });
-    });
-    $("backToJoin").addEventListener("click", function (e) { e.preventDefault(); show("formView"); $("email").focus(); });
-
-    $("linkForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      var le = $("linkError"), lb = $("linkBtn"), addr = $("linkEmail").value.trim();
-      le.hidden = true;
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(addr)) {
-        le.textContent = "Enter a full email address, like name@example.com."; le.hidden = false; $("linkEmail").focus(); return;
-      }
-      lb.disabled = true; lb.textContent = "Sending…";
-      var body = { form: "shade_link", email: addr, hp: $("website2").value, t: Date.now() - PAGE_LOADED };
-      if (!CONFIG.endpoint) { setTimeout(function () { show("linkSentView"); }, 400); return; }
-      fetch(CONFIG.endpoint, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
-        .then(function () { show("linkSentView"); })
-        .catch(function () {
-          lb.disabled = false; lb.textContent = "Email Me a Link";
-          le.textContent = "We couldn't reach the waitlist. Check your connection and try again."; le.hidden = false;
-        });
+      $(id).addEventListener("click", function (e) { e.preventDefault(); history.replaceState(null, "", "#update"); enterUpdateMode(); });
     });
 
     form.addEventListener("submit", function (e) {
@@ -624,6 +603,7 @@ document.addEventListener("DOMContentLoaded", function () {
         err.hidden = false; $("email").focus(); return;
       }
       var toneEl = form.querySelector('input[name="tone"]:checked');
+      if (updatingDirect && !toneEl) { err.textContent = "Pick your shade first, or use Find My Shade."; err.hidden = false; return; }
       var code = store("pulse_my_code") || newCode();
       var payload = {
         email: email,
@@ -635,9 +615,13 @@ document.addEventListener("DOMContentLoaded", function () {
         hp: document.getElementById("website").value,
         t: Date.now() - PAGE_LOADED
       };
-      btn.disabled = true; btn.textContent = "Joining…";
+      btn.disabled = true; btn.textContent = updatingDirect ? "Saving…" : "Joining…";
 
       function finish() {
+        if (updatingDirect) {
+          $("savedText").textContent = "Thank you. If you were already on the waitlist, your spot and invite link stay the same. If you weren't, you're on it now and your invite link is in your inbox.";
+          show("savedView"); return;
+        }
         store("pulse_my_code", code); store("pulse_joined", "1");
         showDone(code);
       }
@@ -650,7 +634,7 @@ document.addEventListener("DOMContentLoaded", function () {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload)
       }).then(finish).catch(function () {
-        btn.disabled = false; btn.textContent = "Join the waitlist";
+        btn.disabled = false; btn.textContent = updatingDirect ? "Save My Shade" : "Join the waitlist";
         err.textContent = "We couldn't reach the sign-up list. Check your connection and try again.";
         err.hidden = false;
       });
