@@ -1,5 +1,13 @@
 /*
- * Pulse "Find My Shade" camera helper (v3: eye-white reference, nothing to hold).
+ * Pulse "Find My Shade" camera helper (v3.1: eye-white reference, nothing to hold).
+ *
+ * v3.1 (Oct 22, 2026): people are asked to take off glasses, sunglasses, hats
+ * and anything near their eyes; the eyes are read at the camera's full
+ * resolution; and a reading is refused unless both eyes are wide open and
+ * looking straight at the camera. Glasses, squinting and side glances shaded
+ * the eye whites and made deeper skin read lighter (a friend with deep skin,
+ * wearing glasses, got Moonstone). Add ?sfdebug=1 to the page URL to see the
+ * measured depth on the result screen, for calibration.
  *
  * Why the eyes: phone cameras brighten or darken every face so it looks
  * "normal", which made v1 give most people the same middle shade. The whites
@@ -40,6 +48,10 @@
     // Within this much depth of a gemstone boundary, the result says it's
     // between the two gemstones.
     betweenMargin: 1.5,
+    // Eyes must be at least this open (height / width of the eye outline) and
+    // the iris must sit in the middle of the eye (looking straight ahead).
+    minEyeOpen: 0.25,
+    minWhitePixels: 30,
     framesPerReading: 8,
     goodChecksBeforeAuto: 2,
     analysisWidth: 720
@@ -48,6 +60,7 @@
   // Lower depth limit of gemstones 1-9 (Pearl is open above, Onyx open below).
   var EDGES = (window.PULSE_SHADES && window.PULSE_SHADES.edges) || [83, 76, 69, 62, 55, 48, 41, 34, 27];
   var GEMSTONES = EDGES.length + 1;
+  var DEBUG = /[?&]sfdebug=1/.test(location.search);
 
   var BASE = (function () {
     var s = document.currentScript && document.currentScript.src;
@@ -91,7 +104,8 @@
   }
 
   // Reads skin and eye whites from one frame. lm = face landmarks scaled to pixels.
-  function analyzeFrame(ctx, w, h, lm) {
+  // hi (optional) = {ctx, scale}: the same frame at full camera resolution, used for the eyes.
+  function analyzeFrame(ctx, w, h, lm, hi) {
     var out = { face: !!lm };
     var frame = ctx.getImageData(0, 0, w, h).data;
     var fs = 0, fc = 0;
@@ -136,22 +150,32 @@
       out.sideRatio = sideL && sideR ? Math.max(lum.apply(null, sideL), lum.apply(null, sideR)) / Math.max(1e-4, Math.min(lum.apply(null, sideL), lum.apply(null, sideR))) : 1;
     }
 
-    // Eye whites: inside each eye outline, outside the iris
+    // Looking straight ahead: each iris sits near the middle between the eye corners.
+    out.gaze = [[33, 133, IRIS_L[0]], [362, 263, IRIS_R[0]]].map(function (t) {
+      var a = lm[t[0]], b = lm[t[1]], c = lm[t[2]];
+      return (c[0] - a[0]) / ((b[0] - a[0]) || 1);
+    });
+
+    // Eye whites: inside each eye outline, outside the iris, read at full resolution when available
+    var es = hi ? hi.scale : 1, EW = hi ? Math.round(w * es) : w, EH = hi ? Math.round(h * es) : h;
     var white = [], clipped = 0, openness = [];
     [[EYE_L, IRIS_L], [EYE_R, IRIS_R]].forEach(function (pair) {
-      var poly = pair[0].map(function (i) { return lm[i]; });
-      var ic = lm[pair[1][0]], ir = 0;
-      for (var k = 1; k < 5; k++) ir = Math.max(ir, Math.hypot(lm[pair[1][k]][0] - ic[0], lm[pair[1][k]][1] - ic[1]));
+      var poly = pair[0].map(function (i) { return [lm[i][0] * es, lm[i][1] * es]; });
+      var ic = [lm[pair[1][0]][0] * es, lm[pair[1][0]][1] * es], ir = 0;
+      for (var k = 1; k < 5; k++) ir = Math.max(ir, Math.hypot(lm[pair[1][k]][0] * es - ic[0], lm[pair[1][k]][1] * es - ic[1]));
       ir *= 1.15;
       var xs = poly.map(function (q) { return q[0]; }), ys = poly.map(function (q) { return q[1]; });
-      var x0 = Math.max(0, Math.min.apply(null, xs)), x1 = Math.min(w - 1, Math.max.apply(null, xs));
-      var y0 = Math.max(0, Math.min.apply(null, ys)), y1 = Math.min(h - 1, Math.max.apply(null, ys));
-      openness.push((y1 - y0) / Math.max(1, x1 - x0));
+      var x0 = Math.max(0, Math.floor(Math.min.apply(null, xs))), x1 = Math.min(EW - 1, Math.ceil(Math.max.apply(null, xs)));
+      var y0 = Math.max(0, Math.floor(Math.min.apply(null, ys))), y1 = Math.min(EH - 1, Math.ceil(Math.max.apply(null, ys)));
+      openness.push((Math.max.apply(null, ys) - Math.min.apply(null, ys)) / Math.max(1, Math.max.apply(null, xs) - Math.min.apply(null, xs)));
+      if (x1 <= x0 || y1 <= y0) return;
+      var bw = x1 - x0 + 1, box = (hi ? hi.ctx : ctx).getImageData(x0, y0, bw, y1 - y0 + 1).data;
       var eyePx = [];
-      for (var y = Math.ceil(y0); y <= y1; y++) for (var x = Math.ceil(x0); x <= x1; x++) {
+      for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) {
         if (!pointInPoly(x, y, poly)) continue;
         if (Math.hypot(x - ic[0], y - ic[1]) < ir) continue;
-        var v = px(x, y), mx = Math.max(v[0], v[1], v[2]);
+        var bi = ((y - y0) * bw + (x - x0)) * 4;
+        var v = [box[bi], box[bi + 1], box[bi + 2]], mx = Math.max(v[0], v[1], v[2]);
         eyePx.push([v[0], v[1], v[2], lum(LIN[v[0]], LIN[v[1]], LIN[v[2]]), mx ? (mx - Math.min(v[0], v[1], v[2])) / mx : 1]);
       }
       // Eye whites are the least colorful part of the eye (eyelid skin, lashes
@@ -168,6 +192,7 @@
     out.eyeOpen = Math.min.apply(null, openness);
     out.whiteCount = white.length + clipped;
     out.whiteClipped = out.whiteCount ? clipped / out.whiteCount : 0;
+    out.whiteCount = Math.round(out.whiteCount / (es * es)); // in analysis-size pixels, so the limit is the same on every camera
     if (white.length >= 6) out.white = [0, 1, 2].map(function (c) { return median(white.map(function (q) { return q[c]; })); });
     return out;
   }
@@ -192,7 +217,9 @@
     if (median(withSkin.map(function (f) { return f.sideRatio; })) > 1.6) return { issue: "uneven" };
     var open = median(withFace.map(function (f) { return f.eyeOpen; }));
     var count = median(withFace.map(function (f) { return f.whiteCount; }));
-    if (open < 0.2 || count < 12) return { issue: "eyes" };
+    var gaze = withFace.filter(function (f) { return f.gaze && f.gaze.every(function (g) { return g > 0.3 && g < 0.7; }); }).length;
+    if (open < SETTINGS.minEyeOpen || count < SETTINGS.minWhitePixels) return { issue: "eyes" };
+    if (gaze < withFace.length / 2) return { issue: "gaze" };
 
     var skin = [0, 1, 2].map(function (c) { return median(withSkin.map(function (f) { return f.skin[c]; })); });
     var clippedShare = median(withFace.map(function (f) { return f.whiteClipped; }));
@@ -239,7 +266,8 @@
     dark: "It's too dark. Face a window or a bright lamp.",
     noFace: "Center your face in the oval.",
     far: "Bring your phone a little closer.",
-    eyes: "Look straight at the camera with your eyes open. Glasses off if you can.",
+    eyes: "Open your eyes wide. Take off glasses, sunglasses or a hat, and move hair away from your eyes.",
+    gaze: "Look straight into the camera, not at the screen.",
     glare: "The light is too strong on your face. Step out of direct sun, or turn so the light is soft and in front of you.",
     eyeShadow: "Your eyes are in shadow. Face the light straight on instead of having it overhead.",
     uneven: "One side of your face is in shadow. Turn so the light hits you straight on.",
@@ -322,6 +350,7 @@
     ".sf-alt{display:flex;align-items:center;gap:10px;font-size:14px}" +
     ".sf-alt i{width:24px;height:24px;border-radius:50%;display:block;border:1px solid rgba(38,16,0,.15);flex:none}" +
     ".sf-alt button{font:inherit;font-weight:600;font-size:14px;color:var(--auburn,#96262C);background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}" +
+    ".sf-debug{font:12px/1.4 ui-monospace,Menlo,monospace;background:#261000;color:#FFFBF7;border-radius:10px;padding:10px;margin:0;white-space:pre-wrap}" +
     ".sf [hidden]{display:none !important}";
 
   var ICON_CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
@@ -356,8 +385,9 @@
           '<p>Your camera finds your shade in a few seconds. Then you pick your undertone.</p>' +
           '<ul>' +
             '<li><b>1</b><span>Face a window in daylight, out of direct sun, so your whole face is evenly lit.</span></li>' +
-            '<li><b>2</b><span>Look straight at the camera with your eyes open. Glasses off if you can.</span></li>' +
-            '<li><b>3</b><span>Hold still. Your shade shows up on its own.</span></li>' +
+            '<li><b>2</b><span>Take off glasses, sunglasses, hats and anything near your eyes, and move hair off your face.</span></li>' +
+            '<li><b>3</b><span>Open your eyes wide and look straight into the camera, not at the screen.</span></li>' +
+            '<li><b>4</b><span>Hold still. Your shade shows up on its own.</span></li>' +
           '</ul>' +
           '<label class="sf-consent"><input type="checkbox" data-consent><span>I agree to let Pulse map my face on this device to find my shade. The image and face measurements stay on my phone and are never saved or sent.</span></label>' +
           '<button type="button" class="sf-btn" data-start disabled>Start Camera</button>' +
@@ -379,6 +409,7 @@
         '<div data-step="result" hidden class="sf-step">' +
           '<div class="sf-result"><i data-best-dot></i><div><small>Your Shade</small><strong data-best-name></strong></div></div>' +
           '<p data-note></p>' +
+          '<pre class="sf-debug" data-debug hidden></pre>' +
           '<div class="sf-alt"><i data-alt-dot></i><span>Also close: <button type="button" data-use-alt></button></span></div>' +
           '<button type="button" class="sf-btn" data-use-best></button>' +
           '<div class="sf-row"><button type="button" class="sf-btn ghost" data-retry>Try Again</button><button type="button" class="sf-btn ghost" data-close>Pick Myself</button></div>' +
@@ -396,6 +427,8 @@
     var video = q("video"), status = q(".sf-status"), captureBtn = q("[data-capture]"), startBtn = q("[data-start]"), consent = q("[data-consent]");
     var canvas = document.createElement("canvas");
     var ctx = canvas.getContext("2d", { willReadFrequently: true });
+    var hiCanvas = document.createElement("canvas");
+    var hiCtx = hiCanvas.getContext("2d", { willReadFrequently: true });
     var stream = null, mesh = null, liveTimer = null, busy = false, result = null, focusAfter = null, goodChecks = 0, session = 0;
 
     consent.addEventListener("change", function () { startBtn.disabled = !consent.checked; });
@@ -422,10 +455,13 @@
       var sc = Math.min(1, SETTINGS.analysisWidth / vw), w = Math.round(vw * sc), h = Math.round(vh * sc);
       if (canvas.width !== w) { canvas.width = w; canvas.height = h; }
       ctx.drawImage(video, 0, 0, w, h);
+      // Same frame at full camera resolution, for the eye whites
+      if (hiCanvas.width !== vw) { hiCanvas.width = vw; hiCanvas.height = vh; }
+      hiCtx.drawImage(video, 0, 0, vw, vh);
       return mesh.detect(canvas).then(function (r) {
         var f = r && r.multiFaceLandmarks && r.multiFaceLandmarks[0];
         var lm = f && f.length >= 478 ? f.map(function (p) { return [p.x * w, p.y * h]; }) : null;
-        return analyzeFrame(ctx, w, h, lm);
+        return analyzeFrame(ctx, w, h, lm, { ctx: hiCtx, scale: vw / w });
       });
     }
 
@@ -485,6 +521,7 @@
           var res = combine(frames);
           if (res.issue) { setStatus(res.issue); loop(my); return; }
           result = classify(res.depth, res.deeperThan);
+          result.reading = res;
           stopCamera();
           showResult();
         }, function () { busy = false; captureBtn.disabled = false; loop(my); });
@@ -500,6 +537,10 @@
         ? "You're right between " + best.name + " and " + alt.name + ". Go with whichever feels more like you."
         : "If another shade feels more like you, pick that one instead.";
       q("[data-alt-dot]").style.background = alt.color;
+      var dbg = q("[data-debug]"), rd = result.reading;
+      dbg.hidden = !(DEBUG && rd);
+      if (DEBUG && rd) dbg.textContent = "depth " + rd.depth.toFixed(1) + (rd.deeperThan ? " (eyes blown out, at least this deep)" : "") +
+        "\nLab " + rd.lab.map(function (x) { return x.toFixed(1); }).join(", ") + "\nsclera setting " + SETTINGS.scleraReflectance;
       q("[data-use-alt]").textContent = alt.name;
       show("result");
       q("[data-use-best]").focus();
