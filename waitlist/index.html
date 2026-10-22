@@ -280,6 +280,10 @@
   .site-nav .nav-cta { background: var(--espresso); color: var(--warm-white); padding: 11px 20px; border-radius: 999px; letter-spacing: .02em; }
   .site-nav .nav-cta:hover { color: var(--warm-white); background: var(--auburn); }
   .top .wrap { flex-wrap: wrap; }
+  .already { margin: 14px 0 0; text-align: center; font-size: 13px; }
+  .already a { color: var(--sienna); font-weight: 600; }
+  .update-email { margin: 0 0 14px; font-size: 14px; color: var(--espresso-soft); }
+  .update-email b { color: var(--espresso); }
 </style>
 <link rel="canonical" href="https://pulseskin.co/waitlist/">
 <meta property="og:url" content="https://pulseskin.co/waitlist/">
@@ -348,8 +352,37 @@
           </label>
           <p class="error" id="formError" hidden></p>
           <button class="primary" type="submit" id="submitBtn">Join the waitlist</button>
-          <p class="fine">We use your email only to tell you about Pulse's launch. Your shade helps us make sure early access includes every skin tone. Unsubscribe anytime. <a href="/privacy/">Privacy notice</a></p>
+          <p class="fine" id="joinFine">We use your email only to tell you about Pulse's launch. Your shade helps us make sure early access includes every skin tone. Unsubscribe anytime. <a href="/privacy/">Privacy notice</a></p>
         </form>
+        <p class="already" id="alreadyRow"><a href="#update" id="alreadyLink">Already on the waitlist? Add or update your shade.</a></p>
+      </div>
+
+      <div id="linkView" hidden>
+        <h2>Update your shade</h2>
+        <p class="sub">Enter the email you joined with. We'll send you a private link to add or update your shade and undertone.</p>
+        <form id="linkForm" novalidate>
+          <div class="hp" aria-hidden="true"><label for="website2">Leave this empty</label><input type="text" id="website2" name="website2" tabindex="-1" autocomplete="off"></div>
+          <label class="field" for="linkEmail">Email
+            <input id="linkEmail" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+          </label>
+          <p class="error" id="linkError" hidden></p>
+          <button class="primary" type="submit" id="linkBtn">Email Me a Link</button>
+        </form>
+        <p class="already"><a href="#join" id="backToJoin">New here? Join the waitlist.</a></p>
+      </div>
+
+      <div id="linkSentView" class="done" hidden>
+        <h2>Check your inbox.</h2>
+        <p class="sub" style="margin:0">If that email is on the waitlist, a link to update your shade is on its way. It can take a few minutes, so check your spam folder too.</p>
+      </div>
+
+      <div id="savedView" class="done" hidden>
+        <h2>Your shade is saved.</h2>
+        <p class="sub" style="margin:0">Thank you. Your spot on the waitlist and your invite link stay the same.</p>
+        <div class="survey-cta">
+          <p><strong>Got five minutes?</strong> Answer a few questions about your skin and routine, and help decide what Pulse checks first.</p>
+          <a class="btn-survey" href="/survey/?src=shade-update">Take the 5-minute survey</a>
+        </div>
       </div>
 
       <div id="doneView" class="done" hidden>
@@ -368,6 +401,7 @@
           <p><strong>Got five minutes?</strong> Answer a few questions about your skin and routine, and help decide what Pulse checks first.</p>
           <a class="btn-survey" href="/survey/?src=waitlist">Take the 5-minute survey</a>
         </div>
+        <p class="already"><a href="#update" id="alreadyLink2">Add or update your shade</a></p>
       </div>
     </div>
   </div>
@@ -528,12 +562,62 @@ document.addEventListener("DOMContentLoaded", function () {
       if (navigator.share) $("shareBtn").hidden = false;
     }
 
-    var existing = store("pulse_my_code");
-    if (existing && store("pulse_joined") === "1") showDone(existing);
+    // Update-your-shade mode: opened from the private link we email (?update=TOKEN&e=EMAIL).
+    var params = new URLSearchParams(window.location.search);
+    var updToken = params.get("update"), updEmail = (params.get("e") || "").trim().toLowerCase();
+    var updating = !!(updToken && /^[A-Za-z0-9_-]{16,64}$/.test(updToken) && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(updEmail));
+
+    function show(id) {
+      ["formView", "doneView", "linkView", "linkSentView", "savedView"].forEach(function (v) { $(v).hidden = v !== id; });
+    }
+
+    if (updating) {
+      $("formView").querySelector("h2").textContent = "Update your shade";
+      $("formView").querySelector(".sub").textContent = "Pick your shade, then your undertone, and save. Your spot and invite link stay the same.";
+      var emailLabel = $("email").closest("label");
+      var note = document.createElement("p"); note.className = "update-email";
+      note.innerHTML = "Updating the shade for <b></b>";
+      note.querySelector("b").textContent = updEmail;
+      emailLabel.parentNode.insertBefore(note, emailLabel);
+      emailLabel.style.display = "none"; $("email").value = updEmail;
+      $("updates").closest("label").style.display = "none";
+      $("joinFine").innerHTML = 'Your shade helps us make sure early access includes every skin tone. <a href="/privacy/">Privacy notice</a>';
+      $("alreadyRow").hidden = true;
+      form.querySelector("legend span").textContent = "";
+      btn.textContent = "Save My Shade";
+    } else {
+      var existing = store("pulse_my_code");
+      if (existing && store("pulse_joined") === "1") showDone(existing);
+      if (window.location.hash === "#update") show("linkView");
+    }
+
+    ["alreadyLink", "alreadyLink2"].forEach(function (id) {
+      $(id).addEventListener("click", function (e) { e.preventDefault(); show("linkView"); $("linkEmail").focus(); });
+    });
+    $("backToJoin").addEventListener("click", function (e) { e.preventDefault(); show("formView"); $("email").focus(); });
+
+    $("linkForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var le = $("linkError"), lb = $("linkBtn"), addr = $("linkEmail").value.trim();
+      le.hidden = true;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(addr)) {
+        le.textContent = "Enter a full email address, like name@example.com."; le.hidden = false; $("linkEmail").focus(); return;
+      }
+      lb.disabled = true; lb.textContent = "Sending…";
+      var body = { form: "shade_link", email: addr, hp: $("website2").value, t: Date.now() - PAGE_LOADED };
+      if (!CONFIG.endpoint) { setTimeout(function () { show("linkSentView"); }, 400); return; }
+      fetch(CONFIG.endpoint, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
+        .then(function () { show("linkSentView"); })
+        .catch(function () {
+          lb.disabled = false; lb.textContent = "Email Me a Link";
+          le.textContent = "We couldn't reach the waitlist. Check your connection and try again."; le.hidden = false;
+        });
+    });
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       err.hidden = true;
+      if (updating) { saveShade(); return; }
       var email = $("email").value.trim();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
         err.textContent = "Enter a full email address, like name@example.com.";
@@ -571,6 +655,27 @@ document.addEventListener("DOMContentLoaded", function () {
         err.hidden = false;
       });
     });
+
+    function toneValue() {
+      var toneEl = form.querySelector('input[name="tone"]:checked');
+      if (!toneEl) return "";
+      var u = form.querySelector('input[name="undertone"]:checked');
+      return toneEl.value + (u && /^mst_/.test(toneEl.value) ? "_" + u.value : "");
+    }
+
+    function saveShade() {
+      var tone = toneValue();
+      if (!tone) { err.textContent = "Pick your shade first, or use Find My Shade."; err.hidden = false; return; }
+      btn.disabled = true; btn.textContent = "Saving…";
+      var body = { form: "shade_update", email: updEmail, token: updToken, skin_tone: tone, hp: $("website").value, t: Date.now() - PAGE_LOADED };
+      if (!CONFIG.endpoint) { setTimeout(function () { show("savedView"); }, 400); return; }
+      fetch(CONFIG.endpoint, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
+        .then(function () { show("savedView"); })
+        .catch(function () {
+          btn.disabled = false; btn.textContent = "Save My Shade";
+          err.textContent = "We couldn't reach the waitlist. Check your connection and try again."; err.hidden = false;
+        });
+    }
 
     $("copyBtn").addEventListener("click", function () {
       var input = $("shareLink"), b = this;
