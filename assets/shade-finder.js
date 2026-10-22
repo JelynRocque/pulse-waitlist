@@ -1,42 +1,65 @@
 /*
- * Pulse "Find My Shade" camera helper.
+ * Pulse "Find My Shade" camera helper (v3: eye-white reference, nothing to hold).
  *
- * Suggests the closest Monk Skin Tone shade from the phone's front camera.
- * Everything runs in the browser: frames are read into a canvas, a few small
- * patches of skin (forehead and both cheeks) are averaged into one color, and
- * that color is compared with the shade swatches already on the page.
- * No image or video is saved, uploaded or sent anywhere, and there is no face
- * detection or face mapping. Only the shade the person picks is submitted, the
- * same as tapping it by hand.
+ * Why the eyes: phone cameras brighten or darken every face so it looks
+ * "normal", which made v1 give most people the same middle shade. The whites
+ * of the eyes are in the same light as the skin and go through the same
+ * camera adjustments, and they're close to white on everyone. Comparing
+ * cheek skin with the eye whites cancels out the camera's brightness changes.
+ *
+ * The comparison gives the skin's depth (CIELAB lightness, L*). Each gemstone
+ * is a band of depth, shared with the shade library (assets/shade-library.js),
+ * where 126 foundation shades from Pat McGrath, Fenty and Juvia's Place sit in
+ * the same bands. The camera picks the gemstone; the person picks their
+ * undertone, because lighting tints color too much for a camera to judge
+ * warm versus cool reliably.
+ *
+ * Face tracking (MediaPipe Face Mesh, Apache 2.0, served from /assets/vendor)
+ * runs on the device to find the cheeks and eyes. No image, video or face
+ * measurement is saved, uploaded or sent anywhere. Only the shade the person
+ * picks is submitted, the same as tapping it by hand.
  *
  * Use: add a button with data-shade-finder="<radio name>" next to a group of
- * shade radios. Each radio's label needs an <i> swatch (its background is the
- * shade color) and the shade name as text. Radios with value "prefer_not" are
- * skipped.
+ * ten shade radios, lightest first. Each radio's label needs an <i> swatch and
+ * the shade name as text. Radios with value "prefer_not" are skipped.
  */
 (function () {
   "use strict";
 
   var SETTINGS = {
-    // Weights for matching. Lightness matters most for Monk shades; hue and
-    // saturation from phone cameras drift with lighting, so they count less.
-    weightL: 1.0,
-    weightAB: 0.55,
-    // Added to the measured lightness before matching. Leave at 0 until real
-    // tests with people who know their shade show a consistent lean.
-    lightnessOffset: 0,
-    framesPerReading: 14,
-    frameGapMs: 70
+    // Light reflected by the whites of the eyes, as the camera sees them
+    // (lids and lashes shade them). Sets the overall light-to-deep scale.
+    // Calibrated Oct 22, 2026 on one person who wears Pat McGrath Medium
+    // Deep 24 and Fenty 486W (both depth ~49, Tiger's Eye).
+    // Lower it if results run too light; raise it if too deep.
+    scleraReflectance: 0.30,
+    // How much to trust the eye whites for color balance (0 = trust the
+    // camera's own white balance, 1 = treat eye whites as pure white).
+    // Eye whites are often slightly yellow, so this stays partial.
+    whiteBalanceFromEyes: 0.75,
+    // Within this much depth of a gemstone boundary, the result says it's
+    // between the two gemstones.
+    betweenMargin: 1.5,
+    framesPerReading: 8,
+    goodChecksBeforeAuto: 2,
+    analysisWidth: 720
   };
 
-  // ---------- Color math (sRGB D65 -> CIELAB) ----------
+  // Lower depth limit of gemstones 1-9 (Pearl is open above, Onyx open below).
+  var EDGES = (window.PULSE_SHADES && window.PULSE_SHADES.edges) || [83, 76, 69, 62, 55, 48, 41, 34, 27];
+  var GEMSTONES = EDGES.length + 1;
+
+  var BASE = (function () {
+    var s = document.currentScript && document.currentScript.src;
+    return s ? s.replace(/[^/]*$/, "") : "/assets/";
+  })();
+
+  // ---------- Color math ----------
   function lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
-  function unlin(c) { var v = c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055; return Math.max(0, Math.min(255, Math.round(v * 255))); }
   var LIN = new Float32Array(256);
   for (var li = 0; li < 256; li++) LIN[li] = lin(li);
-
-  function rgbToLab(r, g, b) {
-    var R = LIN[r], G = LIN[g], B = LIN[b];
+  function lum(r, g, b) { return 0.2126 * r + 0.7152 * g + 0.0722 * b; }
+  function labFromLinear(R, G, B) {
     var x = (0.4124 * R + 0.3576 * G + 0.1805 * B) / 0.95047;
     var y = (0.2126 * R + 0.7152 * G + 0.0722 * B);
     var z = (0.0193 * R + 0.1192 * G + 0.9505 * B) / 1.08883;
@@ -44,110 +67,207 @@
     var fx = f(x), fy = f(y), fz = f(z);
     return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
   }
-  function labToRgb(L, a, b) {
-    var fy = (L + 16) / 116, fx = fy + a / 500, fz = fy - b / 200;
-    function inv(t) { return t * t * t > 0.008856 ? t * t * t : (t - 16 / 116) / 7.787; }
-    var x = inv(fx) * 0.95047, y = inv(fy), z = inv(fz) * 1.08883;
-    var R = 3.2406 * x - 1.5372 * y - 0.4986 * z;
-    var G = -0.9689 * x + 1.8758 * y + 0.0415 * z;
-    var B = 0.0557 * x - 0.2040 * y + 1.0570 * z;
-    return [unlin(R), unlin(G), unlin(B)];
-  }
-  function parseRgb(s) {
-    var m = String(s).match(/rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/);
-    return m ? [+m[1], +m[2], +m[3]] : null;
-  }
+  function ita(lab) { return Math.atan2(lab[0] - 50, lab[2]) * 180 / Math.PI; }
   function median(arr) {
     var s = arr.slice().sort(function (p, q) { return p - q; });
-    var n = s.length; if (!n) return 0;
+    var n = s.length; if (!n) return NaN;
     return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
   }
-  function dist(p, q) {
-    var dL = (p[0] - q[0]) * SETTINGS.weightL, da = (p[1] - q[1]) * SETTINGS.weightAB, db = (p[2] - q[2]) * SETTINGS.weightAB;
-    return Math.sqrt(dL * dL + da * da + db * db);
-  }
-  function deltaE(p, q) {
-    var dL = p[0] - q[0], da = p[1] - q[1], db = p[2] - q[2];
-    return Math.sqrt(dL * dL + da * da + db * db);
+
+  // ---------- Face mesh landmark indices ----------
+  var EYE_L = [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246];
+  var EYE_R = [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398];
+  var IRIS_L = [468, 469, 470, 471, 472], IRIS_R = [473, 474, 475, 476, 477];
+  var CHEEKS = [50, 280, 205, 425]; // upper and lower cheeks, both sides
+  var FACE_SIDES = [234, 454];
+
+  function pointInPoly(x, y, poly) {
+    var inside = false;
+    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      var xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
   }
 
-  // Sample spots, as fractions of the camera frame shown on screen.
-  var ZONES = [
-    { name: "forehead", x: 0.50, y: 0.30, r: 0.055 },
-    { name: "left", x: 0.37, y: 0.53, r: 0.06 },
-    { name: "right", x: 0.63, y: 0.53, r: 0.06 }
-  ];
-  var CW = 240, CH = 320; // analysis canvas, 3:4 like the viewfinder
+  // Reads skin and eye whites from one frame. lm = face landmarks scaled to pixels.
+  function analyzeFrame(ctx, w, h, lm) {
+    var out = { face: !!lm };
+    var frame = ctx.getImageData(0, 0, w, h).data;
+    var fs = 0, fc = 0;
+    for (var p = 0; p < frame.length; p += 64) { fs += (frame[p] + frame[p + 1] + frame[p + 2]) / 3; fc++; }
+    out.frameMean = fs / fc;
+    if (!lm) return out;
 
-  // Reads one frame. Returns per-zone Lab colors plus lighting stats.
-  function analyzeFrame(ctx) {
-    var img = ctx.getImageData(0, 0, CW, CH).data;
-    var frameSum = 0, frameCount = 0;
-    for (var p = 0; p < img.length; p += 16) { frameSum += (img[p] + img[p + 1] + img[p + 2]) / 3; frameCount++; }
-    var zones = [], clipped = 0, total = 0;
-    for (var zi = 0; zi < ZONES.length; zi++) {
-      var z = ZONES[zi], cx = z.x * CW, cy = z.y * CH, rad = z.r * CW, r2 = rad * rad;
-      var labs = [];
-      for (var y = Math.floor(cy - rad); y <= Math.ceil(cy + rad); y++) {
-        for (var x = Math.floor(cx - rad); x <= Math.ceil(cx + rad); x++) {
-          if ((x - cx) * (x - cx) + (y - cy) * (y - cy) > r2) continue;
-          var i = (y * CW + x) * 4, r = img[i], g = img[i + 1], b = img[i + 2];
-          total++;
-          if (r >= 253 || g >= 253 || b >= 253) { clipped++; continue; }
-          labs.push(rgbToLab(r, g, b));
+    var faceW = Math.hypot(lm[FACE_SIDES[0]][0] - lm[FACE_SIDES[1]][0], lm[FACE_SIDES[0]][1] - lm[FACE_SIDES[1]][1]);
+    var cx = (lm[FACE_SIDES[0]][0] + lm[FACE_SIDES[1]][0]) / 2;
+    out.faceShare = faceW / w;
+    out.offCenter = Math.abs(cx / w - 0.5);
+    function px(x, y) { var i = ((y | 0) * w + (x | 0)) * 4; return [frame[i], frame[i + 1], frame[i + 2]]; }
+
+    // Skin: four cheek patches
+    var rad = faceW * 0.055, patches = [], skinTried = 0, skinClipped = 0;
+    CHEEKS.forEach(function (idx) {
+      var c = lm[idx], vals = [];
+      for (var y = Math.max(0, c[1] - rad); y < Math.min(h, c[1] + rad); y++) {
+        for (var x = Math.max(0, c[0] - rad); x < Math.min(w, c[0] + rad); x++) {
+          if ((x - c[0]) * (x - c[0]) + (y - c[1]) * (y - c[1]) > rad * rad) continue;
+          var v = px(x, y);
+          skinTried++;
+          if (v[0] >= 250 || v[1] >= 250 || v[2] >= 250) { skinClipped++; continue; }
+          var R = LIN[v[0]], G = LIN[v[1]], B = LIN[v[2]];
+          if (R <= B) continue;
+          vals.push([R, G, B, lum(R, G, B)]);
         }
       }
-      // Drop the brightest and darkest fifth (shine, shadows, stray hair).
-      labs.sort(function (p1, p2) { return p1[0] - p2[0]; });
-      var lo = Math.floor(labs.length * 0.2), hi = Math.ceil(labs.length * 0.8), sL = 0, sa = 0, sb = 0, n = 0;
-      for (var k = lo; k < hi; k++) { sL += labs[k][0]; sa += labs[k][1]; sb += labs[k][2]; n++; }
-      zones.push(n ? [sL / n, sa / n, sb / n] : null);
-    }
-    return { zones: zones, frameMean: frameSum / frameCount, clippedShare: total ? clipped / total : 0 };
-  }
-
-  // Combines frames and flags anything that makes the reading unreliable.
-  function combine(frames) {
-    var perZone = ZONES.map(function (_, zi) {
-      var L = [], a = [], b = [];
-      frames.forEach(function (f) { var z = f.zones[zi]; if (z) { L.push(z[0]); a.push(z[1]); b.push(z[2]); } });
-      return L.length ? [median(L), median(a), median(b)] : null;
+      if (vals.length < 20) { patches.push(null); return; }
+      vals.sort(function (a, b) { return a[3] - b[3]; });
+      var lo = Math.floor(vals.length * 0.25), hi = Math.ceil(vals.length * 0.75), s = [0, 0, 0], n = 0;
+      for (var k = lo; k < hi; k++) { s[0] += vals[k][0]; s[1] += vals[k][1]; s[2] += vals[k][2]; n++; }
+      patches.push([s[0] / n, s[1] / n, s[2] / n]);
     });
-    var frameMean = median(frames.map(function (f) { return f.frameMean; }));
-    var clippedShare = median(frames.map(function (f) { return f.clippedShare; }));
-    var issue = null;
-    if (perZone.some(function (z) { return !z; })) issue = "glare";
-    else if (frameMean < 38) issue = "dark";
-    else if (clippedShare > 0.25) issue = "glare";
-    else {
-      var looksLikeSkin = perZone.every(function (z) {
-        var hue = Math.atan2(z[2], z[1]) * 180 / Math.PI, chroma = Math.sqrt(z[1] * z[1] + z[2] * z[2]);
-        return z[1] > -2 && hue > 5 && hue < 105 && chroma > 3;
+    out.skinClipped = skinTried ? skinClipped / skinTried : 0;
+    var good = patches.filter(Boolean);
+    if (good.length >= 2) {
+      out.skin = [0, 1, 2].map(function (c) { return median(good.map(function (q) { return q[c]; })); });
+      var sideL = patches[0] || patches[2], sideR = patches[1] || patches[3];
+      out.sideRatio = sideL && sideR ? Math.max(lum.apply(null, sideL), lum.apply(null, sideR)) / Math.max(1e-4, Math.min(lum.apply(null, sideL), lum.apply(null, sideR))) : 1;
+    }
+
+    // Eye whites: inside each eye outline, outside the iris
+    var white = [], clipped = 0, openness = [];
+    [[EYE_L, IRIS_L], [EYE_R, IRIS_R]].forEach(function (pair) {
+      var poly = pair[0].map(function (i) { return lm[i]; });
+      var ic = lm[pair[1][0]], ir = 0;
+      for (var k = 1; k < 5; k++) ir = Math.max(ir, Math.hypot(lm[pair[1][k]][0] - ic[0], lm[pair[1][k]][1] - ic[1]));
+      ir *= 1.15;
+      var xs = poly.map(function (q) { return q[0]; }), ys = poly.map(function (q) { return q[1]; });
+      var x0 = Math.max(0, Math.min.apply(null, xs)), x1 = Math.min(w - 1, Math.max.apply(null, xs));
+      var y0 = Math.max(0, Math.min.apply(null, ys)), y1 = Math.min(h - 1, Math.max.apply(null, ys));
+      openness.push((y1 - y0) / Math.max(1, x1 - x0));
+      var eyePx = [];
+      for (var y = Math.ceil(y0); y <= y1; y++) for (var x = Math.ceil(x0); x <= x1; x++) {
+        if (!pointInPoly(x, y, poly)) continue;
+        if (Math.hypot(x - ic[0], y - ic[1]) < ir) continue;
+        var v = px(x, y);
+        eyePx.push([v[0], v[1], v[2], lum(LIN[v[0]], LIN[v[1]], LIN[v[2]])]);
+      }
+      // The brightest part of what's left is the eye white; corners and lash shadows are darker.
+      eyePx.sort(function (a, b) { return b[3] - a[3]; });
+      eyePx.slice(0, Math.ceil(eyePx.length * 0.4)).forEach(function (q) {
+        if (q[0] >= 250 || q[1] >= 250 || q[2] >= 250) { clipped++; return; }
+        white.push([LIN[q[0]], LIN[q[1]], LIN[q[2]]]);
       });
-      var spread = Math.max(deltaE(perZone[0], perZone[1]), deltaE(perZone[0], perZone[2]), deltaE(perZone[1], perZone[2]));
-      if (!looksLikeSkin || spread > 26) issue = "center";
-      else if (Math.abs(perZone[1][0] - perZone[2][0]) > 11) issue = "uneven";
-    }
-    var color = null;
-    if (perZone.every(Boolean)) {
-      color = [0, 1, 2].map(function (c) { return median(perZone.map(function (z) { return z[c]; })); });
-    }
-    return { color: color, issue: issue };
+    });
+    out.eyeOpen = Math.min.apply(null, openness);
+    out.whiteCount = white.length + clipped;
+    out.whiteClipped = out.whiteCount ? clipped / out.whiteCount : 0;
+    if (white.length >= 6) out.white = [0, 1, 2].map(function (c) { return median(white.map(function (q) { return q[c]; })); });
+    return out;
   }
 
-  function rank(color, shades) {
-    var probe = [color[0] + SETTINGS.lightnessOffset, color[1], color[2]];
-    return shades.map(function (s) { return { shade: s, d: dist(probe, s.lab) }; })
-      .sort(function (p, q) { return p.d - q.d; });
+  // Combines frames, checks conditions, returns the skin's ITA.
+  function combine(frames) {
+    var withFace = frames.filter(function (f) { return f.face; });
+    var frameMean = median(frames.map(function (f) { return f.frameMean; }));
+    if (frameMean < 28) return { issue: "dark" };
+    if (withFace.length < frames.length / 2) return { issue: "noFace" };
+    var share = median(withFace.map(function (f) { return f.faceShare; }));
+    var off = median(withFace.map(function (f) { return f.offCenter; }));
+    if (share < 0.28) return { issue: "far" };
+    if (off > 0.18) return { issue: "noFace" };
+    var withSkin = withFace.filter(function (f) { return f.skin; });
+    if (withSkin.length < withFace.length / 2) return { issue: "noFace" };
+    // Skin washed out to pure white by the light hides real color, and hides shadowed-side differences too.
+    if (median(withFace.map(function (f) { return f.skinClipped || 0; })) > 0.08) return { issue: "glare" };
+    if (median(withSkin.map(function (f) { return f.sideRatio; })) > 1.6) return { issue: "uneven" };
+    var open = median(withFace.map(function (f) { return f.eyeOpen; }));
+    var count = median(withFace.map(function (f) { return f.whiteCount; }));
+    if (open < 0.2 || count < 12) return { issue: "eyes" };
+
+    var skin = [0, 1, 2].map(function (c) { return median(withSkin.map(function (f) { return f.skin[c]; })); });
+    var clippedShare = median(withFace.map(function (f) { return f.whiteClipped; }));
+    var withWhite = withFace.filter(function (f) { return f.white; });
+    var R = SETTINGS.scleraReflectance, white, eyesClipped = clippedShare > 0.3 || withWhite.length < withFace.length / 2;
+    if (!eyesClipped) {
+      white = [0, 1, 2].map(function (c) { return median(withWhite.map(function (f) { return f.white[c]; })); });
+    } else {
+      // Eye whites blown out: they're at least as bright as the camera can record.
+      white = [1, 1, 1];
+    }
+    var wl = lum(white[0], white[1], white[2]);
+    if (!eyesClipped && wl < lum(skin[0], skin[1], skin[2]) * 1.05) return { issue: "eyeShadow" };
+    var k = SETTINGS.whiteBalanceFromEyes;
+    var refl = [0, 1, 2].map(function (c) {
+      var balance = Math.pow(wl / Math.max(1e-4, white[c]), k);
+      return Math.min(1, skin[c] * balance * R / wl);
+    });
+    var lab = labFromLinear(refl[0], refl[1], refl[2]);
+    // If the eye whites were blown out, the true skin is at least this deep.
+    return { issue: null, depth: lab[0], ita: ita(lab), lab: lab, deeperThan: eyesClipped };
+  }
+
+  // Depth -> gemstone (0 = Pearl ... 9 = Onyx), plus the nearer neighbor as runner-up.
+  function classify(depth, deeperThan) {
+    var best = GEMSTONES - 1;
+    for (var i = 0; i < EDGES.length; i++) if (depth >= EDGES[i]) { best = i; break; }
+    if (deeperThan) {
+      // The eye whites were too bright to read, so the skin is at least this deep.
+      var deeper = Math.min(GEMSTONES - 1, best + 1);
+      return { best: deeper, alt: deeper === best ? best - 1 : best, between: true, depth: depth };
+    }
+    var top = best > 0 ? EDGES[best - 1] : Infinity, bottom = best < EDGES.length ? EDGES[best] : -Infinity;
+    var toLighter = top - depth, toDeeper = depth - bottom;
+    var alt = toLighter < toDeeper ? best - 1 : best + 1;
+    if (alt < 0) alt = 1; if (alt > GEMSTONES - 1) alt = GEMSTONES - 2;
+    return { best: best, alt: alt, between: Math.min(toLighter, toDeeper) < SETTINGS.betweenMargin, depth: depth };
   }
 
   var MESSAGES = {
-    dark: "It's too dark to read your shade. Face a window or a bright lamp.",
-    glare: "Too much glare on your skin. Step back from the light or tilt your phone slightly.",
-    center: "Fit your face inside the oval, with the three dots on your forehead and cheeks.",
-    uneven: "One side of your face is in shadow. Turn so the light hits your face straight on.",
-    ok: "Looks good. Hold still and take your reading."
+    loading: "Getting things ready…",
+    dark: "It's too dark. Face a window or a bright lamp.",
+    noFace: "Center your face in the oval.",
+    far: "Bring your phone a little closer.",
+    eyes: "Look straight at the camera with your eyes open. Glasses off if you can.",
+    glare: "The light is too strong on your face. Step out of direct sun, or turn so the light is soft and in front of you.",
+    eyeShadow: "Your eyes are in shadow. Face the light straight on instead of having it overhead.",
+    uneven: "One side of your face is in shadow. Turn so the light hits you straight on.",
+    ok: "Perfect. Hold still…"
   };
+
+  // ---------- Face mesh loader ----------
+  var meshPromise = null;
+  function loadMesh() {
+    if (meshPromise) return meshPromise;
+    meshPromise = new Promise(function (resolve, reject) {
+      function make() {
+        try {
+          var fm = new window.FaceMesh({ locateFile: function (f) { return BASE + "vendor/face_mesh/" + f; } });
+          fm.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5, selfieMode: false });
+          var pending = null;
+          fm.onResults(function (r) { if (pending) { var p = pending; pending = null; p(r); } });
+          var api = {
+            detect: function (source) {
+              return new Promise(function (res, rej) {
+                pending = res;
+                fm.send({ image: source }).catch(function (e) { pending = null; rej(e); });
+              });
+            }
+          };
+          fm.initialize().then(function () { resolve(api); }, reject);
+        } catch (e) { reject(e); }
+      }
+      if (window.FaceMesh) return make();
+      var s = document.createElement("script");
+      s.src = BASE + "vendor/face_mesh/face_mesh.js";
+      s.crossOrigin = "anonymous";
+      s.onload = make;
+      s.onerror = function () { reject(new Error("load")); };
+      document.head.appendChild(s);
+    });
+    meshPromise.catch(function () { meshPromise = null; });
+    return meshPromise;
+  }
 
   // ---------- Styles ----------
   var CSS = "" +
@@ -156,10 +276,12 @@
     ".sf-open:hover{background:var(--espresso,#261000);color:var(--warm-white,#FFFBF7)}" +
     ".sf-open svg{width:16px;height:16px;flex:none}" +
     ".sf-picked{font-size:12px;color:var(--espresso-soft,#5B4436);margin:0}" +
+    ".sf-picked:empty{display:none}" +
     "dialog.sf{border:0;padding:0;width:min(440px,100vw);max-width:100vw;max-height:100dvh;border-radius:20px;background:var(--warm-white,#FFFBF7);color:var(--espresso,#261000);font-family:var(--body,Raleway,Arial,sans-serif);box-shadow:0 30px 80px -20px rgba(38,16,0,.6)}" +
     "dialog.sf::backdrop{background:rgba(38,16,0,.6)}" +
     "@media (max-width:480px){dialog.sf{width:100vw;height:100dvh;max-height:100dvh;border-radius:0;margin:0}}" +
     ".sf-body{padding:22px 22px 24px;display:grid;gap:14px}" +
+    ".sf-step{display:grid;gap:14px}" +
     ".sf-head{display:flex;justify-content:space-between;align-items:center;gap:12px}" +
     ".sf h2{font-family:var(--display,Georgia,serif);font-weight:400;font-size:26px;line-height:1.15;margin:0}" +
     ".sf-x{font:inherit;font-size:24px;line-height:1;border:0;background:transparent;color:var(--espresso,#261000);cursor:pointer;width:40px;height:40px;border-radius:50%;flex:none}" +
@@ -168,36 +290,30 @@
     ".sf ul{margin:0;padding:0;list-style:none;display:grid;gap:8px;font-size:14px}" +
     ".sf li{display:flex;gap:10px;align-items:flex-start}" +
     ".sf li b{flex:none;width:22px;height:22px;border-radius:50%;background:var(--paper,#FFF3E8);color:var(--auburn,#96262C);font-size:12px;display:grid;place-items:center;margin-top:1px}" +
-    ".sf-private{display:flex;gap:10px;align-items:flex-start;background:var(--paper,#FFF3E8);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--espresso,#261000)}" +
-    ".sf-private svg{width:18px;height:18px;flex:none;margin-top:1px;color:var(--auburn,#96262C)}" +
+    ".sf-consent{display:flex;gap:10px;align-items:flex-start;background:var(--paper,#FFF3E8);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.45;color:var(--espresso,#261000);cursor:pointer}" +
+    ".sf-consent input{margin-top:2px;accent-color:var(--auburn,#96262C);width:18px;height:18px;flex:none}" +
     ".sf-btn{font:inherit;font-weight:700;font-size:15px;letter-spacing:.03em;border:0;border-radius:999px;padding:14px 20px;cursor:pointer;background:var(--espresso,#261000);color:var(--warm-white,#FFFBF7);width:100%}" +
     ".sf-btn:hover{background:var(--auburn,#96262C)}" +
-    ".sf-btn[disabled]{opacity:.6;cursor:default}" +
+    ".sf-btn[disabled]{opacity:.5;cursor:default}" +
+    ".sf-btn[disabled]:hover{background:var(--espresso,#261000)}" +
     ".sf-btn.ghost{background:transparent;color:var(--espresso,#261000);border:1px solid var(--espresso,#261000)}" +
     ".sf-btn.ghost:hover{background:var(--espresso,#261000);color:var(--warm-white,#FFFBF7)}" +
     ".sf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}" +
     ".sf-view{position:relative;width:100%;aspect-ratio:3/4;border-radius:16px;overflow:hidden;background:#1a0b00}" +
     ".sf-view video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}" +
     ".sf-view svg{position:absolute;inset:0;width:100%;height:100%}" +
-    ".sf-status{position:absolute;left:12px;right:12px;bottom:12px;background:rgba(38,16,0,.78);color:#FFFBF7;font-size:13px;line-height:1.4;padding:10px 12px;border-radius:12px;text-align:center}" +
-    ".sf-status.ok{background:rgba(38,16,0,.78);box-shadow:inset 0 0 0 1.5px var(--gold,#E4A524)}" +
+    ".sf-status{position:absolute;left:12px;right:12px;bottom:12px;background:rgba(38,16,0,.8);color:#FFFBF7;font-size:14px;line-height:1.4;padding:11px 12px;border-radius:12px;text-align:center}" +
+    ".sf-status.ok{box-shadow:inset 0 0 0 1.5px var(--gold,#E4A524)}" +
     ".sf-result{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;background:var(--paper,#FFF3E8);border-radius:16px;padding:16px}" +
-    ".sf-dots{display:flex}" +
-    ".sf-dots i{width:58px;height:58px;border-radius:50%;display:block;border:3px solid var(--warm-white,#FFFBF7);box-shadow:0 0 0 1px rgba(38,16,0,.12)}" +
-    ".sf-dots i+i{margin-left:-14px}" +
+    ".sf-result i{width:64px;height:64px;border-radius:50%;display:block;border:3px solid var(--warm-white,#FFFBF7);box-shadow:0 0 0 1px rgba(38,16,0,.12)}" +
     ".sf-result small{display:block;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--burnt-orange,#AB5B1E)}" +
     ".sf-result strong{display:block;font-family:var(--display,Georgia,serif);font-weight:400;font-size:28px;line-height:1.1;color:var(--espresso,#261000)}" +
-    ".sf-legend{display:flex;gap:14px;font-size:12px;color:var(--espresso-soft,#5B4436)}" +
-    ".sf-legend span{display:flex;align-items:center;gap:6px}" +
-    ".sf-legend i{width:12px;height:12px;border-radius:50%;display:block;border:1px solid rgba(38,16,0,.15)}" +
     ".sf-alt{display:flex;align-items:center;gap:10px;font-size:14px}" +
     ".sf-alt i{width:24px;height:24px;border-radius:50%;display:block;border:1px solid rgba(38,16,0,.15);flex:none}" +
     ".sf-alt button{font:inherit;font-weight:600;font-size:14px;color:var(--auburn,#96262C);background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}" +
-    ".sf-link{font:inherit;font-size:14px;font-weight:600;color:var(--espresso,#261000);background:none;border:0;padding:6px 0;text-decoration:underline;text-underline-offset:3px;cursor:pointer;justify-self:center}" +
     ".sf [hidden]{display:none !important}";
 
   var ICON_CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
-  var ICON_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>';
 
   function el(tag, attrs, html) {
     var e = document.createElement(tag);
@@ -205,21 +321,19 @@
     if (html != null) e.innerHTML = html;
     return e;
   }
-  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
 
   function setup(trigger) {
     var groupName = trigger.getAttribute("data-shade-finder");
     var radios = Array.prototype.slice.call(document.querySelectorAll('input[type="radio"][name="' + groupName + '"]'));
     var shades = radios.filter(function (r) { return r.value !== "prefer_not"; }).map(function (r) {
       var label = r.closest("label"), sw = label && label.querySelector("i");
-      var rgb = sw && parseRgb(getComputedStyle(sw).backgroundColor);
-      return rgb ? { input: r, name: label.textContent.trim(), rgb: rgb, lab: rgbToLab(rgb[0], rgb[1], rgb[2]) } : null;
-    }).filter(Boolean);
-    if (shades.length < 2) return;
+      var cs = sw ? getComputedStyle(sw) : null;
+      return { input: r, name: label ? label.textContent.trim() : r.value, color: cs ? (cs.getPropertyValue("--c").trim() || cs.backgroundColor) : "#ccc" };
+    });
+    if (shades.length !== GEMSTONES) return;
 
-    var canUseCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext !== false;
+    var canUseCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext !== false && typeof WebAssembly === "object";
     trigger.hidden = false;
-
     var picked = document.getElementById(trigger.getAttribute("aria-describedby") || "") || null;
 
     var dlg = el("dialog", { "class": "sf", "aria-labelledby": "sfTitle" });
@@ -227,151 +341,154 @@
       '<div class="sf-body">' +
         '<div class="sf-head"><h2 id="sfTitle">Find My Shade</h2><button type="button" class="sf-x" data-close aria-label="Close">&times;</button></div>' +
 
-        '<div data-step="intro" class="sf-body" style="padding:0">' +
-          '<p>Your phone camera can suggest the closest of the ten shades. It takes about ten seconds.</p>' +
+        '<div data-step="intro" class="sf-step">' +
+          '<p>Your camera finds your shade in a few seconds. Then you pick your undertone.</p>' +
           '<ul>' +
-            '<li><b>1</b><span>Face a window or bright light, so your whole face is lit evenly.</span></li>' +
-            '<li><b>2</b><span>Go bare-faced if you can. Makeup and filters change the reading.</span></li>' +
-            '<li><b>3</b><span>Hold your phone at arm\'s length, eye level, and fit your face in the oval.</span></li>' +
+            '<li><b>1</b><span>Face a window in daylight, out of direct sun, so your whole face is evenly lit.</span></li>' +
+            '<li><b>2</b><span>Look straight at the camera with your eyes open. Glasses off if you can.</span></li>' +
+            '<li><b>3</b><span>Hold still. Your shade shows up on its own.</span></li>' +
           '</ul>' +
-          '<div class="sf-private">' + ICON_LOCK + '<span>Your camera image stays on your phone. Pulse never saves, uploads or sees it. Only the shade you choose is sent.</span></div>' +
-          '<button type="button" class="sf-btn" data-start>Start Camera</button>' +
+          '<label class="sf-consent"><input type="checkbox" data-consent><span>I agree to let Pulse map my face on this device to find my shade. The image and face measurements stay on my phone and are never saved or sent.</span></label>' +
+          '<button type="button" class="sf-btn" data-start disabled>Start Camera</button>' +
         '</div>' +
 
-        '<div data-step="camera" hidden class="sf-body" style="padding:0">' +
+        '<div data-step="camera" hidden class="sf-step">' +
           '<div class="sf-view">' +
             '<video playsinline muted autoplay></video>' +
             '<svg viewBox="0 0 300 400" preserveAspectRatio="none" aria-hidden="true">' +
-              '<defs><mask id="sfMask"><rect width="300" height="400" fill="#fff"/><ellipse cx="150" cy="176" rx="96" ry="132" fill="#000"/></mask></defs>' +
+              '<defs><mask id="sfMask"><rect width="300" height="400" fill="#fff"/><ellipse cx="150" cy="180" rx="100" ry="135" fill="#000"/></mask></defs>' +
               '<rect width="300" height="400" fill="rgba(38,16,0,.45)" mask="url(#sfMask)"/>' +
-              '<ellipse cx="150" cy="176" rx="96" ry="132" fill="none" stroke="#FFFBF7" stroke-width="2" stroke-dasharray="6 6"/>' +
-              ZONES.map(function (z) { return '<circle cx="' + z.x * 300 + '" cy="' + z.y * 400 + '" r="' + z.r * 300 + '" fill="none" stroke="#E4A524" stroke-width="2"/>'; }).join("") +
+              '<ellipse cx="150" cy="180" rx="100" ry="135" fill="none" stroke="#FFFBF7" stroke-width="2" stroke-dasharray="6 6"/>' +
             '</svg>' +
-            '<div class="sf-status" role="status" aria-live="polite">Starting camera…</div>' +
+            '<div class="sf-status" role="status" aria-live="polite"></div>' +
           '</div>' +
-          '<button type="button" class="sf-btn" data-capture disabled>Take Reading</button>' +
+          '<button type="button" class="sf-btn" data-capture disabled>Get My Shade</button>' +
         '</div>' +
 
-        '<div data-step="result" hidden class="sf-body" style="padding:0">' +
-          '<div class="sf-result">' +
-            '<div class="sf-dots"><i data-measured title="What the camera saw"></i><i data-best-dot></i></div>' +
-            '<div><small>Closest Shade</small><strong data-best-name></strong></div>' +
-          '</div>' +
-          '<div class="sf-legend"><span><i data-measured-key></i>What the camera saw</span><span><i data-best-key></i><span data-best-key-name></span></span></div>' +
+        '<div data-step="result" hidden class="sf-step">' +
+          '<div class="sf-result"><i data-best-dot></i><div><small>Your Shade</small><strong data-best-name></strong></div></div>' +
           '<p data-note></p>' +
-          '<div class="sf-alt" data-alt-row><i data-alt-dot></i><span>Also close: <button type="button" data-use-alt></button></span></div>' +
+          '<div class="sf-alt"><i data-alt-dot></i><span>Also close: <button type="button" data-use-alt></button></span></div>' +
           '<button type="button" class="sf-btn" data-use-best></button>' +
           '<div class="sf-row"><button type="button" class="sf-btn ghost" data-retry>Try Again</button><button type="button" class="sf-btn ghost" data-close>Pick Myself</button></div>' +
         '</div>' +
 
-        '<div data-step="error" hidden class="sf-body" style="padding:0">' +
+        '<div data-step="error" hidden class="sf-step">' +
           '<p data-error></p>' +
-          '<p>You can still pick by eye. In daylight, hold your phone next to your jawline in a mirror and choose the shade that blends in best.</p>' +
+          '<p>To pick by eye: in daylight, hold your phone up to a mirror next to your jawline and choose the shade that blends in best.</p>' +
           '<button type="button" class="sf-btn" data-close>Pick Myself</button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(dlg);
 
     var q = function (s) { return dlg.querySelector(s); };
-    var video = q("video"), status = q(".sf-status"), captureBtn = q("[data-capture]");
-    var canvas = document.createElement("canvas"); canvas.width = CW; canvas.height = CH;
+    var video = q("video"), status = q(".sf-status"), captureBtn = q("[data-capture]"), startBtn = q("[data-start]"), consent = q("[data-consent]");
+    var canvas = document.createElement("canvas");
     var ctx = canvas.getContext("2d", { willReadFrequently: true });
-    var stream = null, liveTimer = null, busy = false, ranked = null, focusAfter = null;
+    var stream = null, mesh = null, liveTimer = null, busy = false, result = null, focusAfter = null, goodChecks = 0, session = 0;
+
+    consent.addEventListener("change", function () { startBtn.disabled = !consent.checked; });
 
     function show(step) {
       ["intro", "camera", "result", "error"].forEach(function (s) { q('[data-step="' + s + '"]').hidden = s !== step; });
     }
     function stopCamera() {
-      clearInterval(liveTimer); liveTimer = null;
+      session++;
+      clearTimeout(liveTimer); liveTimer = null; busy = false;
       if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
       stream = null; video.srcObject = null;
     }
-    function grab() {
+    function setStatus(key) {
+      status.textContent = MESSAGES[key || "ok"];
+      status.classList.toggle("ok", !key);
+    }
+    function fail(msg) { q("[data-error]").textContent = msg; show("error"); }
+
+    // Grabs the current frame and finds the face. Resolves to a frame reading.
+    function readFrame() {
       var vw = video.videoWidth, vh = video.videoHeight;
-      if (!vw || !vh) return false;
-      // Match object-fit: cover, so the dots line up with what's on screen.
-      var target = CW / CH, sw = vw, sh = vh, sx = 0, sy = 0;
-      if (vw / vh > target) { sw = vh * target; sx = (vw - sw) / 2; } else { sh = vw / target; sy = (vh - sh) / 2; }
-      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, CW, CH);
-      return true;
+      if (!vw || !vh || !mesh) return Promise.resolve(null);
+      var sc = Math.min(1, SETTINGS.analysisWidth / vw), w = Math.round(vw * sc), h = Math.round(vh * sc);
+      if (canvas.width !== w) { canvas.width = w; canvas.height = h; }
+      ctx.drawImage(video, 0, 0, w, h);
+      return mesh.detect(canvas).then(function (r) {
+        var f = r && r.multiFaceLandmarks && r.multiFaceLandmarks[0];
+        var lm = f && f.length >= 478 ? f.map(function (p) { return [p.x * w, p.y * h]; }) : null;
+        return analyzeFrame(ctx, w, h, lm);
+      });
     }
-    function setStatus(issue) {
-      status.textContent = MESSAGES[issue || "ok"];
-      status.classList.toggle("ok", !issue);
-    }
-    function liveCheck() {
-      if (busy || !grab()) return;
-      setStatus(combine([analyzeFrame(ctx)]).issue);
+
+    function loop(my) {
+      if (my !== session || !stream) return;
+      if (busy) { liveTimer = setTimeout(function () { loop(my); }, 300); return; }
+      readFrame().then(function (fr) {
+        if (my !== session || busy) return;
+        if (fr) {
+          var res = combine([fr]);
+          setStatus(res.issue);
+          goodChecks = res.issue ? 0 : goodChecks + 1;
+          if (goodChecks >= SETTINGS.goodChecksBeforeAuto) { capture(); return; }
+        }
+        liveTimer = setTimeout(function () { loop(my); }, 350);
+      }, function () { liveTimer = setTimeout(function () { loop(my); }, 600); });
     }
 
     function startCamera() {
       show("camera");
-      status.textContent = "Starting camera…"; status.classList.remove("ok");
-      captureBtn.disabled = true;
-      navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } }
-      }).then(function (s) {
-        stream = s;
-        video.srcObject = s;
-        var p = video.play(); if (p && p.catch) p.catch(function () {});
-        video.onloadedmetadata = function () {
-          captureBtn.disabled = false;
-          // Give auto-exposure a moment to settle before judging the light.
-          setTimeout(liveCheck, 600);
-          liveTimer = setInterval(liveCheck, 700);
-        };
+      setStatus("loading"); status.classList.remove("ok");
+      captureBtn.disabled = true; goodChecks = 0;
+      var my = ++session;
+      var cam = navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } } });
+      Promise.all([cam, loadMesh().catch(function () { return null; })]).then(function (arr) {
+        if (my !== session) { arr[0].getTracks().forEach(function (t) { t.stop(); }); return; }
+        stream = arr[0]; mesh = arr[1];
+        if (!mesh) { stopCamera(); fail("Find My Shade couldn't load on this browser. Try updating your browser, or pick your shade below."); return; }
+        video.srcObject = stream;
+        var pl = video.play(); if (pl && pl.catch) pl.catch(function () {});
+        function ready() { captureBtn.disabled = false; setStatus("noFace"); setTimeout(function () { loop(my); }, 700); }
+        if (video.readyState >= 1) ready(); else video.onloadedmetadata = ready;
       }).catch(function (e) {
+        if (my !== session) return;
         var inApp = /Instagram|FBAN|FBAV|TikTok|Snapchat|Line\//i.test(navigator.userAgent);
-        var msg;
         if (e && (e.name === "NotAllowedError" || e.name === "SecurityError")) {
-          msg = inApp
-            ? "This app's built-in browser blocked the camera. Tap the menu (•••) and choose Open in Browser, then try again."
-            : "Camera access was blocked. To use Find My Shade, allow camera access for this site in your browser settings and try again.";
-        } else if (e && e.name === "NotFoundError") {
-          msg = "We couldn't find a camera on this device.";
-        } else {
-          msg = "The camera didn't start. Close other apps that might be using it and try again.";
-        }
-        q("[data-error]").textContent = msg;
-        show("error");
+          fail(inApp
+            ? "This app's built-in browser blocked the camera. Tap the menu (•••), choose Open in Browser, then try again."
+            : "Camera access was blocked. To use Find My Shade, allow camera access for this site in your browser settings and try again.");
+        } else if (e && e.name === "NotFoundError") fail("We couldn't find a camera on this device.");
+        else fail("The camera didn't start. Close other apps that might be using it and try again.");
       });
     }
 
     function capture() {
-      if (busy) return;
-      busy = true; captureBtn.disabled = true;
-      status.textContent = "Reading… hold still."; status.classList.add("ok");
-      var frames = [];
+      if (busy || !stream) return;
+      busy = true; captureBtn.disabled = true; goodChecks = 0;
+      setStatus(null);
+      var my = session, frames = [];
       (function next() {
-        if (!stream) { busy = false; return; }
-        if (grab()) frames.push(analyzeFrame(ctx));
-        if (frames.length < SETTINGS.framesPerReading) { setTimeout(next, SETTINGS.frameGapMs); return; }
-        busy = false; captureBtn.disabled = false;
-        var res = combine(frames);
-        if (res.issue || !res.color) { setStatus(res.issue || "center"); return; }
-        ranked = rank(res.color, shades);
-        stopCamera();
-        showResult(res.color);
+        if (my !== session) return;
+        readFrame().then(function (fr) {
+          if (my !== session) return;
+          if (fr) frames.push(fr);
+          if (frames.length < SETTINGS.framesPerReading) { setTimeout(next, 60); return; }
+          busy = false; captureBtn.disabled = false;
+          var res = combine(frames);
+          if (res.issue) { setStatus(res.issue); loop(my); return; }
+          result = classify(res.depth, res.deeperThan);
+          stopCamera();
+          showResult();
+        }, function () { busy = false; captureBtn.disabled = false; loop(my); });
       })();
     }
 
-    function showResult(color) {
-      var best = ranked[0].shade, alt = ranked[1].shade;
-      var m = labToRgb(color[0], color[1], color[2]), mCss = "rgb(" + m.join(",") + ")";
-      var bCss = "rgb(" + best.rgb.join(",") + ")";
-      q("[data-measured]").style.background = mCss;
-      q("[data-measured-key]").style.background = mCss;
-      q("[data-best-dot]").style.background = bCss;
-      q("[data-best-key]").style.background = bCss;
-      q("[data-best-key-name]").textContent = best.name;
+    function showResult() {
+      var best = shades[result.best], alt = shades[result.alt];
+      q("[data-best-dot]").style.background = best.color;
       q("[data-best-name]").textContent = best.name;
       q("[data-use-best]").textContent = "Use " + best.name;
-      var close = ranked[1].d - ranked[0].d < 4;
-      q("[data-note]").textContent = close
-        ? "You're right between " + best.name + " and " + alt.name + ". Pick whichever looks more like you in daylight."
-        : "Cameras and lighting shift color a little. If another shade looks more like you, pick that one instead.";
-      q("[data-alt-dot]").style.background = "rgb(" + alt.rgb.join(",") + ")";
+      q("[data-note]").textContent = result.between
+        ? "You're right between " + best.name + " and " + alt.name + ". Go with whichever feels more like you."
+        : "If another shade feels more like you, pick that one instead.";
+      q("[data-alt-dot]").style.background = alt.color;
       q("[data-use-alt]").textContent = alt.name;
       show("result");
       q("[data-use-best]").focus();
@@ -380,20 +497,18 @@
     function choose(shade) {
       shade.input.checked = true;
       shade.input.dispatchEvent(new Event("change", { bubbles: true }));
-      if (picked) picked.textContent = "Suggested by Find My Shade: " + shade.name + ". You can change it anytime.";
+      if (picked) picked.textContent = "Suggested by Find My Shade: " + shade.name + ". Now pick your undertone below. You can change either anytime.";
       focusAfter = shade.input;
       close();
     }
 
     function open() {
-      ranked = null;
+      result = null;
       if (!canUseCamera) {
-        q("[data-error]").textContent = window.isSecureContext === false
-          ? "The camera only works on the secure (https) version of this page."
-          : "This browser doesn't support the camera. Try Safari or Chrome.";
-        show("error");
+        fail(window.isSecureContext === false ? "The camera only works on the secure (https) version of this page." : "This browser can't use the camera. Try Safari or Chrome.");
       } else {
         show("intro");
+        loadMesh().catch(function () {}); // start downloading while they read
       }
       if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
       document.documentElement.style.overflow = "hidden";
@@ -412,14 +527,13 @@
       if (lbl && lbl.scrollIntoView) lbl.scrollIntoView({ block: "nearest", behavior: "smooth" });
     });
     dlg.addEventListener("click", function (e) {
-      if (e.target === dlg) { close(); return; } // tap on backdrop
+      if (e.target === dlg) { close(); return; }
       var t = e.target.closest("button"); if (!t) return;
       if (t.hasAttribute("data-close")) close();
-      else if (t.hasAttribute("data-start")) startCamera();
+      else if (t.hasAttribute("data-start") || t.hasAttribute("data-retry")) startCamera();
       else if (t.hasAttribute("data-capture")) capture();
-      else if (t.hasAttribute("data-retry")) startCamera();
-      else if (t.hasAttribute("data-use-best")) choose(ranked[0].shade);
-      else if (t.hasAttribute("data-use-alt")) choose(ranked[1].shade);
+      else if (t.hasAttribute("data-use-best")) choose(shades[result.best]);
+      else if (t.hasAttribute("data-use-alt")) choose(shades[result.alt]);
     });
     document.addEventListener("visibilitychange", function () { if (document.hidden && stream) close(); });
     trigger.addEventListener("click", open);
@@ -436,8 +550,7 @@
     });
   }
 
-  // Exposed for testing the color math.
-  window.PulseShadeFinder = { rgbToLab: rgbToLab, labToRgb: labToRgb, combine: combine, rank: rank, analyzeFrame: analyzeFrame, ZONES: ZONES, SETTINGS: SETTINGS };
+  window.PulseShadeFinder = { EDGES: EDGES, analyzeFrame: analyzeFrame, combine: combine, classify: classify, loadMesh: loadMesh, SETTINGS: SETTINGS, labFromLinear: labFromLinear, ita: ita };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
