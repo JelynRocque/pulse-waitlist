@@ -1,23 +1,27 @@
 /*
- * Pulse "Find My Shade" camera helper (v3: eye-white reference, nothing to hold).
+ * Pulse "Find My Shade" (v4: shade match, no camera).
  *
- * Why the eyes: phone cameras brighten or darken every face so it looks
- * "normal", which made v1 give most people the same middle shade. The whites
- * of the eyes are in the same light as the skin and go through the same
- * camera adjustments, and they're close to white on everyone. Comparing
- * cheek skin with the eye whites cancels out the camera's brightness changes.
+ * The person holds their phone against their jawline in a mirror (in
+ * daylight) and the screen fills with one gemstone color at a time. They say
+ * whether their skin is lighter, deeper or a match, and the next color jumps
+ * halfway toward their answer, so any of the ten gemstones is reached in about
+ * four taps. When they land between two gemstones, both are shown side by side
+ * and they pick the closer one.
  *
- * The comparison gives the skin's depth (CIELAB lightness, L*). Each gemstone
- * is a band of depth, shared with the shade library (assets/shade-library.js),
- * where 126 foundation shades from Pat McGrath, Fenty and Juvia's Place sit in
- * the same bands. The camera picks the gemstone; the person picks their
- * undertone, because lighting tints color too much for a camera to judge
- * warm versus cool reliably.
+ * Why no camera: v3 measured cheek skin against the whites of the eyes. Tested
+ * Oct 22, 2026 on a friend (deep skin, glasses, indoor light) it said
+ * Moonstone, and on the Monk Skin Tone Examples set (Google/TONL, 19 people
+ * rated by Dr. Ellis Monk, testing use) it was off by two or more gemstones
+ * about two times in three and read deeper skin as lighter. Phone cameras
+ * re-expose every face and the eye whites are too small, shaded and easily
+ * blocked by lids, lashes or glasses to fix that. Comparing against the
+ * gemstone colors themselves, the references the gemstones are defined by,
+ * works the same for every skin tone.
  *
- * Face tracking (MediaPipe Face Mesh, Apache 2.0, served from /assets/vendor)
- * runs on the device to find the cheeks and eyes. No image, video or face
- * measurement is saved, uploaded or sent anywhere. Only the shade the person
- * picks is submitted, the same as tapping it by hand.
+ * The colors are the gemstone swatches already on the page (each radio's <i>
+ * swatch), so the finder always shows exactly the colors people pick from.
+ * Nothing is recorded; only the shade the person picks is submitted, the same
+ * as tapping it by hand.
  *
  * Use: add a button with data-shade-finder="<radio name>" next to a group of
  * ten shade radios, lightest first. Each radio's label needs an <i> swatch and
@@ -26,258 +30,34 @@
 (function () {
   "use strict";
 
-  var SETTINGS = {
-    // Light reflected by the whites of the eyes, as the camera sees them
-    // (lids and lashes shade them). Sets the overall light-to-deep scale.
-    // Calibrated Oct 22, 2026 on one person who wears Pat McGrath Medium
-    // Deep 24 and Fenty 486W (both depth ~49, Tiger's Eye).
-    // Lower it if results run too light; raise it if too deep.
-    scleraReflectance: 0.34,
-    // How much to trust the eye whites for color balance (0 = trust the
-    // camera's own white balance, 1 = treat eye whites as pure white).
-    // Eye whites are often slightly yellow, so this stays partial.
-    whiteBalanceFromEyes: 0.75,
-    // Within this much depth of a gemstone boundary, the result says it's
-    // between the two gemstones.
-    betweenMargin: 1.5,
-    framesPerReading: 8,
-    goodChecksBeforeAuto: 2,
-    analysisWidth: 720
-  };
+  var GEMSTONES = 10;
+  var FIRST = 5; // start in the middle of the row (Tiger's Eye)
 
-  // Lower depth limit of gemstones 1-9 (Pearl is open above, Onyx open below).
-  var EDGES = (window.PULSE_SHADES && window.PULSE_SHADES.edges) || [83, 76, 69, 62, 55, 48, 41, 34, 27];
-  var GEMSTONES = EDGES.length + 1;
+  // Next gemstone to show inside the range lo..hi still possible.
+  function middle(lo, hi) { return Math.round((lo + hi) / 2); }
 
-  var BASE = (function () {
-    var s = document.currentScript && document.currentScript.src;
-    return s ? s.replace(/[^/]*$/, "") : "/assets/";
-  })();
-
-  // ---------- Color math ----------
-  function lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
-  var LIN = new Float32Array(256);
-  for (var li = 0; li < 256; li++) LIN[li] = lin(li);
-  function lum(r, g, b) { return 0.2126 * r + 0.7152 * g + 0.0722 * b; }
-  function labFromLinear(R, G, B) {
-    var x = (0.4124 * R + 0.3576 * G + 0.1805 * B) / 0.95047;
-    var y = (0.2126 * R + 0.7152 * G + 0.0722 * B);
-    var z = (0.0193 * R + 0.1192 * G + 0.9505 * B) / 1.08883;
-    function f(t) { return t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; }
-    var fx = f(x), fy = f(y), fz = f(z);
-    return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
-  }
-  function ita(lab) { return Math.atan2(lab[0] - 50, lab[2]) * 180 / Math.PI; }
-  function median(arr) {
-    var s = arr.slice().sort(function (p, q) { return p - q; });
-    var n = s.length; if (!n) return NaN;
-    return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
-  }
-
-  // ---------- Face mesh landmark indices ----------
-  var EYE_L = [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246];
-  var EYE_R = [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398];
-  var IRIS_L = [468, 469, 470, 471, 472], IRIS_R = [473, 474, 475, 476, 477];
-  var CHEEKS = [50, 280, 205, 425]; // upper and lower cheeks, both sides
-  var FACE_SIDES = [234, 454];
-
-  function pointInPoly(x, y, poly) {
-    var inside = false;
-    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      var xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
-      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+  // One answer. state = {lo, hi, cur, steps}. answer: "lighter" | "deeper" | "match".
+  // Returns the new state, or {done:true, best, alt, between}.
+  function step(state, answer) {
+    var lo = state.lo, hi = state.hi, cur = state.cur, steps = (state.steps || 0) + 1;
+    if (answer === "match") {
+      return { done: true, best: cur, alt: neighbor(cur, state.lastDir), between: false };
     }
-    return inside;
-  }
-
-  // Reads skin and eye whites from one frame. lm = face landmarks scaled to pixels.
-  function analyzeFrame(ctx, w, h, lm) {
-    var out = { face: !!lm };
-    var frame = ctx.getImageData(0, 0, w, h).data;
-    var fs = 0, fc = 0;
-    for (var p = 0; p < frame.length; p += 64) { fs += (frame[p] + frame[p + 1] + frame[p + 2]) / 3; fc++; }
-    out.frameMean = fs / fc;
-    if (!lm) return out;
-
-    var faceW = Math.hypot(lm[FACE_SIDES[0]][0] - lm[FACE_SIDES[1]][0], lm[FACE_SIDES[0]][1] - lm[FACE_SIDES[1]][1]);
-    var cx = (lm[FACE_SIDES[0]][0] + lm[FACE_SIDES[1]][0]) / 2;
-    out.faceShare = faceW / w;
-    out.offCenter = Math.abs(cx / w - 0.5);
-    function px(x, y) { var i = ((y | 0) * w + (x | 0)) * 4; return [frame[i], frame[i + 1], frame[i + 2]]; }
-
-    // Skin: four cheek patches
-    var rad = faceW * 0.055, patches = [], skinTried = 0, skinClipped = 0, spreads = [];
-    CHEEKS.forEach(function (idx) {
-      var c = lm[idx], vals = [];
-      for (var y = Math.max(0, c[1] - rad); y < Math.min(h, c[1] + rad); y++) {
-        for (var x = Math.max(0, c[0] - rad); x < Math.min(w, c[0] + rad); x++) {
-          if ((x - c[0]) * (x - c[0]) + (y - c[1]) * (y - c[1]) > rad * rad) continue;
-          var v = px(x, y);
-          skinTried++;
-          if (v[0] >= 250 || v[1] >= 250 || v[2] >= 250) { skinClipped++; continue; }
-          var R = LIN[v[0]], G = LIN[v[1]], B = LIN[v[2]];
-          if (R <= B) continue;
-          vals.push([R, G, B, lum(R, G, B)]);
-        }
-      }
-      if (vals.length < 20) { patches.push(null); return; }
-      vals.sort(function (a, b) { return a[3] - b[3]; });
-      spreads.push(vals[Math.floor(vals.length * 0.9)][3] / Math.max(1e-4, vals[Math.floor(vals.length * 0.1)][3]));
-      var lo = Math.floor(vals.length * 0.25), hi = Math.ceil(vals.length * 0.75), s = [0, 0, 0], n = 0;
-      for (var k = lo; k < hi; k++) { s[0] += vals[k][0]; s[1] += vals[k][1]; s[2] += vals[k][2]; n++; }
-      patches.push([s[0] / n, s[1] / n, s[2] / n]);
-    });
-    out.skinClipped = skinTried ? skinClipped / skinTried : 0;
-    out.skinSpread = spreads.length ? median(spreads) : 1;
-    var good = patches.filter(Boolean);
-    if (good.length >= 2) {
-      out.skin = [0, 1, 2].map(function (c) { return median(good.map(function (q) { return q[c]; })); });
-      var sideL = patches[0] || patches[2], sideR = patches[1] || patches[3];
-      out.sideRatio = sideL && sideR ? Math.max(lum.apply(null, sideL), lum.apply(null, sideR)) / Math.max(1e-4, Math.min(lum.apply(null, sideL), lum.apply(null, sideR))) : 1;
+    if (answer === "lighter") hi = cur - 1; else lo = cur + 1;
+    if (hi < 0) return { done: true, best: 0, alt: 1, between: false };                         // lighter than Pearl
+    if (lo > GEMSTONES - 1) return { done: true, best: GEMSTONES - 1, alt: GEMSTONES - 2, between: false }; // deeper than Onyx
+    if (lo > hi) {
+      // Lighter than one gemstone and deeper than the one next to it: compare those two.
+      var a = Math.min(lo, hi), b = Math.max(lo, hi);
+      return { done: false, pair: [a, b], steps: steps };
     }
-
-    // Eye whites: inside each eye outline, outside the iris
-    var white = [], clipped = 0, openness = [];
-    [[EYE_L, IRIS_L], [EYE_R, IRIS_R]].forEach(function (pair) {
-      var poly = pair[0].map(function (i) { return lm[i]; });
-      var ic = lm[pair[1][0]], ir = 0;
-      for (var k = 1; k < 5; k++) ir = Math.max(ir, Math.hypot(lm[pair[1][k]][0] - ic[0], lm[pair[1][k]][1] - ic[1]));
-      ir *= 1.15;
-      var xs = poly.map(function (q) { return q[0]; }), ys = poly.map(function (q) { return q[1]; });
-      var x0 = Math.max(0, Math.min.apply(null, xs)), x1 = Math.min(w - 1, Math.max.apply(null, xs));
-      var y0 = Math.max(0, Math.min.apply(null, ys)), y1 = Math.min(h - 1, Math.max.apply(null, ys));
-      openness.push((y1 - y0) / Math.max(1, x1 - x0));
-      var eyePx = [];
-      for (var y = Math.ceil(y0); y <= y1; y++) for (var x = Math.ceil(x0); x <= x1; x++) {
-        if (!pointInPoly(x, y, poly)) continue;
-        if (Math.hypot(x - ic[0], y - ic[1]) < ir) continue;
-        var v = px(x, y), mx = Math.max(v[0], v[1], v[2]);
-        eyePx.push([v[0], v[1], v[2], lum(LIN[v[0]], LIN[v[1]], LIN[v[2]]), mx ? (mx - Math.min(v[0], v[1], v[2])) / mx : 1]);
-      }
-      // Eye whites are the least colorful part of the eye (eyelid skin, lashes
-      // and the iris edge all carry color), then the brighter half of those.
-      // Picking by color, not brightness, keeps light eyelid skin out on fair faces.
-      eyePx.sort(function (a, b) { return a[4] - b[4]; });
-      var plain = eyePx.slice(0, Math.ceil(eyePx.length * 0.5));
-      plain.sort(function (a, b) { return b[3] - a[3]; });
-      plain.slice(0, Math.ceil(plain.length * 0.6)).forEach(function (q) {
-        if (q[0] >= 250 || q[1] >= 250 || q[2] >= 250) { clipped++; return; }
-        white.push([LIN[q[0]], LIN[q[1]], LIN[q[2]]]);
-      });
-    });
-    out.eyeOpen = Math.min.apply(null, openness);
-    out.whiteCount = white.length + clipped;
-    out.whiteClipped = out.whiteCount ? clipped / out.whiteCount : 0;
-    if (white.length >= 6) out.white = [0, 1, 2].map(function (c) { return median(white.map(function (q) { return q[c]; })); });
-    return out;
+    var next = middle(lo, hi);
+    return { done: false, lo: lo, hi: hi, cur: next, steps: steps, lastDir: answer };
   }
-
-  // Combines frames, checks conditions, returns the skin's ITA.
-  function combine(frames) {
-    var withFace = frames.filter(function (f) { return f.face; });
-    var frameMean = median(frames.map(function (f) { return f.frameMean; }));
-    if (frameMean < 28) return { issue: "dark" };
-    if (withFace.length < frames.length / 2) return { issue: "noFace" };
-    var share = median(withFace.map(function (f) { return f.faceShare; }));
-    var off = median(withFace.map(function (f) { return f.offCenter; }));
-    if (share < 0.28) return { issue: "far" };
-    if (off > 0.18) return { issue: "noFace" };
-    var withSkin = withFace.filter(function (f) { return f.skin; });
-    if (withSkin.length < withFace.length / 2) return { issue: "noFace" };
-    // Skin washed out to pure white by the light hides real color, and hides shadowed-side differences too.
-    if (median(withFace.map(function (f) { return f.skinClipped || 0; })) > 0.08) return { issue: "glare" };
-    // Hard, direct light throws strong highlights and shadows across the cheeks
-    // (soft window light measures about 2-3 here; direct sun 14+).
-    if (median(withFace.map(function (f) { return f.skinSpread || 1; })) > 6) return { issue: "glare" };
-    if (median(withSkin.map(function (f) { return f.sideRatio; })) > 1.6) return { issue: "uneven" };
-    var open = median(withFace.map(function (f) { return f.eyeOpen; }));
-    var count = median(withFace.map(function (f) { return f.whiteCount; }));
-    if (open < 0.2 || count < 12) return { issue: "eyes" };
-
-    var skin = [0, 1, 2].map(function (c) { return median(withSkin.map(function (f) { return f.skin[c]; })); });
-    var clippedShare = median(withFace.map(function (f) { return f.whiteClipped; }));
-    var withWhite = withFace.filter(function (f) { return f.white; });
-    var R = SETTINGS.scleraReflectance, white, eyesClipped = clippedShare > 0.3 || withWhite.length < withFace.length / 2;
-    if (!eyesClipped) {
-      white = [0, 1, 2].map(function (c) { return median(withWhite.map(function (f) { return f.white[c]; })); });
-    } else {
-      // Eye whites blown out: they're at least as bright as the camera can record.
-      white = [1, 1, 1];
-    }
-    var wl = lum(white[0], white[1], white[2]);
-    // On fair skin the cheeks can look brighter than the eye whites (lids shade
-    // them), so only refuse when the eyes are far darker than any skin allows.
-    if (!eyesClipped && wl < lum(skin[0], skin[1], skin[2]) * 0.4) return { issue: "eyeShadow" };
-    var k = SETTINGS.whiteBalanceFromEyes;
-    var refl = [0, 1, 2].map(function (c) {
-      var balance = Math.pow(wl / Math.max(1e-4, white[c]), k);
-      return Math.min(1, skin[c] * balance * R / wl);
-    });
-    var lab = labFromLinear(refl[0], refl[1], refl[2]);
-    // If the eye whites were blown out, the true skin is at least this deep.
-    return { issue: null, depth: lab[0], ita: ita(lab), lab: lab, deeperThan: eyesClipped };
-  }
-
-  // Depth -> gemstone (0 = Pearl ... 9 = Onyx), plus the nearer neighbor as runner-up.
-  function classify(depth, deeperThan) {
-    var best = GEMSTONES - 1;
-    for (var i = 0; i < EDGES.length; i++) if (depth >= EDGES[i]) { best = i; break; }
-    if (deeperThan) {
-      // The eye whites were too bright to read, so the skin is at least this deep.
-      var deeper = Math.min(GEMSTONES - 1, best + 1);
-      return { best: deeper, alt: deeper === best ? best - 1 : best, between: true, depth: depth };
-    }
-    var top = best > 0 ? EDGES[best - 1] : Infinity, bottom = best < EDGES.length ? EDGES[best] : -Infinity;
-    var toLighter = top - depth, toDeeper = depth - bottom;
-    var alt = toLighter < toDeeper ? best - 1 : best + 1;
-    if (alt < 0) alt = 1; if (alt > GEMSTONES - 1) alt = GEMSTONES - 2;
-    return { best: best, alt: alt, between: Math.min(toLighter, toDeeper) < SETTINGS.betweenMargin, depth: depth };
-  }
-
-  var MESSAGES = {
-    loading: "Getting things ready…",
-    dark: "It's too dark. Face a window or a bright lamp.",
-    noFace: "Center your face in the oval.",
-    far: "Bring your phone a little closer.",
-    eyes: "Look straight at the camera with your eyes open. Glasses off if you can.",
-    glare: "The light is too strong on your face. Step out of direct sun, or turn so the light is soft and in front of you.",
-    eyeShadow: "Your eyes are in shadow. Face the light straight on instead of having it overhead.",
-    uneven: "One side of your face is in shadow. Turn so the light hits you straight on.",
-    ok: "Perfect. Hold still…"
-  };
-
-  // ---------- Face mesh loader ----------
-  var meshPromise = null;
-  function loadMesh() {
-    if (meshPromise) return meshPromise;
-    meshPromise = new Promise(function (resolve, reject) {
-      function make() {
-        try {
-          var fm = new window.FaceMesh({ locateFile: function (f) { return BASE + "vendor/face_mesh/" + f; } });
-          fm.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5, selfieMode: false });
-          var pending = null;
-          fm.onResults(function (r) { if (pending) { var p = pending; pending = null; p(r); } });
-          var api = {
-            detect: function (source) {
-              return new Promise(function (res, rej) {
-                pending = res;
-                fm.send({ image: source }).catch(function (e) { pending = null; rej(e); });
-              });
-            }
-          };
-          fm.initialize().then(function () { resolve(api); }, reject);
-        } catch (e) { reject(e); }
-      }
-      if (window.FaceMesh) return make();
-      var s = document.createElement("script");
-      s.src = BASE + "vendor/face_mesh/face_mesh.js";
-      s.crossOrigin = "anonymous";
-      s.onload = make;
-      s.onerror = function () { reject(new Error("load")); };
-      document.head.appendChild(s);
-    });
-    meshPromise.catch(function () { meshPromise = null; });
-    return meshPromise;
+  function neighbor(i, lastDir) {
+    if (i === 0) return 1;
+    if (i === GEMSTONES - 1) return GEMSTONES - 2;
+    return lastDir === "lighter" ? i + 1 : i - 1;
   }
 
   // ---------- Styles ----------
@@ -288,33 +68,38 @@
     ".sf-open svg{width:16px;height:16px;flex:none}" +
     ".sf-picked{font-size:12px;color:var(--espresso-soft,#5B4436);margin:0}" +
     ".sf-picked:empty{display:none}" +
-    "dialog.sf{border:0;padding:0;width:min(440px,100vw);max-width:100vw;max-height:100dvh;border-radius:20px;background:var(--warm-white,#FFFBF7);color:var(--espresso,#261000);font-family:var(--body,Raleway,Arial,sans-serif);box-shadow:0 30px 80px -20px rgba(38,16,0,.6)}" +
+    "dialog.sf{border:0;padding:0;width:min(440px,100vw);max-width:100vw;max-height:100dvh;border-radius:20px;background:var(--warm-white,#FFFBF7);color:var(--espresso,#261000);font-family:var(--body,Raleway,Arial,sans-serif);box-shadow:0 30px 80px -20px rgba(38,16,0,.6);overflow:hidden}" +
     "dialog.sf::backdrop{background:rgba(38,16,0,.6)}" +
     "@media (max-width:480px){dialog.sf{width:100vw;height:100dvh;max-height:100dvh;border-radius:0;margin:0}}" +
     ".sf-body{padding:22px 22px 24px;display:grid;gap:14px}" +
     ".sf-step{display:grid;gap:14px}" +
     ".sf-head{display:flex;justify-content:space-between;align-items:center;gap:12px}" +
     ".sf h2{font-family:var(--display,Georgia,serif);font-weight:400;font-size:26px;line-height:1.15;margin:0}" +
-    ".sf-x{font:inherit;font-size:24px;line-height:1;border:0;background:transparent;color:var(--espresso,#261000);cursor:pointer;width:40px;height:40px;border-radius:50%;flex:none}" +
-    ".sf-x:hover{background:var(--paper,#FFF3E8)}" +
+    ".sf-x{font:inherit;font-size:24px;line-height:1;border:0;background:transparent;color:inherit;cursor:pointer;width:40px;height:40px;border-radius:50%;flex:none}" +
+    ".sf-x:hover{background:rgba(127,127,127,.18)}" +
     ".sf p{margin:0;font-size:14px;color:var(--espresso-soft,#5B4436)}" +
     ".sf ul{margin:0;padding:0;list-style:none;display:grid;gap:8px;font-size:14px}" +
     ".sf li{display:flex;gap:10px;align-items:flex-start}" +
     ".sf li b{flex:none;width:22px;height:22px;border-radius:50%;background:var(--paper,#FFF3E8);color:var(--auburn,#96262C);font-size:12px;display:grid;place-items:center;margin-top:1px}" +
-    ".sf-consent{display:flex;gap:10px;align-items:flex-start;background:var(--paper,#FFF3E8);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.45;color:var(--espresso,#261000);cursor:pointer}" +
-    ".sf-consent input{margin-top:2px;accent-color:var(--auburn,#96262C);width:18px;height:18px;flex:none}" +
     ".sf-btn{font:inherit;font-weight:700;font-size:15px;letter-spacing:.03em;border:0;border-radius:999px;padding:14px 20px;cursor:pointer;background:var(--espresso,#261000);color:var(--warm-white,#FFFBF7);width:100%}" +
     ".sf-btn:hover{background:var(--auburn,#96262C)}" +
-    ".sf-btn[disabled]{opacity:.5;cursor:default}" +
-    ".sf-btn[disabled]:hover{background:var(--espresso,#261000)}" +
     ".sf-btn.ghost{background:transparent;color:var(--espresso,#261000);border:1px solid var(--espresso,#261000)}" +
     ".sf-btn.ghost:hover{background:var(--espresso,#261000);color:var(--warm-white,#FFFBF7)}" +
     ".sf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}" +
-    ".sf-view{position:relative;width:100%;aspect-ratio:3/4;border-radius:16px;overflow:hidden;background:#1a0b00}" +
-    ".sf-view video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}" +
-    ".sf-view svg{position:absolute;inset:0;width:100%;height:100%}" +
-    ".sf-status{position:absolute;left:12px;right:12px;bottom:12px;background:rgba(38,16,0,.8);color:#FFFBF7;font-size:14px;line-height:1.4;padding:11px 12px;border-radius:12px;text-align:center}" +
-    ".sf-status.ok{box-shadow:inset 0 0 0 1.5px var(--gold,#E4A524)}" +
+    /* Compare screens: the whole dialog becomes the color */
+    "dialog.sf.sf-full .sf-body{padding:0;gap:0;height:100%}" +
+    ".sf-cmp{position:relative;display:grid;grid-template-rows:auto 1fr auto;min-height:min(640px,100dvh);height:100%}" +
+    ".sf-cmp-top{display:flex;justify-content:space-between;align-items:center;padding:14px 14px 0 20px;gap:12px}" +
+    ".sf-cmp-top span{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;border-radius:999px;background:rgba(255,251,247,.86);color:#261000}" +
+    ".sf-cmp-top .sf-x{background:rgba(255,251,247,.86);color:#261000}" +
+    ".sf-colors{display:grid;grid-auto-flow:column;grid-auto-columns:1fr}" +
+    ".sf-colors button{border:0;margin:0;padding:0 0 18px;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;font:inherit;font-weight:700;font-size:15px}" +
+    ".sf-colors button span{background:rgba(255,251,247,.92);color:#261000;padding:10px 16px;border-radius:999px}" +
+    ".sf-colors div{display:block}" +
+    ".sf-ask{background:var(--warm-white,#FFFBF7);padding:16px 18px 20px;display:grid;gap:10px}" +
+    ".sf-ask p{text-align:center;color:var(--espresso,#261000);font-size:15px;font-weight:600}" +
+    ".sf-ask .sf-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}" +
+    ".sf-ask .sf-btn{padding:13px 8px;font-size:14px;letter-spacing:.01em}" +
     ".sf-result{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;background:var(--paper,#FFF3E8);border-radius:16px;padding:16px}" +
     ".sf-result i{width:64px;height:64px;border-radius:50%;display:block;border:3px solid var(--warm-white,#FFFBF7);box-shadow:0 0 0 1px rgba(38,16,0,.12)}" +
     ".sf-result small{display:block;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--burnt-orange,#AB5B1E)}" +
@@ -324,7 +109,7 @@
     ".sf-alt button{font:inherit;font-weight:600;font-size:14px;color:var(--auburn,#96262C);background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}" +
     ".sf [hidden]{display:none !important}";
 
-  var ICON_CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+  var ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="12" r="3.5"/><circle cx="17" cy="12" r="3.5"/><path d="M10.5 12h3"/></svg>';
 
   function el(tag, attrs, html) {
     var e = document.createElement(tag);
@@ -342,153 +127,98 @@
       return { input: r, name: label ? label.textContent.trim() : r.value, color: cs ? (cs.getPropertyValue("--c").trim() || cs.backgroundColor) : "#ccc" };
     });
     if (shades.length !== GEMSTONES) return;
-
-    var canUseCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext !== false && typeof WebAssembly === "object";
     trigger.hidden = false;
     var picked = document.getElementById(trigger.getAttribute("aria-describedby") || "") || null;
 
     var dlg = el("dialog", { "class": "sf", "aria-labelledby": "sfTitle" });
     dlg.innerHTML =
       '<div class="sf-body">' +
-        '<div class="sf-head"><h2 id="sfTitle">Find My Shade</h2><button type="button" class="sf-x" data-close aria-label="Close">&times;</button></div>' +
-
         '<div data-step="intro" class="sf-step">' +
-          '<p>Your camera finds your shade in a few seconds. Then you pick your undertone.</p>' +
+          '<div class="sf-head"><h2 id="sfTitle">Find My Shade</h2><button type="button" class="sf-x" data-close aria-label="Close">&times;</button></div>' +
+          '<p>Your screen will fill with one shade at a time. Compare each one with your skin, and you\'ll have your shade in about four taps.</p>' +
           '<ul>' +
-            '<li><b>1</b><span>Face a window in daylight, out of direct sun, so your whole face is evenly lit.</span></li>' +
-            '<li><b>2</b><span>Look straight at the camera with your eyes open. Glasses off if you can.</span></li>' +
-            '<li><b>3</b><span>Hold still. Your shade shows up on its own.</span></li>' +
+            '<li><b>1</b><span>Stand at a mirror facing a window in daylight, out of direct sun.</span></li>' +
+            '<li><b>2</b><span>Set your screen brightness to about halfway.</span></li>' +
+            '<li><b>3</b><span>Hold your phone flat against your jawline, screen facing the mirror, and compare the color with the skin right next to it. A friend can hold it for you instead.</span></li>' +
           '</ul>' +
-          '<label class="sf-consent"><input type="checkbox" data-consent><span>I agree to let Pulse map my face on this device to find my shade. The image and face measurements stay on my phone and are never saved or sent.</span></label>' +
-          '<button type="button" class="sf-btn" data-start disabled>Start Camera</button>' +
+          '<button type="button" class="sf-btn" data-start>Start</button>' +
         '</div>' +
 
-        '<div data-step="camera" hidden class="sf-step">' +
-          '<div class="sf-view">' +
-            '<video playsinline muted autoplay></video>' +
-            '<svg viewBox="0 0 300 400" preserveAspectRatio="none" aria-hidden="true">' +
-              '<defs><mask id="sfMask"><rect width="300" height="400" fill="#fff"/><ellipse cx="150" cy="180" rx="100" ry="135" fill="#000"/></mask></defs>' +
-              '<rect width="300" height="400" fill="rgba(38,16,0,.45)" mask="url(#sfMask)"/>' +
-              '<ellipse cx="150" cy="180" rx="100" ry="135" fill="none" stroke="#FFFBF7" stroke-width="2" stroke-dasharray="6 6"/>' +
-            '</svg>' +
-            '<div class="sf-status" role="status" aria-live="polite"></div>' +
+        '<div data-step="compare" hidden class="sf-cmp">' +
+          '<div class="sf-cmp-top"><span data-progress></span><button type="button" class="sf-x" data-close aria-label="Close">&times;</button></div>' +
+          '<div class="sf-colors" data-colors></div>' +
+          '<div class="sf-ask" data-ask>' +
+            '<p data-question>Compared with this color, your skin is…</p>' +
+            '<div class="sf-row3" data-three><button type="button" class="sf-btn ghost" data-answer="lighter">Lighter</button><button type="button" class="sf-btn" data-answer="match">A Match</button><button type="button" class="sf-btn ghost" data-answer="deeper">Deeper</button></div>' +
           '</div>' +
-          '<button type="button" class="sf-btn" data-capture disabled>Get My Shade</button>' +
         '</div>' +
 
         '<div data-step="result" hidden class="sf-step">' +
+          '<div class="sf-head"><h2>Find My Shade</h2><button type="button" class="sf-x" data-close aria-label="Close">&times;</button></div>' +
           '<div class="sf-result"><i data-best-dot></i><div><small>Your Shade</small><strong data-best-name></strong></div></div>' +
-          '<p data-note></p>' +
+          '<p data-note>If another shade feels more like you, pick that one instead.</p>' +
           '<div class="sf-alt"><i data-alt-dot></i><span>Also close: <button type="button" data-use-alt></button></span></div>' +
           '<button type="button" class="sf-btn" data-use-best></button>' +
-          '<div class="sf-row"><button type="button" class="sf-btn ghost" data-retry>Try Again</button><button type="button" class="sf-btn ghost" data-close>Pick Myself</button></div>' +
-        '</div>' +
-
-        '<div data-step="error" hidden class="sf-step">' +
-          '<p data-error></p>' +
-          '<p>To pick by eye: in daylight, hold your phone up to a mirror next to your jawline and choose the shade that blends in best.</p>' +
-          '<button type="button" class="sf-btn" data-close>Pick Myself</button>' +
+          '<div class="sf-row"><button type="button" class="sf-btn ghost" data-retry>Start Over</button><button type="button" class="sf-btn ghost" data-close>Pick Myself</button></div>' +
         '</div>' +
       '</div>';
     document.body.appendChild(dlg);
 
     var q = function (s) { return dlg.querySelector(s); };
-    var video = q("video"), status = q(".sf-status"), captureBtn = q("[data-capture]"), startBtn = q("[data-start]"), consent = q("[data-consent]");
-    var canvas = document.createElement("canvas");
-    var ctx = canvas.getContext("2d", { willReadFrequently: true });
-    var stream = null, mesh = null, liveTimer = null, busy = false, result = null, focusAfter = null, goodChecks = 0, session = 0;
+    var state = null, result = null, focusAfter = null;
 
-    consent.addEventListener("change", function () { startBtn.disabled = !consent.checked; });
-
-    function show(step) {
-      ["intro", "camera", "result", "error"].forEach(function (s) { q('[data-step="' + s + '"]').hidden = s !== step; });
-    }
-    function stopCamera() {
-      session++;
-      clearTimeout(liveTimer); liveTimer = null; busy = false;
-      if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
-      stream = null; video.srcObject = null;
-    }
-    function setStatus(key) {
-      status.textContent = MESSAGES[key || "ok"];
-      status.classList.toggle("ok", !key);
-    }
-    function fail(msg) { q("[data-error]").textContent = msg; show("error"); }
-
-    // Grabs the current frame and finds the face. Resolves to a frame reading.
-    function readFrame() {
-      var vw = video.videoWidth, vh = video.videoHeight;
-      if (!vw || !vh || !mesh) return Promise.resolve(null);
-      var sc = Math.min(1, SETTINGS.analysisWidth / vw), w = Math.round(vw * sc), h = Math.round(vh * sc);
-      if (canvas.width !== w) { canvas.width = w; canvas.height = h; }
-      ctx.drawImage(video, 0, 0, w, h);
-      return mesh.detect(canvas).then(function (r) {
-        var f = r && r.multiFaceLandmarks && r.multiFaceLandmarks[0];
-        var lm = f && f.length >= 478 ? f.map(function (p) { return [p.x * w, p.y * h]; }) : null;
-        return analyzeFrame(ctx, w, h, lm);
-      });
+    function show(name) {
+      ["intro", "compare", "result"].forEach(function (s) { q('[data-step="' + s + '"]').hidden = s !== name; });
+      dlg.classList.toggle("sf-full", name === "compare");
     }
 
-    function loop(my) {
-      if (my !== session || !stream) return;
-      if (busy) { liveTimer = setTimeout(function () { loop(my); }, 300); return; }
-      readFrame().then(function (fr) {
-        if (my !== session || busy) return;
-        if (fr) {
-          var res = combine([fr]);
-          setStatus(res.issue);
-          goodChecks = res.issue ? 0 : goodChecks + 1;
-          if (goodChecks >= SETTINGS.goodChecksBeforeAuto) { capture(); return; }
-        }
-        liveTimer = setTimeout(function () { loop(my); }, 350);
-      }, function () { liveTimer = setTimeout(function () { loop(my); }, 600); });
+    function begin() {
+      state = { lo: 0, hi: GEMSTONES - 1, cur: FIRST, steps: 0 };
+      showCompare();
     }
 
-    function startCamera() {
-      show("camera");
-      setStatus("loading"); status.classList.remove("ok");
-      captureBtn.disabled = true; goodChecks = 0;
-      var my = ++session;
-      var cam = navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } } });
-      Promise.all([cam, loadMesh().catch(function () { return null; })]).then(function (arr) {
-        if (my !== session) { arr[0].getTracks().forEach(function (t) { t.stop(); }); return; }
-        stream = arr[0]; mesh = arr[1];
-        if (!mesh) { stopCamera(); fail("Find My Shade couldn't load on this browser. Try updating your browser, or pick your shade below."); return; }
-        video.srcObject = stream;
-        var pl = video.play(); if (pl && pl.catch) pl.catch(function () {});
-        function ready() { captureBtn.disabled = false; setStatus("noFace"); setTimeout(function () { loop(my); }, 700); }
-        if (video.readyState >= 1) ready(); else video.onloadedmetadata = ready;
-      }).catch(function (e) {
-        if (my !== session) return;
-        var inApp = /Instagram|FBAN|FBAV|TikTok|Snapchat|Line\//i.test(navigator.userAgent);
-        if (e && (e.name === "NotAllowedError" || e.name === "SecurityError")) {
-          fail(inApp
-            ? "This app's built-in browser blocked the camera. Tap the menu (•••), choose Open in Browser, then try again."
-            : "Camera access was blocked. To use Find My Shade, allow camera access for this site in your browser settings and try again.");
-        } else if (e && e.name === "NotFoundError") fail("We couldn't find a camera on this device.");
-        else fail("The camera didn't start. Close other apps that might be using it and try again.");
-      });
+    function showCompare() {
+      var colors = q("[data-colors]");
+      colors.innerHTML = "";
+      var pair = state.pair;
+      // Single color fills the whole screen behind the top bar; a pair splits it.
+      q('[data-step="compare"]').style.background = pair
+        ? "linear-gradient(90deg," + shades[pair[0]].color + " 50%," + shades[pair[1]].color + " 50%)"
+        : shades[state.cur].color;
+      if (pair) {
+        // Final choice between two neighbors: tap the half that blends in better.
+        pair.forEach(function (i) {
+          var b = el("button", { type: "button", "data-pick": String(i), "aria-label": shades[i].name });
+          b.style.background = shades[i].color;
+          b.appendChild(el("span", null, shades[i].name));
+          colors.appendChild(b);
+        });
+        q("[data-question]").textContent = "You're between these two. Hold each half to your jawline and tap the closer one.";
+        q("[data-three]").hidden = true;
+        q("[data-progress]").textContent = "Last step";
+      } else {
+        var d = el("div", { role: "img", "aria-label": shades[state.cur].name });
+        colors.appendChild(d);
+        q("[data-question]").textContent = "Compared with this color, your skin is…";
+        q("[data-three]").hidden = false;
+        q("[data-progress]").textContent = "Shade " + (state.steps + 1);
+      }
+      show("compare");
+      var focusTarget = pair ? colors.querySelector("button") : q('[data-answer="match"]');
+      if (focusTarget) focusTarget.focus();
     }
 
-    function capture() {
-      if (busy || !stream) return;
-      busy = true; captureBtn.disabled = true; goodChecks = 0;
-      setStatus(null);
-      var my = session, frames = [];
-      (function next() {
-        if (my !== session) return;
-        readFrame().then(function (fr) {
-          if (my !== session) return;
-          if (fr) frames.push(fr);
-          if (frames.length < SETTINGS.framesPerReading) { setTimeout(next, 60); return; }
-          busy = false; captureBtn.disabled = false;
-          var res = combine(frames);
-          if (res.issue) { setStatus(res.issue); loop(my); return; }
-          result = classify(res.depth, res.deeperThan);
-          stopCamera();
-          showResult();
-        }, function () { busy = false; captureBtn.disabled = false; loop(my); });
-      })();
+    function answer(a) {
+      var next = step(state, a);
+      if (next.done) { result = next; showResult(); return; }
+      state = next;
+      showCompare();
+    }
+
+    function pick(i) {
+      var other = state.pair[0] === i ? state.pair[1] : state.pair[0];
+      result = { best: i, alt: other, between: true };
+      showResult();
     }
 
     function showResult() {
@@ -497,7 +227,7 @@
       q("[data-best-name]").textContent = best.name;
       q("[data-use-best]").textContent = "Use " + best.name;
       q("[data-note]").textContent = result.between
-        ? "You're right between " + best.name + " and " + alt.name + ". Go with whichever feels more like you."
+        ? "You're between " + best.name + " and " + alt.name + ". Go with whichever feels more like you."
         : "If another shade feels more like you, pick that one instead.";
       q("[data-alt-dot]").style.background = alt.color;
       q("[data-use-alt]").textContent = alt.name;
@@ -508,30 +238,24 @@
     function choose(shade) {
       shade.input.checked = true;
       shade.input.dispatchEvent(new Event("change", { bubbles: true }));
-      if (picked) picked.textContent = "Suggested by Find My Shade: " + shade.name + ". Now pick your undertone below. You can change either anytime.";
+      if (picked) picked.textContent = "Matched with Find My Shade: " + shade.name + ". Now pick your undertone below. You can change either anytime.";
       focusAfter = shade.input;
       close();
     }
 
     function open() {
-      result = null;
-      if (!canUseCamera) {
-        fail(window.isSecureContext === false ? "The camera only works on the secure (https) version of this page." : "This browser can't use the camera. Try Safari or Chrome.");
-      } else {
-        show("intro");
-        loadMesh().catch(function () {}); // start downloading while they read
-      }
+      result = null; state = null;
+      show("intro");
       if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
       document.documentElement.style.overflow = "hidden";
     }
     function close() {
-      stopCamera();
       if (dlg.open) { if (dlg.close) dlg.close(); else dlg.removeAttribute("open"); }
     }
 
     dlg.addEventListener("close", function () {
-      stopCamera();
       document.documentElement.style.overflow = "";
+      dlg.classList.remove("sf-full");
       var target = focusAfter || trigger; focusAfter = null;
       try { target.focus({ preventScroll: true }); } catch (e) { target.focus(); }
       var lbl = target.closest && target.closest("label");
@@ -541,12 +265,12 @@
       if (e.target === dlg) { close(); return; }
       var t = e.target.closest("button"); if (!t) return;
       if (t.hasAttribute("data-close")) close();
-      else if (t.hasAttribute("data-start") || t.hasAttribute("data-retry")) startCamera();
-      else if (t.hasAttribute("data-capture")) capture();
+      else if (t.hasAttribute("data-start") || t.hasAttribute("data-retry")) begin();
+      else if (t.hasAttribute("data-answer")) answer(t.getAttribute("data-answer"));
+      else if (t.hasAttribute("data-pick")) pick(parseInt(t.getAttribute("data-pick"), 10));
       else if (t.hasAttribute("data-use-best")) choose(shades[result.best]);
       else if (t.hasAttribute("data-use-alt")) choose(shades[result.alt]);
     });
-    document.addEventListener("visibilitychange", function () { if (document.hidden && stream) close(); });
     trigger.addEventListener("click", open);
     radios.forEach(function (r) { r.addEventListener("change", function (e) { if (e.isTrusted && picked) picked.textContent = ""; }); });
   }
@@ -556,12 +280,12 @@
       var st = el("style", { id: "sf-style" }); st.textContent = CSS; document.head.appendChild(st);
     }
     Array.prototype.forEach.call(document.querySelectorAll("[data-shade-finder]"), function (b) {
-      if (!b.querySelector("svg")) b.insertAdjacentHTML("afterbegin", ICON_CAM);
+      if (!b.querySelector("svg")) b.insertAdjacentHTML("afterbegin", ICON);
       setup(b);
     });
   }
 
-  window.PulseShadeFinder = { EDGES: EDGES, analyzeFrame: analyzeFrame, combine: combine, classify: classify, loadMesh: loadMesh, SETTINGS: SETTINGS, labFromLinear: labFromLinear, ita: ita };
+  window.PulseShadeFinder = { step: step, FIRST: FIRST, GEMSTONES: GEMSTONES };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
