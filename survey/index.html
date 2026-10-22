@@ -316,14 +316,11 @@
     var g = +m[1] - 1, gem = lib.gemstones[g];
     var prevM = /_(cool|neutral|warm|olive|red|unsure)$/.exec(String(answers[q.id] || "")), prev = (wrap.querySelector('input[name=ut]:checked') || {}).value || (prevM && prevM[1]);
     var NAMES = { cool: "Cool", neutral: "Neutral", warm: "Warm", olive: "Olive", red: "Red" };
+    var HINTS = { cool: "Pink or rosy", neutral: "Neither pink nor golden", warm: "Golden, peach or bronze", olive: "Green-gray or olive", red: "Red or deep copper" };
     var h = '<p class="ut-t" id="utTitle">Your undertone in ' + esc(gem.name) + ' (optional)</p>';
     ["cool", "neutral", "warm", "olive", "red"].forEach(function (f) {
       if (!gem.families[f]) return;
-      var list = lib.shades.filter(function (r) { return r[6] === g && r[3] === f; }), seen = {}, pick = [];
-      list.forEach(function (r) { if (!seen[r[0]] && pick.length < 3) { seen[r[0]] = 1; pick.push(r); } });
-      list.forEach(function (r) { if (pick.length < 3 && pick.indexOf(r) < 0) pick.push(r); });
-      var ex = pick.map(function (r) { return r[0] + " " + r[1]; }).join(" · ");
-      h += '<label class="ut-opt"><input type="radio" name="ut" value="' + f + '"' + (prev === f ? " checked" : "") + '><span><i style="background:' + gem.families[f] + '"></i><b>' + NAMES[f] + '</b><small>Like ' + esc(ex) + '</small></span></label>';
+      h += '<label class="ut-opt"><input type="radio" name="ut" value="' + f + '"' + (prev === f ? " checked" : "") + '><span><i style="background:' + gem.families[f] + '"></i><b>' + NAMES[f] + '</b><small>' + HINTS[f] + '</small></span></label>';
     });
     h += '<label class="ut-opt"><input type="radio" name="ut" value="unsure"' + (prev === "unsure" ? " checked" : "") + '><span><i style="background:repeating-linear-gradient(45deg,#FFF3E8 0 4px,#E7D6C8 4px 8px)"></i><b>Not Sure</b><small>That\'s fine.</small></span></label>';
     wrap.innerHTML = h; wrap.hidden = false;
