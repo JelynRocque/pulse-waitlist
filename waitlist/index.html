@@ -139,6 +139,17 @@
   .tone i { width: 26px; height: 26px; border-radius: 50%; display: block; border: 1px solid rgba(38,16,0,.12); }
   .tone input:checked + span { border-color: var(--burnt-orange); box-shadow: inset 0 0 0 1px var(--burnt-orange); background: var(--paper); }
   .tone input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .undertones[hidden], .ut-row .tone[hidden] { display: none; }
+  .undertones { display: grid; gap: 8px; margin-top: 4px; }
+  .ut-label { font-size: 13px; font-weight: 600; margin: 0; }
+  .ut-label span { font-weight: 400; color: var(--espresso-soft); }
+  .ut-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .ut-row.no-olive { grid-template-columns: repeat(3, 1fr); }
+  .ut-row .ut-none { grid-column: 1 / -1; }
+  .ut-row .ut-none span { grid-auto-flow: column; justify-content: center; align-items: center; }
+  @media (max-width: 399px) { .ut-row { grid-template-columns: repeat(2, 1fr); } .ut-row.no-olive { grid-template-columns: repeat(3, 1fr); } }
+  .ut-help { font-size: 12px; color: var(--espresso-soft); margin: 0; }
+  .tone i.ut-unsure { background: repeating-linear-gradient(45deg,#FFF3E8 0 4px,#E7D6C8 4px 8px); }
   .check { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--espresso-soft); }
   .check input { margin-top: 3px; accent-color: var(--auburn); width: 16px; height: 16px; flex: none; }
   button.primary {
@@ -297,19 +308,30 @@
           <fieldset>
             <legend>Your shade <span>(optional)</span></legend>
             <div class="tones">
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_1" value="mst_1"><span><i style="background:#f6ede4"></i>Pearl</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_2" value="mst_2"><span><i style="background:#f3e7db"></i>Selenite</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_3" value="mst_3"><span><i style="background:#f7ead0"></i>Moonstone</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_4" value="mst_4"><span><i style="background:#eadaba"></i>Citrine</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_5" value="mst_5"><span><i style="background:#d7bd96"></i>Amber</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_6" value="mst_6"><span><i style="background:#a07e56"></i>Tiger&#x27;s Eye</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_7" value="mst_7"><span><i style="background:#825c43"></i>Bronzite</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_8" value="mst_8"><span><i style="background:#604134"></i>Smoky Quartz</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_9" value="mst_9"><span><i style="background:#3a312a"></i>Obsidian</span></label>
-              <label class="tone"><input type="radio" name="tone" id="tone-mst_10" value="mst_10"><span><i style="background:#292420"></i>Onyx</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_1" value="mst_1"><span><i style="background:#fcebdf"></i>Pearl</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_2" value="mst_2"><span><i style="background:#f7e6d9"></i>Selenite</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_3" value="mst_3"><span><i style="background:#ffe6d4"></i>Moonstone</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_4" value="mst_4"><span><i style="background:#f2d6c2"></i>Citrine</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_5" value="mst_5"><span><i style="background:#ddb99f"></i>Amber</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_6" value="mst_6"><span><i style="background:#a27c60"></i>Tiger&#x27;s Eye</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_7" value="mst_7"><span><i style="background:#7e5e45"></i>Bronzite</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_8" value="mst_8"><span><i style="background:#5e432e"></i>Smoky Quartz</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_9" value="mst_9"><span><i style="background:#402f21"></i>Obsidian</span></label>
+              <label class="tone"><input type="radio" name="tone" id="tone-mst_10" value="mst_10"><span><i style="background:#322114"></i>Onyx</span></label>
               <label class="tone tone-none"><input type="radio" name="tone" id="tone-prefer-not" value="prefer_not"><span><i style="background:repeating-linear-gradient(45deg,#FFF3E8 0 4px,#E7D6C8 4px 8px)"></i>Prefer not to say</span></label>
             </div>
-            <button type="button" class="sf-open" data-shade-finder="tone" aria-describedby="shadePicked" hidden>Not Sure? Find My Shade</button>
+            <div class="undertones" id="undertoneGroup" role="radiogroup" aria-labelledby="utLabel" hidden>
+              <p class="ut-label" id="utLabel">Your undertone <span>(optional)</span></p>
+              <div class="ut-row">
+                <label class="tone"><input type="radio" name="undertone" id="ut-cool" value="cool"><span><i data-ut="cool"></i>Cool</span></label>
+                <label class="tone"><input type="radio" name="undertone" id="ut-neutral" value="neutral"><span><i data-ut="neutral"></i>Neutral</span></label>
+                <label class="tone"><input type="radio" name="undertone" id="ut-warm" value="warm"><span><i data-ut="warm"></i>Warm</span></label>
+                <label class="tone" id="utOliveWrap"><input type="radio" name="undertone" id="ut-olive" value="olive"><span><i data-ut="olive"></i>Olive</span></label>
+                <label class="tone ut-none"><input type="radio" name="undertone" id="ut-unsure" value="unsure"><span><i class="ut-unsure"></i>Not Sure</span></label>
+              </div>
+              <p class="ut-help">Cool leans rose or red. Warm leans golden or peach. <span id="utOliveHelp">Olive has a green-gold cast.</span> Neutral is a mix.</p>
+            </div>
+            <button type="button" class="sf-open" data-shade-finder="tone" data-shade-undertone="undertone" aria-describedby="shadePicked" hidden>Not Sure? Find My Shade</button>
             <p class="sf-picked" id="shadePicked" aria-live="polite"></p>
           </fieldset>
           <label class="check" for="updates">
@@ -418,6 +440,38 @@
   </div>
 </footer>
 
+<script type="application/json" id="pulse-shades">{"mst_1":{"cool":"#ffe9e3","neutral":"#fcebdf","warm":"#fbecdb"},"mst_2":{"cool":"#fbe3dc","neutral":"#f7e6d9","warm":"#f6e6d6"},"mst_3":{"cool":"#ffe5dd","neutral":"#ffe6d4","warm":"#fde7cf"},"mst_4":{"cool":"#f8d2c6","neutral":"#f2d6c2","warm":"#f0d7bc"},"mst_5":{"cool":"#e5b5a6","neutral":"#ddb99f","warm":"#dbbb98","olive":"#cbc1a1"},"mst_6":{"cool":"#aa7767","neutral":"#a27c60","warm":"#a07e56","olive":"#908461"},"mst_7":{"cool":"#85594c","neutral":"#7e5e45","warm":"#7d5f3d","olive":"#6f6547"},"mst_8":{"cool":"#633f34","neutral":"#5e432e","warm":"#5d4427","olive":"#51492f"},"mst_9":{"cool":"#442c25","neutral":"#402f21","warm":"#40301d","olive":"#383322"},"mst_10":{"cool":"#351e17","neutral":"#322114","warm":"#31220f","olive":"#2a2515"}}</script>
+<script>
+/* Undertone step: shows once a shade is picked, with swatches for that shade.
+   Olive is offered from Amber (mst_5) down. */
+(function () {
+  var pal = {};
+  try { pal = JSON.parse(document.getElementById("pulse-shades").textContent); } catch (e) {}
+  var group = document.getElementById("undertoneGroup");
+  if (!group) return;
+  var row = group.querySelector(".ut-row"), oliveWrap = document.getElementById("utOliveWrap");
+  function sync() {
+    var t = document.querySelector('input[name="tone"]:checked');
+    var fam = t && pal[t.value];
+    group.hidden = !fam;
+    if (!fam) {
+      Array.prototype.forEach.call(group.querySelectorAll("input"), function (i) { i.checked = false; });
+      return;
+    }
+    var hasOlive = !!fam.olive;
+    oliveWrap.hidden = !hasOlive;
+    var oh = document.getElementById("utOliveHelp"); if (oh) oh.hidden = !hasOlive;
+    row.classList.toggle("no-olive", !hasOlive);
+    if (!hasOlive && document.getElementById("ut-olive").checked) document.getElementById("ut-olive").checked = false;
+    Array.prototype.forEach.call(group.querySelectorAll("i[data-ut]"), function (i) {
+      var hex = fam[i.getAttribute("data-ut")];
+      if (hex) i.style.background = hex;
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="tone"]'), function (r) { r.addEventListener("change", sync); });
+  sync();
+})();
+</script>
 <script src="/assets/shade-finder.js" defer></script>
 <script>
   // ---- Settings you can change ----
@@ -481,10 +535,16 @@
         err.hidden = false; $("email").focus(); return;
       }
       var toneEl = form.querySelector('input[name="tone"]:checked');
+      function shadeValue(t) {
+        if (!t) return "";
+        if (t.value === "prefer_not") return "prefer_not";
+        var u = form.querySelector('input[name="undertone"]:checked');
+        return t.value + "_" + (u ? u.value : "unsure");
+      }
       var code = store("pulse_my_code") || newCode();
       var payload = {
         email: email,
-        skin_tone: toneEl ? toneEl.value : "",
+        skin_tone: shadeValue(toneEl),
         my_code: code,
         referred_by: referredBy === code ? "" : referredBy,
         email_updates: $("updates").checked ? "yes" : "no",
