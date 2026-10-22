@@ -100,6 +100,18 @@
   .shade input:checked + span { border-color: var(--burnt-orange); background: var(--paper); box-shadow: inset 0 0 0 1px var(--burnt-orange); }
   .shade input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
   .shade-none { grid-column: 1 / -1; }
+  .ut-wrap[hidden] { display: none; }
+  .ut-wrap { margin-top: 14px; padding: 14px; border-radius: 12px; background: var(--paper); display: grid; gap: 8px; }
+  .ut-wrap p { margin: 0; font-size: 13px; }
+  .ut-wrap .ut-t { font-weight: 600; }
+  .ut-opt { display: block; position: relative; }
+  .ut-opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .ut-opt > span { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; cursor: pointer; }
+  .ut-opt i { grid-row: span 2; width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(38,16,0,.12); }
+  .ut-opt b { font-size: 13px; }
+  .ut-opt small { font-size: 11px; color: var(--espresso-soft); }
+  .ut-opt input:checked + span { border-color: var(--burnt-orange); box-shadow: inset 0 0 0 1px var(--burnt-orange); background: var(--warm-white); }
+  .ut-opt input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
   .shade-none span { grid-auto-flow: column; justify-content: center; align-items: center; }
   @media (max-width: 399px) { .shades { grid-template-columns: repeat(2, 1fr); } }
 
@@ -153,15 +165,16 @@
   <div class="wrap">Questions about this survey: hello@pulsecosmeticsolutions.com &middot; <a href="/privacy/" style="color:inherit">Privacy notice</a></div>
 </footer>
 
+<script src="/assets/shade-library.js"></script>
 <script>
   // ---- Settings ----
   var ENDPOINT = "https://script.google.com/macros/s/AKfycbxqre8bK-vNamqo9zud4tY_bEJlVosERZZ0tTNo6Nk4iCiglGLiMmII71ca7P4Nw8cr5Q/exec";
   // ------------------
 
   var SHADES = [
-    ["Pearl","mst_1","#f6ede4"],["Selenite","mst_2","#f3e7db"],["Moonstone","mst_3","#f7ead0"],
-    ["Citrine","mst_4","#eadaba"],["Amber","mst_5","#d7bd96"],["Tiger's Eye","mst_6","#a07e56"],
-    ["Bronzite","mst_7","#825c43"],["Smoky Quartz","mst_8","#604134"],["Obsidian","mst_9","#3a312a"],["Onyx","mst_10","#292420"]
+    ["Pearl","mst_1","#f9e1ce"],["Selenite","mst_2","#e9c5aa"],["Moonstone","mst_3","#d7aa8b"],
+    ["Citrine","mst_4","#bf926e"],["Amber","mst_5","#ac7a55"],["Tiger's Eye","mst_6","#9c6746"],
+    ["Bronzite","mst_7","#865739"],["Smoky Quartz","mst_8","#76452b"],["Obsidian","mst_9","#623522"],["Onyx","mst_10","#321300"]
   ];
 
   var DESCRIPTION = "Pulse is an app that scans your face, builds a skincare routine around what it finds, and lets you rescan to see whether the routine is working. Every skin concern is tested across ten skin tones before it goes in the app, and the results are published.";
@@ -177,7 +190,7 @@
       help: "For example a cleanser, moisturizer, serum or sunscreen.",
       options: [["yes","Yes"],["no","No"]] },
     { id: "q4_shade", type: "shade", title: "Which shade is closest to the skin on your face?",
-      help: "Choose the one that looks closest. There's no wrong answer." },
+      help: "Choose the one that looks closest, then your undertone if you know it. There's no wrong answer." },
     { id: "q5_concerns", type: "checkbox", title: "Which skin concerns do you want to improve?",
       help: "Choose all that apply.",
       options: [["dark_spots","Dark spots or hyperpigmentation"],["post_acne_marks","Post-acne marks"],["acne","Breakouts or acne"],
@@ -265,14 +278,16 @@
   function renderOptions(q) {
     if (q.type === "shade") {
       var h = '<div class="shades" role="radiogroup" aria-labelledby="qtitle">';
+      var curGem = String(answers[q.id] || "").replace(/_(cool|neutral|warm|olive|red|unsure)$/, "");
       SHADES.forEach(function (s) {
         var id = "o_" + s[1];
         h += '<label class="shade" for="' + id + '"><input type="radio" name="opt" id="' + id + '" value="' + s[1] + '"' +
-          (answers[q.id] === s[1] ? " checked" : "") + '><span><i style="background:' + s[2] + '"></i>' + esc(s[0]) + '</span></label>';
+          (curGem === s[1] ? " checked" : "") + '><span><i style="background:' + s[2] + '"></i>' + esc(s[0]) + '</span></label>';
       });
       h += '<label class="shade shade-none" for="o_prefer_not"><input type="radio" name="opt" id="o_prefer_not" value="prefer_not"' +
         (answers[q.id] === "prefer_not" ? " checked" : "") +
         '><span><i style="background:repeating-linear-gradient(45deg,#FFF3E8 0 4px,#E7D6C8 4px 8px)"></i>Prefer not to say</span></label></div>';
+      h += '<div class="ut-wrap" id="utWrap" role="radiogroup" aria-labelledby="utTitle" hidden></div>';
       return h;
     }
     var multi = q.type === "checkbox";
@@ -292,11 +307,37 @@
     return h2;
   }
 
+  // Undertone options nested in the chosen gemstone, from the shade library.
+  function renderUndertones(q) {
+    var wrap = document.getElementById("utWrap"), lib = window.PULSE_SHADES;
+    if (!wrap) return;
+    var el = app.querySelector('input[name=opt]:checked'), m = el && /^mst_(\d+)$/.exec(el.value);
+    if (!m || !lib) { wrap.hidden = true; wrap.innerHTML = ""; return; }
+    var g = +m[1] - 1, gem = lib.gemstones[g];
+    var prevM = /_(cool|neutral|warm|olive|red|unsure)$/.exec(String(answers[q.id] || "")), prev = (wrap.querySelector('input[name=ut]:checked') || {}).value || (prevM && prevM[1]);
+    var NAMES = { cool: "Cool", neutral: "Neutral", warm: "Warm", olive: "Olive", red: "Red" };
+    var h = '<p class="ut-t" id="utTitle">Your undertone in ' + esc(gem.name) + ' (optional)</p>';
+    ["cool", "neutral", "warm", "olive", "red"].forEach(function (f) {
+      if (!gem.families[f]) return;
+      var list = lib.shades.filter(function (r) { return r[6] === g && r[3] === f; }), seen = {}, pick = [];
+      list.forEach(function (r) { if (!seen[r[0]] && pick.length < 3) { seen[r[0]] = 1; pick.push(r); } });
+      list.forEach(function (r) { if (pick.length < 3 && pick.indexOf(r) < 0) pick.push(r); });
+      var ex = pick.map(function (r) { return r[0] + " " + r[1]; }).join(" · ");
+      h += '<label class="ut-opt"><input type="radio" name="ut" value="' + f + '"' + (prev === f ? " checked" : "") + '><span><i style="background:' + gem.families[f] + '"></i><b>' + NAMES[f] + '</b><small>Like ' + esc(ex) + '</small></span></label>';
+    });
+    h += '<label class="ut-opt"><input type="radio" name="ut" value="unsure"' + (prev === "unsure" ? " checked" : "") + '><span><i style="background:repeating-linear-gradient(45deg,#FFF3E8 0 4px,#E7D6C8 4px 8px)"></i><b>Not Sure</b><small>That\'s fine.</small></span></label>';
+    wrap.innerHTML = h; wrap.hidden = false;
+  }
+
   function currentValue(q) {
     if (q.type === "checkbox") {
       return Array.prototype.map.call(app.querySelectorAll('input[name=opt]:checked'), function (el) { return el.value; });
     }
     var el = app.querySelector('input[name=opt]:checked');
+    if (q.type === "shade" && el && /^mst_/.test(el.value)) {
+      var ut = app.querySelector('input[name=ut]:checked');
+      return el.value + (ut ? "_" + ut.value : "");
+    }
     return el ? el.value : "";
   }
 
@@ -329,7 +370,8 @@
         otherWrap.hidden = !show;
       }
     }
-    app.querySelectorAll('input[name=opt]').forEach(function (el) { el.addEventListener("change", sync); });
+    app.querySelectorAll('input[name=opt]').forEach(function (el) { el.addEventListener("change", function () { if (q.type === "shade") renderUndertones(q); sync(); }); });
+    if (q.type === "shade") renderUndertones(q);
     sync();
     document.getElementById("back").onclick = back;
     next.onclick = function () { advance(q); };
