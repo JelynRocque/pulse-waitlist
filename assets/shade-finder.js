@@ -32,7 +32,7 @@
     // Calibrated Oct 22, 2026 on one person who wears Pat McGrath Medium
     // Deep 24 and Fenty 486W (both depth ~49, Tiger's Eye).
     // Lower it if results run too light; raise it if too deep.
-    scleraReflectance: 0.30,
+    scleraReflectance: 0.34,
     // How much to trust the eye whites for color balance (0 = trust the
     // camera's own white balance, 1 = treat eye whites as pure white).
     // Eye whites are often slightly yellow, so this stays partial.
@@ -106,7 +106,7 @@
     function px(x, y) { var i = ((y | 0) * w + (x | 0)) * 4; return [frame[i], frame[i + 1], frame[i + 2]]; }
 
     // Skin: four cheek patches
-    var rad = faceW * 0.055, patches = [], skinTried = 0, skinClipped = 0;
+    var rad = faceW * 0.055, patches = [], skinTried = 0, skinClipped = 0, spreads = [];
     CHEEKS.forEach(function (idx) {
       var c = lm[idx], vals = [];
       for (var y = Math.max(0, c[1] - rad); y < Math.min(h, c[1] + rad); y++) {
@@ -122,11 +122,13 @@
       }
       if (vals.length < 20) { patches.push(null); return; }
       vals.sort(function (a, b) { return a[3] - b[3]; });
+      spreads.push(vals[Math.floor(vals.length * 0.9)][3] / Math.max(1e-4, vals[Math.floor(vals.length * 0.1)][3]));
       var lo = Math.floor(vals.length * 0.25), hi = Math.ceil(vals.length * 0.75), s = [0, 0, 0], n = 0;
       for (var k = lo; k < hi; k++) { s[0] += vals[k][0]; s[1] += vals[k][1]; s[2] += vals[k][2]; n++; }
       patches.push([s[0] / n, s[1] / n, s[2] / n]);
     });
     out.skinClipped = skinTried ? skinClipped / skinTried : 0;
+    out.skinSpread = spreads.length ? median(spreads) : 1;
     var good = patches.filter(Boolean);
     if (good.length >= 2) {
       out.skin = [0, 1, 2].map(function (c) { return median(good.map(function (q) { return q[c]; })); });
@@ -149,12 +151,16 @@
       for (var y = Math.ceil(y0); y <= y1; y++) for (var x = Math.ceil(x0); x <= x1; x++) {
         if (!pointInPoly(x, y, poly)) continue;
         if (Math.hypot(x - ic[0], y - ic[1]) < ir) continue;
-        var v = px(x, y);
-        eyePx.push([v[0], v[1], v[2], lum(LIN[v[0]], LIN[v[1]], LIN[v[2]])]);
+        var v = px(x, y), mx = Math.max(v[0], v[1], v[2]);
+        eyePx.push([v[0], v[1], v[2], lum(LIN[v[0]], LIN[v[1]], LIN[v[2]]), mx ? (mx - Math.min(v[0], v[1], v[2])) / mx : 1]);
       }
-      // The brightest part of what's left is the eye white; corners and lash shadows are darker.
-      eyePx.sort(function (a, b) { return b[3] - a[3]; });
-      eyePx.slice(0, Math.ceil(eyePx.length * 0.4)).forEach(function (q) {
+      // Eye whites are the least colorful part of the eye (eyelid skin, lashes
+      // and the iris edge all carry color), then the brighter half of those.
+      // Picking by color, not brightness, keeps light eyelid skin out on fair faces.
+      eyePx.sort(function (a, b) { return a[4] - b[4]; });
+      var plain = eyePx.slice(0, Math.ceil(eyePx.length * 0.5));
+      plain.sort(function (a, b) { return b[3] - a[3]; });
+      plain.slice(0, Math.ceil(plain.length * 0.6)).forEach(function (q) {
         if (q[0] >= 250 || q[1] >= 250 || q[2] >= 250) { clipped++; return; }
         white.push([LIN[q[0]], LIN[q[1]], LIN[q[2]]]);
       });
@@ -180,6 +186,9 @@
     if (withSkin.length < withFace.length / 2) return { issue: "noFace" };
     // Skin washed out to pure white by the light hides real color, and hides shadowed-side differences too.
     if (median(withFace.map(function (f) { return f.skinClipped || 0; })) > 0.08) return { issue: "glare" };
+    // Hard, direct light throws strong highlights and shadows across the cheeks
+    // (soft window light measures about 2-3 here; direct sun 14+).
+    if (median(withFace.map(function (f) { return f.skinSpread || 1; })) > 6) return { issue: "glare" };
     if (median(withSkin.map(function (f) { return f.sideRatio; })) > 1.6) return { issue: "uneven" };
     var open = median(withFace.map(function (f) { return f.eyeOpen; }));
     var count = median(withFace.map(function (f) { return f.whiteCount; }));
@@ -196,7 +205,9 @@
       white = [1, 1, 1];
     }
     var wl = lum(white[0], white[1], white[2]);
-    if (!eyesClipped && wl < lum(skin[0], skin[1], skin[2]) * 1.05) return { issue: "eyeShadow" };
+    // On fair skin the cheeks can look brighter than the eye whites (lids shade
+    // them), so only refuse when the eyes are far darker than any skin allows.
+    if (!eyesClipped && wl < lum(skin[0], skin[1], skin[2]) * 0.4) return { issue: "eyeShadow" };
     var k = SETTINGS.whiteBalanceFromEyes;
     var refl = [0, 1, 2].map(function (c) {
       var balance = Math.pow(wl / Math.max(1e-4, white[c]), k);
