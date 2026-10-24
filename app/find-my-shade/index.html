@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Find My Shade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&family=Raleway:wght@400;500;600;700&display=swap">
+<!--
+  The Pulse app's Find My Shade (A17). The app opens this page in a built-in web view so the app and pulseskin.co use
+  the same finder: on-device face tracking, the same live checks, the same depth math (assets/shade-finder.js).
+  Nothing is saved or uploaded. The reading goes back to the app as a message: {type:"result", gemstone, alt, close,
+  measuredHex} or {type:"cancel"}. The app shows A18 Your Shade and the person picks their undertone there.
+-->
+<style>
+  :root {
+    --warm-white: #FFFBF7; --paper: #FFF3E8; --espresso: #261000; --espresso-soft: #5B4436;
+    --auburn: #96262C; --burnt-orange: #AB5B1E; --gold: #E4A524;
+    --display: "Romie", "Gilda Display", "Didot", "Bodoni 72", Georgia, serif;
+    --body: "Raleway", "Helvetica Neue", Arial, sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--warm-white); color: var(--espresso); font-family: var(--body); }
+  main { min-height: 100dvh; display: grid; place-content: center; gap: 14px; padding: 24px; text-align: center; }
+  h1 { font-family: var(--display); font-weight: 400; font-size: 28px; margin: 0; }
+  p { margin: 0; color: var(--espresso-soft); font-size: 15px; }
+  .btn { font: inherit; font-weight: 700; font-size: 15px; border: 0; border-radius: 999px; padding: 14px 20px; cursor: pointer; background: var(--espresso); color: var(--warm-white); }
+  .btn.ghost { background: transparent; color: var(--espresso); border: 1px solid var(--espresso); }
+  .sf-open { display: none !important; }
+  .shades { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Find My Shade</h1>
+  <p>Your camera finds your shade in a few seconds. Then you pick your undertone.</p>
+  <button type="button" class="btn" data-start-again>Start</button>
+  <button type="button" class="btn ghost" data-back>Back to Pulse</button>
+  <button type="button" class="sf-open" data-shade-finder="tone" hidden>Find My Shade</button>
+  <fieldset class="shades" aria-hidden="true">
+      <label><input type="radio" name="tone" value="mst_1"><i style="--c:#fceae0;background:#fceae0"></i>Pearl</label>
+      <label><input type="radio" name="tone" value="mst_2"><i style="--c:#e9c5aa;background:#e9c5aa"></i>Selenite</label>
+      <label><input type="radio" name="tone" value="mst_3"><i style="--c:#d7aa8b;background:#d7aa8b"></i>Moonstone</label>
+      <label><input type="radio" name="tone" value="mst_4"><i style="--c:#bf926e;background:#bf926e"></i>Citrine</label>
+      <label><input type="radio" name="tone" value="mst_5"><i style="--c:#ac7a55;background:#ac7a55"></i>Amber</label>
+      <label><input type="radio" name="tone" value="mst_6"><i style="--c:#9c6746;background:#9c6746"></i>Tiger's Eye</label>
+      <label><input type="radio" name="tone" value="mst_7"><i style="--c:#865739;background:#865739"></i>Bronzite</label>
+      <label><input type="radio" name="tone" value="mst_8"><i style="--c:#76452b;background:#76452b"></i>Smoky Quartz</label>
+      <label><input type="radio" name="tone" value="mst_9"><i style="--c:#623522;background:#623522"></i>Obsidian</label>
+      <label><input type="radio" name="tone" value="mst_10"><i style="--c:#2e1b13;background:#2e1b13"></i>Onyx</label>
+  </fieldset>
+</main>
+<script>
+  window.PulseShadeFinderConfig = {
+    blockedMessage: "Camera access is off for Pulse. Turn it on in your phone's Settings, then try again.",
+    unsupportedMessage: "Find My Shade can't use the camera on this phone. Update Pulse, or pick your shade yourself.",
+    loadFailedMessage: "Find My Shade couldn't load. Check your connection and try again, or pick your shade yourself."
+  };
+</script>
+<script src="/assets/shade-library.js"></script>
+<script src="/assets/shade-finder.js" defer></script>
+<script src="/app/find-my-shade/embed.js" defer></script>
+</body>
+</html>
