@@ -1,5 +1,29 @@
 /*
- * Pulse "Find My Shade" camera helper (v3.1: eye-white reference, nothing to hold).
+ * Pulse "Find My Shade" camera helper (v3.2: eye-white reference, nothing to hold).
+ *
+ * v3.2 (Oct 24, 2026): a contrast correction for deeper skin. Tested on the
+ * Monk Skin Tone Examples set (Google/TONL, 19 people, Monk 1-10; licensed for
+ * research and testing only, never for training models), v3.1 read deep skin
+ * far too light: Monk 8-10 came out 20-30 points of depth lighter than the
+ * Monk scale's own swatches, which is 3-4 gemstones (Onyx read as Bronzite).
+ * Two things squeeze the gap between skin and eye whites on deeper skin:
+ *  - Phone cameras brighten dark faces and compress highlights, so the skin
+ *    and the eye whites end up closer together than they really are.
+ *  - Eye whites carry their own pigment more often on deeper skin
+ *    (complexion-associated conjunctival melanosis: about 92% of Black, 36% of
+ *    Asian, 28% of Hispanic and 5% of white adults; Shields et al., Survey of
+ *    Ophthalmology 2004), and darker eye whites make skin look lighter next to
+ *    them.
+ * The fix stretches depth away from the calibration point (depth 49, where
+ * the eye-white scale was set on a person whose foundation shade is known), so
+ * that person's result doesn't move, lighter readings move lighter and deeper
+ * readings move deeper. The stretch (1.3) is the slope measured across the 19
+ * test subjects, checked by leaving each person out in turn: the typical
+ * person's error fell from 13.7 to 4.5 points of depth and the deep-skin
+ * error from +20-30 to under 10. Because single readings still vary by about
+ * a gemstone, "between two gemstones" now covers 2.5 points either side of
+ * a boundary instead of 1.5. Next step: replace the test-set slope with
+ * readings from Pulse users who know their foundation shade.
  *
  * v3.1 (Oct 22, 2026): people are asked to take off glasses, sunglasses, hats
  * and anything near their eyes; the eyes are read at the camera's full
@@ -45,15 +69,22 @@
     // camera's own white balance, 1 = treat eye whites as pure white).
     // Eye whites are often slightly yellow, so this stays partial.
     whiteBalanceFromEyes: 0.75,
+    // v3.2 contrast correction: depth is stretched by this much away from
+    // stretchAnchor (the depth the eye-white scale was calibrated at), undoing
+    // the camera's compression and eye-white pigment on deeper skin. 1 = off.
+    contrastStretch: 1.3,
+    stretchAnchor: 49,
     // Within this much depth of a gemstone boundary, the result says it's
     // between the two gemstones.
-    betweenMargin: 1.5,
+    betweenMargin: 2.5,
     // Eyes must be at least this open (height / width of the eye outline) and
     // the iris must sit in the middle of the eye (looking straight ahead).
     minEyeOpen: 0.25,
     minWhitePixels: 30,
     framesPerReading: 8,
     goodChecksBeforeAuto: 2,
+    // After a refused reading, its message stays up this long before "Perfect" can show again.
+    holdIssueMs: 3000,
     analysisWidth: 720
   };
 
@@ -61,6 +92,8 @@
   var EDGES = (window.PULSE_SHADES && window.PULSE_SHADES.edges) || [83, 76, 69, 62, 55, 48, 41, 34, 27];
   var GEMSTONES = EDGES.length + 1;
   var DEBUG = /[?&]sfdebug=1/.test(location.search);
+  // A page can override a few messages (the Pulse app's built-in finder page points people to phone Settings).
+  var CONFIG = window.PulseShadeFinderConfig || {};
 
   var BASE = (function () {
     var s = document.currentScript && document.currentScript.src;
@@ -241,8 +274,9 @@
       return Math.min(1, skin[c] * balance * R / wl);
     });
     var lab = labFromLinear(refl[0], refl[1], refl[2]);
+    var depth = Math.max(0, Math.min(100, SETTINGS.stretchAnchor + SETTINGS.contrastStretch * (lab[0] - SETTINGS.stretchAnchor)));
     // If the eye whites were blown out, the true skin is at least this deep.
-    return { issue: null, depth: lab[0], ita: ita(lab), lab: lab, deeperThan: eyesClipped };
+    return { issue: null, depth: depth, rawDepth: lab[0], ita: ita(lab), lab: lab, deeperThan: eyesClipped };
   }
 
   // Depth -> gemstone (0 = Pearl ... 9 = Onyx), plus the nearer neighbor as runner-up.
@@ -429,7 +463,7 @@
     var ctx = canvas.getContext("2d", { willReadFrequently: true });
     var hiCanvas = document.createElement("canvas");
     var hiCtx = hiCanvas.getContext("2d", { willReadFrequently: true });
-    var stream = null, mesh = null, liveTimer = null, busy = false, result = null, focusAfter = null, goodChecks = 0, session = 0;
+    var stream = null, mesh = null, liveTimer = null, busy = false, result = null, focusAfter = null, goodChecks = 0, session = 0, handedOff = false, holdIssue = null, holdUntil = 0, needChecks = SETTINGS.goodChecksBeforeAuto, recent = [];
 
     consent.addEventListener("change", function () { startBtn.disabled = !consent.checked; });
 
@@ -445,6 +479,19 @@
     function setStatus(key) {
       status.textContent = MESSAGES[key || "ok"];
       status.classList.toggle("ok", !key);
+    }
+    // What to show for the last few frames (null = good): "Perfect" only when most frames were good; otherwise the
+    // most frequent problem (ties go to the most recent).
+    function mostCommon(list) {
+      var good = list.filter(function (x) { return !x; }).length;
+      if (good * 2 > list.length) return null;
+      var best = null, bestN = 0;
+      for (var i = list.length - 1; i >= 0; i--) {
+        if (!list[i]) continue;
+        var n = 0; for (var j = 0; j < list.length; j++) if (list[j] === list[i]) n++;
+        if (n > bestN) { bestN = n; best = list[i]; }
+      }
+      return best;
     }
     function fail(msg) { q("[data-error]").textContent = msg; show("error"); }
 
@@ -472,9 +519,15 @@
         if (my !== session || busy) return;
         if (fr) {
           var res = combine([fr]);
-          setStatus(res.issue);
-          goodChecks = res.issue ? 0 : goodChecks + 1;
-          if (goodChecks >= SETTINGS.goodChecksBeforeAuto) { capture(); return; }
+          // Frames in borderline light can flip between passing and failing. The message shows the most common
+          // verdict of the last few frames (no flicker), and a reading starts after two good frames in a row or
+          // three of the last four; the 8-frame reading then gives a result or a refusal that stays up for a moment.
+          recent.push(res.issue || null); if (recent.length > 4) recent.shift();
+          var holding = holdIssue && Date.now() < holdUntil;
+          var good = recent.filter(function (x) { return !x; }).length;
+          var twoInRow = recent.length >= 2 && !recent[recent.length - 1] && !recent[recent.length - 2];
+          setStatus(holding && !res.issue ? holdIssue : mostCommon(recent));
+          if (!holding && (good >= 3 || (twoInRow && needChecks <= SETTINGS.goodChecksBeforeAuto))) { capture(); return; }
         }
         liveTimer = setTimeout(function () { loop(my); }, 350);
       }, function () { liveTimer = setTimeout(function () { loop(my); }, 600); });
@@ -484,12 +537,13 @@
       show("camera");
       setStatus("loading"); status.classList.remove("ok");
       captureBtn.disabled = true; goodChecks = 0;
+      holdIssue = null; holdUntil = 0; needChecks = SETTINGS.goodChecksBeforeAuto; recent = [];
       var my = ++session;
       var cam = navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } } });
       Promise.all([cam, loadMesh().catch(function () { return null; })]).then(function (arr) {
         if (my !== session) { arr[0].getTracks().forEach(function (t) { t.stop(); }); return; }
         stream = arr[0]; mesh = arr[1];
-        if (!mesh) { stopCamera(); fail("Find My Shade couldn't load on this browser. Try updating your browser, or pick your shade below."); return; }
+        if (!mesh) { stopCamera(); fail(CONFIG.loadFailedMessage || "Find My Shade couldn't load on this browser. Try updating your browser, or pick your shade below."); return; }
         video.srcObject = stream;
         var pl = video.play(); if (pl && pl.catch) pl.catch(function () {});
         function ready() { captureBtn.disabled = false; setStatus("noFace"); setTimeout(function () { loop(my); }, 700); }
@@ -498,9 +552,9 @@
         if (my !== session) return;
         var inApp = /Instagram|FBAN|FBAV|TikTok|Snapchat|Line\//i.test(navigator.userAgent);
         if (e && (e.name === "NotAllowedError" || e.name === "SecurityError")) {
-          fail(inApp
+          fail(CONFIG.blockedMessage || (inApp
             ? "This app's built-in browser blocked the camera. Tap the menu (•••), choose Open in Browser, then try again."
-            : "Camera access was blocked. To use Find My Shade, allow camera access for this site in your browser settings and try again.");
+            : "Camera access was blocked. To use Find My Shade, allow camera access for this site in your browser settings and try again."));
         } else if (e && e.name === "NotFoundError") fail("We couldn't find a camera on this device.");
         else fail("The camera didn't start. Close other apps that might be using it and try again.");
       });
@@ -508,7 +562,7 @@
 
     function capture() {
       if (busy || !stream) return;
-      busy = true; captureBtn.disabled = true; goodChecks = 0;
+      busy = true; captureBtn.disabled = true; goodChecks = 0; recent = [];
       setStatus(null);
       var my = session, frames = [];
       (function next() {
@@ -519,7 +573,11 @@
           if (frames.length < SETTINGS.framesPerReading) { setTimeout(next, 60); return; }
           busy = false; captureBtn.disabled = false;
           var res = combine(frames);
-          if (res.issue) { setStatus(res.issue); loop(my); return; }
+          if (res.issue) {
+            holdIssue = res.issue; holdUntil = Date.now() + SETTINGS.holdIssueMs;
+            needChecks = SETTINGS.goodChecksBeforeAuto + 2;
+            setStatus(res.issue); loop(my); return;
+          }
           result = classify(res.depth, res.deeperThan);
           result.reading = res;
           stopCamera();
@@ -529,6 +587,13 @@
     }
 
     function showResult() {
+      // A page can take the reading itself (the Pulse app's built-in finder page does this): it listens for
+      // "pulseshadefinder:result" on the trigger and calls preventDefault() to skip the result screen.
+      var handoff = new CustomEvent("pulseshadefinder:result", { cancelable: true, detail: {
+        gemstone: result.best + 1, alt: result.alt + 1, close: !!result.between, depth: result.depth,
+        lab: result.reading ? [result.depth, result.reading.lab[1], result.reading.lab[2]] : null
+      } });
+      if (!trigger.dispatchEvent(handoff)) { handedOff = true; close(); return; }
       var best = shades[result.best], alt = shades[result.alt];
       q("[data-best-dot]").style.background = best.color;
       q("[data-best-name]").textContent = best.name;
@@ -539,8 +604,8 @@
       q("[data-alt-dot]").style.background = alt.color;
       var dbg = q("[data-debug]"), rd = result.reading;
       dbg.hidden = !(DEBUG && rd);
-      if (DEBUG && rd) dbg.textContent = "depth " + rd.depth.toFixed(1) + (rd.deeperThan ? " (eyes blown out, at least this deep)" : "") +
-        "\nLab " + rd.lab.map(function (x) { return x.toFixed(1); }).join(", ") + "\nsclera setting " + SETTINGS.scleraReflectance;
+      if (DEBUG && rd) dbg.textContent = "depth " + rd.depth.toFixed(1) + " (before contrast correction " + rd.rawDepth.toFixed(1) + ")" + (rd.deeperThan ? " (eyes blown out, at least this deep)" : "") +
+        "\nLab " + rd.lab.map(function (x) { return x.toFixed(1); }).join(", ") + "\nsclera setting " + SETTINGS.scleraReflectance + ", stretch " + SETTINGS.contrastStretch + " around " + SETTINGS.stretchAnchor;
       q("[data-use-alt]").textContent = alt.name;
       show("result");
       q("[data-use-best]").focus();
@@ -555,9 +620,9 @@
     }
 
     function open() {
-      result = null;
+      result = null; handedOff = false;
       if (!canUseCamera) {
-        fail(window.isSecureContext === false ? "The camera only works on the secure (https) version of this page." : "This browser can't use the camera. Try Safari or Chrome.");
+        fail(CONFIG.unsupportedMessage || (window.isSecureContext === false ? "The camera only works on the secure (https) version of this page." : "This browser can't use the camera. Try Safari or Chrome."));
       } else {
         show("intro");
         loadMesh().catch(function () {}); // start downloading while they read
@@ -573,6 +638,7 @@
     dlg.addEventListener("close", function () {
       stopCamera();
       document.documentElement.style.overflow = "";
+      trigger.dispatchEvent(new CustomEvent("pulseshadefinder:close", { detail: { handedOff: handedOff, picked: !!focusAfter } }));
       var target = focusAfter || trigger; focusAfter = null;
       try { target.focus({ preventScroll: true }); } catch (e) { target.focus(); }
       var lbl = target.closest && target.closest("label");
