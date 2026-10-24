@@ -1,5 +1,29 @@
 /*
- * Pulse "Find My Shade" camera helper (v3.1: eye-white reference, nothing to hold).
+ * Pulse "Find My Shade" camera helper (v3.2: eye-white reference, nothing to hold).
+ *
+ * v3.2 (Oct 24, 2026): a contrast correction for deeper skin. Tested on the
+ * Monk Skin Tone Examples set (Google/TONL, 19 people, Monk 1-10; licensed for
+ * research and testing only, never for training models), v3.1 read deep skin
+ * far too light: Monk 8-10 came out 20-30 points of depth lighter than the
+ * Monk scale's own swatches, which is 3-4 gemstones (Onyx read as Bronzite).
+ * Two things squeeze the gap between skin and eye whites on deeper skin:
+ *  - Phone cameras brighten dark faces and compress highlights, so the skin
+ *    and the eye whites end up closer together than they really are.
+ *  - Eye whites carry their own pigment more often on deeper skin
+ *    (complexion-associated conjunctival melanosis: about 92% of Black, 36% of
+ *    Asian, 28% of Hispanic and 5% of white adults; Shields et al., Survey of
+ *    Ophthalmology 2004), and darker eye whites make skin look lighter next to
+ *    them.
+ * The fix stretches depth away from the calibration point (depth 49, where
+ * the eye-white scale was set on a person whose foundation shade is known), so
+ * that person's result doesn't move, lighter readings move lighter and deeper
+ * readings move deeper. The stretch (1.3) is the slope measured across the 19
+ * test subjects, checked by leaving each person out in turn: the typical
+ * person's error fell from 13.7 to 4.5 points of depth and the deep-skin
+ * error from +20-30 to under 10. Because single readings still vary by about
+ * a gemstone, "between two gemstones" now covers 2.5 points either side of
+ * a boundary instead of 1.5. Next step: replace the test-set slope with
+ * readings from Pulse users who know their foundation shade.
  *
  * v3.1 (Oct 22, 2026): people are asked to take off glasses, sunglasses, hats
  * and anything near their eyes; the eyes are read at the camera's full
@@ -45,9 +69,14 @@
     // camera's own white balance, 1 = treat eye whites as pure white).
     // Eye whites are often slightly yellow, so this stays partial.
     whiteBalanceFromEyes: 0.75,
+    // v3.2 contrast correction: depth is stretched by this much away from
+    // stretchAnchor (the depth the eye-white scale was calibrated at), undoing
+    // the camera's compression and eye-white pigment on deeper skin. 1 = off.
+    contrastStretch: 1.3,
+    stretchAnchor: 49,
     // Within this much depth of a gemstone boundary, the result says it's
     // between the two gemstones.
-    betweenMargin: 1.5,
+    betweenMargin: 2.5,
     // Eyes must be at least this open (height / width of the eye outline) and
     // the iris must sit in the middle of the eye (looking straight ahead).
     minEyeOpen: 0.25,
@@ -241,8 +270,9 @@
       return Math.min(1, skin[c] * balance * R / wl);
     });
     var lab = labFromLinear(refl[0], refl[1], refl[2]);
+    var depth = Math.max(0, Math.min(100, SETTINGS.stretchAnchor + SETTINGS.contrastStretch * (lab[0] - SETTINGS.stretchAnchor)));
     // If the eye whites were blown out, the true skin is at least this deep.
-    return { issue: null, depth: lab[0], ita: ita(lab), lab: lab, deeperThan: eyesClipped };
+    return { issue: null, depth: depth, rawDepth: lab[0], ita: ita(lab), lab: lab, deeperThan: eyesClipped };
   }
 
   // Depth -> gemstone (0 = Pearl ... 9 = Onyx), plus the nearer neighbor as runner-up.
@@ -539,8 +569,8 @@
       q("[data-alt-dot]").style.background = alt.color;
       var dbg = q("[data-debug]"), rd = result.reading;
       dbg.hidden = !(DEBUG && rd);
-      if (DEBUG && rd) dbg.textContent = "depth " + rd.depth.toFixed(1) + (rd.deeperThan ? " (eyes blown out, at least this deep)" : "") +
-        "\nLab " + rd.lab.map(function (x) { return x.toFixed(1); }).join(", ") + "\nsclera setting " + SETTINGS.scleraReflectance;
+      if (DEBUG && rd) dbg.textContent = "depth " + rd.depth.toFixed(1) + " (before contrast correction " + rd.rawDepth.toFixed(1) + ")" + (rd.deeperThan ? " (eyes blown out, at least this deep)" : "") +
+        "\nLab " + rd.lab.map(function (x) { return x.toFixed(1); }).join(", ") + "\nsclera setting " + SETTINGS.scleraReflectance + ", stretch " + SETTINGS.contrastStretch + " around " + SETTINGS.stretchAnchor;
       q("[data-use-alt]").textContent = alt.name;
       show("result");
       q("[data-use-best]").focus();
