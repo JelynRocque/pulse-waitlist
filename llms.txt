@@ -6,7 +6,7 @@ Pulse is in early access (waitlist open). It's for anyone 16 and up. Pulse is no
 
 ## Key facts
 
-- Skin scan: guided face capture, then analysis of texture, tone, pores, dark spots, wrinkles, redness, moisture and more, mapped to where each concern appears on the face.
+- Skin scan: guided face capture, then 8 skin measures read on your phone (dark spots and uneven tone, redness, shine, texture, pores, breakouts, dark circles and radiance), each mapped to where it appears on the face and measured relative to your own skin. More measures come as Pulse learns.
 - Routine: an AM and PM routine built from the scan; users can swap in products they already own.
 - Progress: rescan anytime and compare side by side against the first scan.
 - Accuracy standard: each concern tested on 30+ consented people per Pulse skin tone (ten gemstone shades, Pearl to Onyx, each a band of measured skin depth with cool, neutral, warm, olive and red undertones inside, anchored to 126 real foundation shades), labeled by board-certified dermatologists; no shade's accuracy may trail the best-served shade by more than 5 points; public accuracy reports by shade every 6 months starting at launch.
