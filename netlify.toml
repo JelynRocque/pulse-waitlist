@@ -10,3 +10,11 @@
   query = { ref = ":ref" }
   status = 301
   force = true
+
+# Invite links from the app's share cards and friend invites: pulseskin.co/join/CODE.
+# Until the app is public they land on the waitlist with the code kept as ?ref=, so the friend is credited.
+[[redirects]]
+  from = "/join/:code"
+  to = "/waitlist/?ref=:code"
+  status = 302
+  force = true
