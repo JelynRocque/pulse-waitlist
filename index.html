@@ -103,10 +103,22 @@ a{color:#96262C}a:hover{color:#5E1418}
 .app-check-dot{position:relative;width:20px;height:20px;box-sizing:border-box;border-radius:50%;border:1.5px solid #E4A524;flex:none;animation:appDotOn .4s ease both;animation-delay:inherit}
 .app-check-dot::after{content:"";position:absolute;left:5.5px;top:2px;width:5px;height:9px;border:solid #FFFFFF;border-width:0 2px 2px 0;transform:rotate(45deg)}
 @keyframes appDotOn{from{background:#FFFFFF}to{background:#E4A524}}
-.app-spotlight{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.app-spot{opacity:0;transition:opacity .45s ease}
-.app-spot.on{opacity:1}
-.app-spot ellipse{fill:none;stroke:#E4A524;stroke-width:2.5;stroke-dasharray:7 6}
+.app-camera .app-scan-face{position:absolute;left:0;top:0;width:100%;height:102%;object-fit:cover;object-position:50% 0;display:block}
+.app-mesh{position:absolute;left:0;top:0;width:100%;height:102%;pointer-events:none}
+.app-mesh .mesh-guide{fill:none;stroke:rgba(255,245,232,.8);stroke-width:2;stroke-dasharray:6 10;opacity:0;transition:opacity .6s ease}
+.app-mesh.is-align .mesh-guide{opacity:1}
+.app-mesh .scan-sweep{opacity:0}
+.app-mesh.is-mesh .scan-sweep{opacity:1;animation:scanSweep 1.7s ease-in-out infinite}
+@keyframes scanSweep{from{transform:translateY(0)}to{transform:translateY(760px)}}
+.app-mesh .mesh-zone{mix-blend-mode:screen}
+.app-mesh .mesh-zone path{fill:#F2B95C;stroke:none;opacity:0;transition:opacity .7s ease}
+.app-mesh.is-map .mesh-zone.on path{opacity:.42}
+.app-mesh.is-map .mesh-zone.on.focus path{opacity:.7}
+.app-mesh .zone-line path{fill:none;stroke:rgba(255,246,234,.8);stroke-width:1.8;stroke-linecap:round;stroke-dasharray:.1 7;opacity:0;transition:opacity .7s ease .15s;filter:drop-shadow(0 0 1.2px rgba(30,14,6,.75))}
+.app-mesh.is-map .zone-line.on path{opacity:1}
+.app-mesh .zone-label{opacity:0;transition:opacity .5s ease .25s}
+.app-mesh.is-map .zone-label.on{opacity:1}
+@media (prefers-reduced-motion: reduce){.app-mesh *{animation:none!important;transition:none!important}}
 .app-scores{width:392px;overflow:hidden;padding:8px 0 2px;flex:none;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%)}
 .app-score-track{display:flex;gap:14px;padding:0 6px;transition:transform .5s cubic-bezier(.3,.7,.2,1)}
 .app-score{display:flex;flex-direction:column;align-items:center;gap:8px;width:66px;flex:none}
@@ -307,23 +319,8 @@ a{color:#96262C}a:hover{color:#5E1418}
 <div class="app-content">
 <div class="app-topbar"><span class="app-back"><img src="/assets/app-ui/icon-back.svg" alt="" width="18" height="18"></span><span class="app-display-l">Face Scan</span></div>
 <div class="app-camera">
-<video poster="/assets/scan-card-poster.jpg" autoplay muted playsinline preload="auto" data-scan-video aria-label="A real skin scan: guided face capture, analysis, then face zones mapped"><source src="/assets/scan-card.mp4" type="video/mp4"><source src="/assets/scan-card.webm" type="video/webm"></video>
-<svg class="app-spotlight" viewBox="0 0 392 430" aria-hidden="true">
-<defs>
-<mask id="spot-dark"><rect width="392" height="430" fill="#fff"/><ellipse cx="129" cy="228" rx="44" ry="22" fill="#000"/><ellipse cx="276" cy="228" rx="44" ry="22" fill="#000"/></mask>
-<mask id="spot-pores"><rect width="392" height="430" fill="#fff"/><ellipse cx="200" cy="262" rx="34" ry="46" fill="#000"/></mask>
-<mask id="spot-wrinkles"><rect width="392" height="430" fill="#fff"/><ellipse cx="200" cy="108" rx="92" ry="40" fill="#000"/></mask>
-<mask id="spot-texture"><rect width="392" height="430" fill="#fff"/><ellipse cx="200" cy="262" rx="34" ry="46" fill="#000"/><ellipse cx="200" cy="392" rx="56" ry="30" fill="#000"/></mask>
-<mask id="spot-spots"><rect width="392" height="430" fill="#fff"/><ellipse cx="116" cy="294" rx="50" ry="44" fill="#000"/><ellipse cx="283" cy="294" rx="50" ry="44" fill="#000"/></mask>
-<mask id="spot-redness"><rect width="392" height="430" fill="#fff"/><ellipse cx="128" cy="290" rx="46" ry="40" fill="#000"/><ellipse cx="272" cy="290" rx="46" ry="40" fill="#000"/><ellipse cx="200" cy="262" rx="30" ry="40" fill="#000"/></mask>
-</defs>
-<g class="app-spot" data-spot="dark"><rect width="392" height="430" fill="rgba(26,15,10,.55)" mask="url(#spot-dark)"/><ellipse cx="129" cy="228" rx="44" ry="22"/><ellipse cx="276" cy="228" rx="44" ry="22"/></g>
-<g class="app-spot" data-spot="pores"><rect width="392" height="430" fill="rgba(26,15,10,.55)" mask="url(#spot-pores)"/><ellipse cx="200" cy="262" rx="34" ry="46"/></g>
-<g class="app-spot" data-spot="wrinkles"><rect width="392" height="430" fill="rgba(26,15,10,.55)" mask="url(#spot-wrinkles)"/><ellipse cx="200" cy="108" rx="92" ry="40"/></g>
-<g class="app-spot" data-spot="texture"><rect width="392" height="430" fill="rgba(26,15,10,.55)" mask="url(#spot-texture)"/><ellipse cx="200" cy="262" rx="34" ry="46"/><ellipse cx="200" cy="392" rx="56" ry="30"/></g>
-<g class="app-spot" data-spot="spots"><rect width="392" height="430" fill="rgba(26,15,10,.55)" mask="url(#spot-spots)"/><ellipse cx="116" cy="294" rx="50" ry="44"/><ellipse cx="283" cy="294" rx="50" ry="44"/></g>
-<g class="app-spot" data-spot="redness"><rect width="392" height="430" fill="rgba(26,15,10,.55)" mask="url(#spot-redness)"/><ellipse cx="128" cy="290" rx="46" ry="40"/><ellipse cx="272" cy="290" rx="46" ry="40"/><ellipse cx="200" cy="262" rx="30" ry="40"/></g>
-</svg>
+<img class="app-scan-face" src="/assets/scan-face.jpg" alt="A Pulse face scan: facial landmarks found, a contour mesh drawn over the face, then skin zones mapped" width="544" height="596">
+<svg class="app-mesh" data-mesh viewBox="0 0 544 596" preserveAspectRatio="xMidYMin slice" aria-hidden="true"><defs><filter id="heat-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="14" result="halo"/><feMorphology in="SourceGraphic" operator="erode" radius="10" result="inner"/><feGaussianBlur in="inner" stdDeviation="10" result="core"/><feMerge><feMergeNode in="halo"/><feMergeNode in="core"/></feMerge></filter><linearGradient id="scan-sweep" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE7BF" stop-opacity="0"/><stop offset=".5" stop-color="#FFE7BF" stop-opacity=".28"/><stop offset="1" stop-color="#FFE7BF" stop-opacity="0"/></linearGradient></defs><rect class="scan-sweep" x="0" y="-160" width="544" height="160" fill="url(#scan-sweep)"/><ellipse class="mesh-guide" cx="264" cy="345" rx="178" ry="248"/><g class="mesh-zone" filter="url(#heat-soft)" data-zone="forehead"><path d="M122.7 194.0L124.0 199.3L133.3 215.0L136.7 218.0L141.0 217.7L157.3 211.7L166.3 211.3L189.0 212.0L230.3 217.3L266.0 219.7L298.3 216.3L335.7 211.0L361.0 210.0L368.3 210.7L383.7 216.3L388.0 216.7L392.3 213.0L404.0 194.3L404.0 191.7L400.0 186.0L383.3 168.7L347.7 152.7L308.7 145.7L260.0 144.7L216.7 146.7L177.0 154.3L142.7 171.0L127.7 187.0Z"/></g><g class="mesh-zone" filter="url(#heat-soft)" data-zone="eyes"><path d="M143.3 301.7L142.3 311.3L140.0 319.3L141.0 322.0L145.3 327.0L147.0 331.0L146.3 337.7L143.3 345.3L143.7 349.0L146.3 351.3L152.0 350.7L171.3 342.3L187.7 337.3L195.0 338.0L205.0 345.3L209.0 345.0L217.0 342.0L226.7 342.0L230.0 338.7L230.3 326.7L225.7 314.3L225.0 304.7L222.7 301.3L219.7 299.7L215.3 299.3L203.3 302.7L197.0 302.7L187.3 300.3L177.3 303.7L171.0 304.0L148.0 298.0L144.7 299.7ZM381.0 299.3L378.7 297.7L374.0 297.7L356.3 302.0L344.3 303.3L329.0 303.0L312.3 299.7L306.0 299.7L301.0 303.7L299.0 309.3L299.0 326.7L301.0 336.0L305.7 344.3L310.7 348.0L314.3 348.3L319.0 347.3L322.0 345.0L327.3 338.3L331.7 336.7L335.3 336.7L353.0 342.0L372.3 350.3L378.0 351.0L381.0 348.0L381.0 344.3L377.7 335.0L377.7 330.3L379.7 326.0L384.3 320.7L385.0 318.3L382.3 310.0L382.0 301.7Z"/></g><g class="mesh-zone" filter="url(#heat-soft)" data-zone="nose"><path d="M261.0 251.3L258.0 253.7L246.7 268.7L242.3 278.0L238.7 292.7L239.3 305.0L238.7 321.0L237.0 325.3L232.0 332.3L233.3 337.0L233.3 341.7L230.0 348.0L230.3 356.7L226.0 363.3L227.0 370.3L224.7 377.3L224.7 383.3L222.0 388.7L221.3 392.3L223.0 394.7L226.0 396.3L237.3 400.0L240.7 400.0L250.0 397.7L258.0 399.0L275.3 398.0L282.3 400.0L286.0 400.0L297.0 396.7L302.0 393.0L301.7 389.3L298.7 383.7L298.7 379.0L301.7 369.3L301.3 361.3L297.3 348.3L295.3 335.0L289.0 326.0L289.0 322.7L291.7 315.7L285.7 306.0L285.7 292.7L280.3 273.7L266.0 253.7L263.0 251.3Z"/></g><g class="mesh-zone" filter="url(#heat-soft)" data-zone="cheeks"><path d="M132.0 328.3L127.3 331.0L113.7 347.0L109.7 353.7L108.7 360.3L112.3 374.0L112.7 380.7L108.0 393.7L107.3 402.0L109.0 413.7L109.3 430.3L111.3 438.7L124.7 464.3L129.0 468.7L134.3 469.7L138.3 467.7L145.7 461.7L155.3 458.3L160.7 454.7L162.3 451.0L163.3 436.0L168.0 426.0L173.7 420.3L191.0 414.7L198.0 410.3L204.3 401.0L206.0 396.0L206.3 390.7L200.0 370.7L197.0 351.3L193.3 344.7L189.0 342.7L184.7 342.7L176.7 344.7L160.0 351.0L152.3 351.3L147.7 349.3L144.7 346.0L140.0 331.0L136.3 328.3ZM391.3 327.3L388.0 327.7L384.3 330.7L380.3 346.0L377.3 349.3L372.7 351.3L365.0 351.0L341.7 342.7L334.7 342.3L330.7 344.3L327.0 351.0L324.0 370.7L317.3 391.0L317.7 397.0L319.3 402.0L322.0 407.0L327.0 412.3L336.7 416.7L354.3 418.0L359.3 420.0L363.0 423.3L366.3 431.3L366.7 450.3L368.3 455.3L383.7 470.0L388.3 472.0L393.0 470.7L397.0 466.7L412.0 438.3L413.7 431.0L414.0 415.7L418.3 391.0L419.0 363.7L418.0 358.3L415.7 353.0L400.0 332.7L396.3 329.3Z"/></g><g class="mesh-zone" filter="url(#heat-soft)" data-zone="chin"><path d="M168.7 513.0L171.0 522.3L173.7 526.7L189.0 540.7L208.0 555.7L230.3 566.0L255.3 569.7L285.7 566.7L310.0 556.3L328.0 543.3L343.7 530.0L347.3 525.7L351.0 516.0L350.7 512.3L348.0 510.7L337.0 511.0L321.0 514.7L317.3 514.7L314.0 513.3L308.0 507.0L304.3 507.3L293.7 513.0L286.0 515.7L282.3 515.3L260.7 507.3L255.3 508.0L236.7 515.0L233.0 515.3L228.3 514.0L213.0 506.0L210.0 506.7L205.0 512.7L201.3 514.0L179.0 509.7L172.0 509.7L170.3 510.3Z"/></g><g class="zone-line" data-zone="forehead"><path d="M122.7 194.0L124.0 199.3L133.3 215.0L136.7 218.0L141.0 217.7L157.3 211.7L166.3 211.3L189.0 212.0L230.3 217.3L266.0 219.7L298.3 216.3L335.7 211.0L361.0 210.0L368.3 210.7L383.7 216.3L388.0 216.7L392.3 213.0L404.0 194.3L404.0 191.7L400.0 186.0L383.3 168.7L347.7 152.7L308.7 145.7L260.0 144.7L216.7 146.7L177.0 154.3L142.7 171.0L127.7 187.0Z"/></g><g class="zone-line" data-zone="eyes"><path d="M143.3 301.7L142.3 311.3L140.0 319.3L141.0 322.0L145.3 327.0L147.0 331.0L146.3 337.7L143.3 345.3L143.7 349.0L146.3 351.3L152.0 350.7L171.3 342.3L187.7 337.3L195.0 338.0L205.0 345.3L209.0 345.0L217.0 342.0L226.7 342.0L230.0 338.7L230.3 326.7L225.7 314.3L225.0 304.7L222.7 301.3L219.7 299.7L215.3 299.3L203.3 302.7L197.0 302.7L187.3 300.3L177.3 303.7L171.0 304.0L148.0 298.0L144.7 299.7ZM381.0 299.3L378.7 297.7L374.0 297.7L356.3 302.0L344.3 303.3L329.0 303.0L312.3 299.7L306.0 299.7L301.0 303.7L299.0 309.3L299.0 326.7L301.0 336.0L305.7 344.3L310.7 348.0L314.3 348.3L319.0 347.3L322.0 345.0L327.3 338.3L331.7 336.7L335.3 336.7L353.0 342.0L372.3 350.3L378.0 351.0L381.0 348.0L381.0 344.3L377.7 335.0L377.7 330.3L379.7 326.0L384.3 320.7L385.0 318.3L382.3 310.0L382.0 301.7Z"/></g><g class="zone-line" data-zone="nose"><path d="M261.0 251.3L258.0 253.7L246.7 268.7L242.3 278.0L238.7 292.7L239.3 305.0L238.7 321.0L237.0 325.3L232.0 332.3L233.3 337.0L233.3 341.7L230.0 348.0L230.3 356.7L226.0 363.3L227.0 370.3L224.7 377.3L224.7 383.3L222.0 388.7L221.3 392.3L223.0 394.7L226.0 396.3L237.3 400.0L240.7 400.0L250.0 397.7L258.0 399.0L275.3 398.0L282.3 400.0L286.0 400.0L297.0 396.7L302.0 393.0L301.7 389.3L298.7 383.7L298.7 379.0L301.7 369.3L301.3 361.3L297.3 348.3L295.3 335.0L289.0 326.0L289.0 322.7L291.7 315.7L285.7 306.0L285.7 292.7L280.3 273.7L266.0 253.7L263.0 251.3Z"/></g><g class="zone-line" data-zone="cheeks"><path d="M132.0 328.3L127.3 331.0L113.7 347.0L109.7 353.7L108.7 360.3L112.3 374.0L112.7 380.7L108.0 393.7L107.3 402.0L109.0 413.7L109.3 430.3L111.3 438.7L124.7 464.3L129.0 468.7L134.3 469.7L138.3 467.7L145.7 461.7L155.3 458.3L160.7 454.7L162.3 451.0L163.3 436.0L168.0 426.0L173.7 420.3L191.0 414.7L198.0 410.3L204.3 401.0L206.0 396.0L206.3 390.7L200.0 370.7L197.0 351.3L193.3 344.7L189.0 342.7L184.7 342.7L176.7 344.7L160.0 351.0L152.3 351.3L147.7 349.3L144.7 346.0L140.0 331.0L136.3 328.3ZM391.3 327.3L388.0 327.7L384.3 330.7L380.3 346.0L377.3 349.3L372.7 351.3L365.0 351.0L341.7 342.7L334.7 342.3L330.7 344.3L327.0 351.0L324.0 370.7L317.3 391.0L317.7 397.0L319.3 402.0L322.0 407.0L327.0 412.3L336.7 416.7L354.3 418.0L359.3 420.0L363.0 423.3L366.3 431.3L366.7 450.3L368.3 455.3L383.7 470.0L388.3 472.0L393.0 470.7L397.0 466.7L412.0 438.3L413.7 431.0L414.0 415.7L418.3 391.0L419.0 363.7L418.0 358.3L415.7 353.0L400.0 332.7L396.3 329.3Z"/></g><g class="zone-line" data-zone="chin"><path d="M168.7 513.0L171.0 522.3L173.7 526.7L189.0 540.7L208.0 555.7L230.3 566.0L255.3 569.7L285.7 566.7L310.0 556.3L328.0 543.3L343.7 530.0L347.3 525.7L351.0 516.0L350.7 512.3L348.0 510.7L337.0 511.0L321.0 514.7L317.3 514.7L314.0 513.3L308.0 507.0L304.3 507.3L293.7 513.0L286.0 515.7L282.3 515.3L260.7 507.3L255.3 508.0L236.7 515.0L233.0 515.3L228.3 514.0L213.0 506.0L210.0 506.7L205.0 512.7L201.3 514.0L179.0 509.7L172.0 509.7L170.3 510.3Z"/></g><g class="zone-label" data-zone-label><rect rx="15" height="30" fill="rgba(24,13,8,.58)" stroke="rgba(255,246,234,.35)" stroke-width="1"/><text dy="20" fill="#FFF6EA" font-family="Raleway, sans-serif" font-size="16" font-weight="700"></text></g></svg>
 <template data-if="isLineUp">
 <div class="app-chips"><span class="app-chip">Lighting &#10003;</span><span class="app-chip">Look Straight</span><span class="app-chip">Come Closer</span></div>
 </template>
@@ -737,13 +734,38 @@ a{color:#96262C}a:hover{color:#5E1418}
     { key: "spots", title: "Spots \u00b7 75", note: "Across the cheeks. Doing well." },
     { key: "redness", title: "Redness \u00b7 81", note: "Cheeks and nose. Doing well." }
   ];
+  // Each score lights the face zones it was measured in. Zones come from a real face mesh.
+  var ZONES = { dark: ["eyes"], pores: ["nose"], wrinkles: ["forehead"], texture: ["nose", "chin"], spots: ["cheeks"], redness: ["cheeks", "nose"] };
+  var FOCUS = { dark: 1, pores: 1, wrinkles: 1 };
+  // Where each label sits, in the photo's pixel space, beside the zones it describes.
+  var LABEL_AT = { dark: [188, 366], pores: [263, 292], wrinkles: [263, 120], texture: [263, 292], spots: [158, 452], redness: [158, 452] };
   var state = { phase: "scan", step: 0, score: 0 };
   function showScore(i) {
     state.score = i;
     var items = document.querySelectorAll("[data-spot-key]");
     for (var n = 0; n < items.length; n++) items[n].classList.toggle("active", n === i);
-    var spots = document.querySelectorAll("[data-spot]");
-    for (var m = 0; m < spots.length; m++) spots[m].classList.toggle("on", spots[m].getAttribute("data-spot") === SCORES[i].key && SCORES[i].key !== "");
+    var key = SCORES[i].key;
+    var zones = document.querySelectorAll("[data-zone]");
+    for (var m = 0; m < zones.length; m++) {
+      var zn = zones[m].getAttribute("data-zone");
+      zones[m].classList.toggle("on", !!key && ZONES[key].indexOf(zn) > -1);
+      zones[m].classList.toggle("focus", !!FOCUS[key]);
+    }
+    var mesh = document.querySelector("[data-mesh]");
+    if (mesh) mesh.classList.toggle("some-on", !!key);
+    var lab = document.querySelector("[data-zone-label]");
+    if (lab) {
+      lab.classList.toggle("on", !!key);
+      if (key) {
+        var txt = lab.querySelector("text"), box = lab.querySelector("rect");
+        txt.textContent = SCORES[i].title;
+        var w = txt.getComputedTextLength ? txt.getComputedTextLength() + 28 : SCORES[i].title.length * 8.6 + 28;
+        var at = LABEL_AT[key];
+        box.setAttribute("width", w);
+        box.setAttribute("x", 0); txt.setAttribute("x", 14);
+        lab.setAttribute("transform", "translate(" + (at[0] - w / 2) + "," + (at[1] - 15) + ")");
+      }
+    }
     var track = document.querySelector("[data-score-track]");
     if (track) {
       var x = Math.max(0, Math.min(i * 80 + 33 - 196, 154));
@@ -817,20 +839,16 @@ a{color:#96262C}a:hover{color:#5E1418}
         requestAnimationFrame(tick);
       })(el, parseInt(el.getAttribute("data-count-up"), 10) || 4000);
     }
-    var vid = document.querySelector("video[data-scan-video]");
-    if (vid && !vid._wired) {
-      vid._wired = true;
-      vid.muted = true;
-      vid.addEventListener("ended", showReport);
-      var p = vid.play();
-      if (p && p.catch) p.catch(function () {});
+    var mesh = document.querySelector("[data-mesh]");
+    if (mesh) {
+      mesh.classList.toggle("is-align", state.step === 0);
+      mesh.classList.toggle("is-mesh", state.step === 1);
+      mesh.classList.toggle("is-map", state.step === 2);
     }
   }
 
   function set(patch) { for (var k in patch) state[k] = patch[k]; render(); }
 
-  // Steps follow the footage: capture ends at 4.2s, mapping appears at 7.9s.
-  function stepAt(t) { return t >= 7.9 ? 2 : t >= 4.2 ? 1 : 0; }
   function goStep(n) {
     if (state.phase !== "scan" || n <= state.step) return;
     if (n === 2) { set({ step: 2, score: 0 }); cycleScores(0); }
@@ -838,22 +856,14 @@ a{color:#96262C}a:hover{color:#5E1418}
   }
   function startScan() {
     set({ phase: "scan", step: 0, score: 0 });
-    var vid = document.querySelector("video[data-scan-video]");
-    if (vid && !vid._synced) {
-      vid._synced = true;
-      vid.addEventListener("timeupdate", function () {
-        clearTimeout(timers.s1); clearTimeout(timers.s2);
-        goStep(stepAt(vid.currentTime));
-      });
-    }
-    // Fallback if the video can't play (the steps still advance on a timer)
-    later("s1", 4300, function () { goStep(1); });
-    later("s2", 8000, function () { goStep(2); });
-    later("fallback", 17000, showReport);
+    // Line up, then the mesh draws across the face, then the zones are mapped score by score.
+    later("s1", 3200, function () { goStep(1); });
+    later("s2", 6600, function () { goStep(2); });
+    later("report", 14000, showReport);
   }
   function showReport() {
     clearAll();
-    var on = document.querySelectorAll(".app-spot.on");
+    var on = document.querySelectorAll("[data-zone].on");
     for (var q = 0; q < on.length; q++) on[q].classList.remove("on");
     set({ phase: "report" });
     later("products", 11500, function () { set({ phase: "products" }); });
