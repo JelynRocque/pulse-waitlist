@@ -5,6 +5,7 @@
 <meta name='impact-site-verification' value='abf2d1a1-34ba-4b77-bcc4-17f810f954ca'>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0D0705">
+<meta name="theme-color" content="#0D0705">
 <title>Pulse: AI Skin Analysis and a Skincare Routine Built for Your Skin</title>
 <link rel="canonical" href="https://pulseskin.co/">
 <meta name="msvalidate.01" content="BE31B95E41EB3FBD3C8F92A6593DA7B1">
@@ -26,7 +27,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&amp;family=Playfair+Display&amp;family=Raleway:wght@400;500;600;700&amp;display=swap">
-<link rel="preload" as="image" href="/assets/home/scan-heatmap.webp" type="image/webp">
+<link rel="preload" as="image" href="/assets/home/scan-lineup.webp" type="image/webp">
 <style>
 body{margin:0;background:#0D0705}
 a{color:#882E1A}a:hover{color:#5E1418}
@@ -112,6 +113,41 @@ img{max-width:100%}
 .faq-dot{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid #E7D6C8;background:#FFFFFF;color:#261000;display:inline-flex;align-items:center;justify-content:center;font-size:22px;line-height:1;transition:transform .4s cubic-bezier(.2,.8,.2,1),background .3s,color .3s,border-color .3s}
 .faq-item[open] .faq-dot{transform:rotate(45deg);background:#882E1A;color:#FFFBF7;border-color:#882E1A}
 .faq-item .faq-a{margin:0;padding:0 64px 28px 4px;font-size:16px;line-height:1.7;color:#5B4436}
+
+/* hero walkthrough */
+.demo{position:relative;width:100%;aspect-ratio:390/844;border-radius:42px;overflow:hidden;background:#140C0A}
+.demo-screen{position:absolute;inset:0;opacity:0;transform:translateY(18px) scale(.985);transition:opacity .7s ease,transform .9s cubic-bezier(.2,.8,.2,1)}
+.demo-screen.is-active{opacity:1;transform:none}
+.demo-screen.is-leaving{opacity:0;transform:translateY(-14px) scale(1.01)}
+.demo-screen img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
+.demo-scroll img{height:auto;object-fit:initial}
+.demo-scroll.is-active img{animation:demoScroll 5.4s cubic-bezier(.45,0,.3,1) .6s both}
+
+.demo-scroll.is-leaving img{transform:translateY(-29.3%)}
+.demo-screen[data-k="map"].is-leaving img{transform:scale(1.06);transform-origin:50% 40%}
+@keyframes demoScroll{from{transform:translateY(0)}to{transform:translateY(-29.3%)}}
+.demo-sweep{position:absolute;left:6%;right:6%;top:12%;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,#FFD530,transparent);box-shadow:0 0 18px 4px rgba(255,213,48,.45);opacity:0}
+.demo-screen.is-active .demo-sweep{animation:demoSweep 1.6s ease-in-out .3s 2}
+@keyframes demoSweep{0%{top:12%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:52%;opacity:0}}
+.demo-ping{position:absolute;left:50%;top:44%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;border:2px solid rgba(255,213,48,.9);opacity:0}
+.demo-screen.is-active .demo-ping{animation:demoPing 1.6s ease-out .5s 3}
+@keyframes demoPing{0%{transform:scale(.5);opacity:0}25%{opacity:1}100%{transform:scale(1.9);opacity:0}}
+.demo-screen[data-k="map"].is-active img{animation:demoZoom 4s ease-in-out both}
+@keyframes demoZoom{from{transform:scale(1)}to{transform:scale(1.06);transform-origin:50% 40%}}
+.demo-steps{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);display:flex;gap:6px;z-index:3}
+.demo-step{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:52px;padding:6px 2px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,251,247,.55);transition:color .3s}
+.demo-step:hover,.demo-step.is-active{color:#FFE7BF}
+.demo-step:focus-visible{outline:2px solid #E4A524;outline-offset:3px;border-radius:6px}
+.demo-bar{display:block;width:48px;height:3px;border-radius:3px;background:rgba(255,251,247,.18);overflow:hidden}
+.demo-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#AA5B1E,#FFD530)}
+.demo-step.is-done .demo-bar i{width:100%}
+.demo-step.is-active .demo-bar i{animation:demoFill var(--dur,4s) linear both}
+.demo.is-paused ~ .demo-steps .demo-step.is-active .demo-bar i,.demo-paused .demo-step.is-active .demo-bar i{animation-play-state:paused}
+@keyframes demoFill{from{width:0}to{width:100%}}
+.demo-note{position:absolute;left:0;right:0;bottom:-34px;margin:0;text-align:center;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,251,247,.4)}
+@media (prefers-reduced-motion: reduce){.demo-screen{transition:none}.demo-screen *{animation:none!important}}
+@media (max-width: 640px){.demo-step{min-width:44px;font-size:10px}.demo-bar{width:40px}}
+
 @media (max-width: 900px){
   .story-desktop{display:none!important}
   .story-mobile{display:block;margin-top:28px}
@@ -340,10 +376,23 @@ img{max-width:100%}
 
 <div class="float" style="position: relative; z-index: 2">
 <div class="phone-tilt" style="width: 300px; border-radius: 52px; padding: 10px; background: linear-gradient(160deg, #3a2a20, #0B0604 40%, #1a110c); box-shadow: 0 70px 120px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,251,247,0.14), inset 0 1px 0 rgba(255,251,247,0.2); transform: perspective(1600px) rotateY(-14deg) rotateX(5deg) rotateZ(2deg)">
-<img src="/assets/home/scan-heatmap.webp" alt="Pulse app Face Scan heat map screen, showing a pores highlight on the nose with a score of 65" style="display: block; width: 100%; height: auto; border-radius: 42px">
+<div class="demo" id="demo" role="group" aria-roledescription="app walkthrough" aria-label="Pulse app walkthrough: scan, heat map, results, routine and home">
+<div class="demo-screen is-active" data-k="scan"><img src="/assets/home/scan-lineup.webp" alt="Pulse Face Scan: line up your face" fetchpriority="high"><span class="demo-sweep" aria-hidden="true"></span></div>
+<div class="demo-screen" data-k="map"><img src="/assets/home/scan-heatmap.webp" alt="Pulse heat map showing pores on the nose with a score of 65"><span class="demo-ping" aria-hidden="true"></span></div>
+<div class="demo-screen demo-scroll" data-k="results"><img src="/assets/home/skin-report-full.webp" alt="Pulse Skin Report: skin score 73, focus areas, doing well and what it means" loading="lazy"></div>
+<div class="demo-screen" data-k="routine"><img src="/assets/home/todays-routine.webp" alt="Pulse Today screen with a four-step AM routine" loading="lazy"></div>
+<div class="demo-screen" data-k="home"><img src="/assets/home/home-morning.webp" alt="Pulse Home screen: skin score 81, up 8 this month" loading="lazy"></div>
 </div>
 </div>
-<p style="position: absolute; bottom: 0; left: 0; right: 0; margin: 0; text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.2em; color: rgba(255,251,247,0.5)">SAMPLE SCAN · HEAT MAP</p>
+</div>
+<div class="demo-steps" role="tablist" aria-label="Walkthrough steps">
+<button type="button" role="tab" class="demo-step is-active" data-i="0" aria-selected="true"><span class="demo-bar"><i></i></span>Scan</button>
+<button type="button" role="tab" class="demo-step" data-i="1" aria-selected="false"><span class="demo-bar"><i></i></span>Map</button>
+<button type="button" role="tab" class="demo-step" data-i="2" aria-selected="false"><span class="demo-bar"><i></i></span>Results</button>
+<button type="button" role="tab" class="demo-step" data-i="3" aria-selected="false"><span class="demo-bar"><i></i></span>Routine</button>
+<button type="button" role="tab" class="demo-step" data-i="4" aria-selected="false"><span class="demo-bar"><i></i></span>Home</button>
+</div>
+<p class="demo-note">Sample scan · Real app screens</p>
 </div>
 </div>
 </section>
@@ -989,6 +1038,42 @@ img{max-width:100%}
   // FAQ: one open at a time
   var faqs = document.querySelectorAll('.faq-item');
   faqs.forEach(function (d) { d.addEventListener('toggle', function () { if (d.open) faqs.forEach(function (o) { if (o !== d) o.open = false; }); }); });
+
+
+  // hero app walkthrough
+  var demo = document.getElementById('demo');
+  if (demo) {
+    var dScreens = demo.querySelectorAll('.demo-screen');
+    var dSteps = document.querySelectorAll('.demo-step');
+    var DUR = [3600, 4200, 6400, 4200, 3800];
+    var di = 0, dTimer = null, dLeft = 0, dStart = 0, paused = false;
+    var stepsWrap = document.querySelector('.demo-steps');
+    function show(n) {
+      dScreens.forEach(function (s, i) {
+        s.classList.remove('is-leaving');
+        if (i === di && i !== n) s.classList.add('is-leaving');
+        s.classList.toggle('is-active', i === n);
+        // restart CSS animations inside the newly active screen
+        if (i === n) s.querySelectorAll('img,span').forEach(function (el) { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
+      });
+      dSteps.forEach(function (b, i) {
+        b.classList.toggle('is-active', i === n);
+        b.classList.toggle('is-done', i < n);
+        b.setAttribute('aria-selected', i === n ? 'true' : 'false');
+        b.style.setProperty('--dur', DUR[i] + 'ms');
+        if (i === n) { var bar = b.querySelector('i'); bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; }
+      });
+      di = n;
+    }
+    function schedule(ms) { clearTimeout(dTimer); dLeft = ms; dStart = Date.now(); dTimer = setTimeout(function () { show((di + 1) % dScreens.length); schedule(DUR[di]); }, ms); }
+    function pause() { if (paused || reduce) return; paused = true; clearTimeout(dTimer); dLeft -= Date.now() - dStart; if (stepsWrap) stepsWrap.parentNode.classList.add('demo-paused'); }
+    function resume() { if (!paused || reduce) return; paused = false; if (stepsWrap) stepsWrap.parentNode.classList.remove('demo-paused'); schedule(Math.max(400, dLeft)); }
+    dSteps.forEach(function (b, i) { b.addEventListener('click', function () { show(i); if (!reduce) { paused = false; if (stepsWrap) stepsWrap.parentNode.classList.remove('demo-paused'); schedule(DUR[i]); } }); });
+    demo.addEventListener('mouseenter', pause); demo.addEventListener('mouseleave', resume);
+    document.addEventListener('visibilitychange', function () { if (document.hidden) pause(); else resume(); });
+    show(reduce ? 1 : 0);
+    if (!reduce) schedule(DUR[0]);
+  }
 
   // gold cursor ring + magnetic buttons (mouse only)
   var cur = document.getElementById('pulse-cursor');
