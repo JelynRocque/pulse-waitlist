@@ -1,5 +1,44 @@
 /*
- * Pulse "Find My Shade" camera helper (v3.2: eye-white reference, nothing to hold).
+ * Pulse "Find My Shade" camera helper (v4: two readings that check each other, nothing to hold).
+ *
+ * v4 (Oct 27, 2026): deep skin was still sometimes told Pearl or Selenite. The
+ * cause was in the math, not the lighting: v3 trusted the eye whites alone, and
+ * whenever the pixels it took for eye white were really lash shadow, lid or the
+ * dark rim of the iris (hooded, deep-set or narrow eyes; eyes slightly down),
+ * the "whites" came out dark and the skin read lighter by comparison, with no
+ * limit. A deep-skinned face with shadowed eyes went all the way to Pearl, and
+ * the v3.2 stretch then pushed it further. v4 changes four things:
+ *
+ *  1. A second reading from the skin's own color. Melanin absorbs blue far
+ *     more than red, so the red:blue and green:blue balance of the cheek tracks
+ *     depth and is unaffected by how bright or dark the camera made the frame.
+ *     Color alone can't tell very light from very deep (both are low in color),
+ *     so the iris sets the range: it is visible whenever the eye is open at
+ *     all, hooded or not, and it is dark brown on nearly everyone with deeper
+ *     skin. Skin barely brighter than the iris is deep; skin many times
+ *     brighter is light. Within the range, the color fit (126 foundation
+ *     shades + the 10 Monk swatches) lands within ~5 points of depth typically.
+ *  2. Eye whites are read strictly: only pixels in the middle band of the eye,
+ *     beside the iris, low in color and brighter than the cheek. Lashes, lids
+ *     and iris rim no longer count. If too few remain (hooded eyes), the eye
+ *     reading is simply not used; the person is not refused.
+ *  3. The two readings check each other. A contaminated eye reading can only
+ *     make skin look LIGHTER, never deeper, so an eye reading that says deep is
+ *     trusted, and an eye reading that says light must be confirmed by the
+ *     skin-color reading. If they disagree by two gemstones or more, the eye
+ *     reading loses. The iris range is also a hard limit: a face whose skin is
+ *     about as bright as its iris is never shown Pearl, Selenite or Moonstone.
+ *  4. The v3.2 contrast stretch now only applies to readings deeper than the
+ *     calibration point, where it was measured to help. It never pushes a
+ *     reading lighter.
+ *
+ * Honest limits: the color fit comes from brand swatches and the Monk scale,
+ * not yet from Pulse users, and phone cameras lift shadows on deep skin. The
+ * final constants (irisDeep, irisLight, the two color fits) must be checked
+ * against a real panel of people who know their shade, at least half of them
+ * Monk 7-10, on iPhone and Android. ?sfdebug=1 shows every intermediate value
+ * so that panel can be run. Launch gate: 90%+ of readings on the right
+ * gemstone or its neighbor for EVERY gemstone, and zero readings 3+ off.
  *
  * v3.2 (Oct 24, 2026): a contrast correction for deeper skin. Tested on the
  * Monk Skin Tone Examples set (Google/TONL, 19 people, Monk 1-10; licensed for
@@ -79,8 +118,44 @@
     betweenMargin: 2.5,
     // Eyes must be at least this open (height / width of the eye outline) and
     // the iris must sit in the middle of the eye (looking straight ahead).
-    minEyeOpen: 0.25,
-    minWhitePixels: 30,
+    // Lower than v3 so hooded and narrow eyes get through to the skin-color
+    // reading instead of being refused forever.
+    minEyeOpen: 0.16,
+    // Clean eye-white pixels (analysis-size) needed before the eye reading is used at all.
+    minWhitePixels: 24,
+    // Eye-white pixels must be at least this bright compared with the cheek
+    // (lids shade them, so a little under 1 is normal on fair skin).
+    scleraMinRatio: 0.85,
+    // Range cues (which color fit to use). Skin brightness / iris brightness:
+    // at or below irisDeep (brown iris) the skin is deep; at or above irisLight
+    // it is light. A blue/green/gray iris means light skin on its own.
+    irisDeep: 3.0,
+    irisLight: 6,
+    // Brightest sliver of the eye region / cheek: at or above eyeBrightDeep the
+    // skin is deep (eye whites far brighter than skin only happens on deep
+    // skin); at or below eyeBrightLight it is light (cheeks outshine eye whites).
+    eyeBrightDeep: 3.5,
+    eyeBrightLight: 0.8,
+    // Below eyeBrightNone no eye white is visible at all (eyes nearly shut, or
+    // all lash): refuse and ask for wider eyes rather than guess.
+    eyeBrightNone: 0.35,
+    // Under-eye skin / cheek: below minUnderEye the eyes sit in brow shadow,
+    // refuse and ask to face the light; between that and compensateUnderEye the
+    // shared shadow is corrected out of the eye whites and iris.
+    minUnderEye: 0.72,
+    compensateUnderEye: 0.95,
+    // Multiplier on the skin's color ratios before the color fit (1 = as fitted
+    // on brand swatches). Phone tone curves compress color; the panel sets this.
+    colorContrast: 1.0,
+    // Depth from the skin's color balance: depth = a + b*ln(R/B) + c*ln(G/B),
+    // fitted on 126 foundation shades + the Monk swatches, per range.
+    colorFit: { light: [94.60, -46.07, 48.71], mid: [75.08, -44.00, 61.95], deep: [35.63, -24.44, 51.98] },
+    // Eye and skin readings this far apart (two gemstones) means the eye reading is contaminated.
+    disagreeDepth: 14,
+    // Hard limits from the iris range: deep skin is never shown lighter than
+    // this, light skin never deeper than this.
+    deepCeiling: 62,
+    lightFloor: 34,
     framesPerReading: 8,
     goodChecksBeforeAuto: 2,
     // After a refused reading, its message stays up this long before "Perfect" can show again.
@@ -91,7 +166,12 @@
   // Lower depth limit of gemstones 1-9 (Pearl is open above, Onyx open below).
   var EDGES = (window.PULSE_SHADES && window.PULSE_SHADES.edges) || [83, 76, 69, 62, 55, 48, 41, 34, 27];
   var GEMSTONES = EDGES.length + 1;
-  var DEBUG = /[?&]sfdebug=1/.test(location.search);
+  // ?sfdebug=1 shows every intermediate value on the result screen.
+  // ?sfcal=1 is calibration mode for the real-person panel: debug values plus a
+  // Copy Reading button that copies one line of numbers (no image, nothing sent
+  // anywhere) to paste into the panel sheet next to the person's known shade.
+  var CAL = /[?&]sfcal=1/.test(location.search);
+  var DEBUG = CAL || /[?&]sfdebug=1/.test(location.search);
   // A page can override a few messages (the Pulse app's built-in finder page points people to phone Settings).
   var CONFIG = window.PulseShadeFinderConfig || {};
 
@@ -189,33 +269,64 @@
       return (c[0] - a[0]) / ((b[0] - a[0]) || 1);
     });
 
-    // Eye whites: inside each eye outline, outside the iris, read at full resolution when available
+    // Eye whites and iris: inside each eye outline, read at full resolution when available.
     var es = hi ? hi.scale : 1, EW = hi ? Math.round(w * es) : w, EH = hi ? Math.round(h * es) : h;
-    var white = [], clipped = 0, openness = [];
-    [[EYE_L, IRIS_L], [EYE_R, IRIS_R]].forEach(function (pair) {
+    var skinLum = out.skin ? lum(out.skin[0], out.skin[1], out.skin[2]) : null;
+    var white = [], clipped = 0, openness = [], irisL = [], irisRB = [], eyeBright = [], underEye = [];
+    [[EYE_L, IRIS_L, 145], [EYE_R, IRIS_R, 374]].forEach(function (pair) {
+      // Skin just under the eye (same shadow as the eye), compared with the cheek later.
+      var eyeWpx = Math.abs(lm[pair[0][8]][0] - lm[pair[0][0]][0]) || faceW * 0.25;
+      var ub = lm[pair[2]], ur = eyeWpx * 0.12, uvals = [];
+      for (var uy = Math.max(0, ub[1] + eyeWpx * 0.28 - ur); uy < Math.min(h, ub[1] + eyeWpx * 0.28 + ur); uy++)
+        for (var ux = Math.max(0, ub[0] - ur); ux < Math.min(w, ub[0] + ur); ux++) { var uv = px(ux, uy); if (uv[0] < 250) uvals.push(lum(LIN[uv[0]], LIN[uv[1]], LIN[uv[2]])); }
+      if (uvals.length >= 10) underEye.push(median(uvals));
       var poly = pair[0].map(function (i) { return [lm[i][0] * es, lm[i][1] * es]; });
       var ic = [lm[pair[1][0]][0] * es, lm[pair[1][0]][1] * es], ir = 0;
       for (var k = 1; k < 5; k++) ir = Math.max(ir, Math.hypot(lm[pair[1][k]][0] * es - ic[0], lm[pair[1][k]][1] * es - ic[1]));
-      ir *= 1.15;
       var xs = poly.map(function (q) { return q[0]; }), ys = poly.map(function (q) { return q[1]; });
       var x0 = Math.max(0, Math.floor(Math.min.apply(null, xs))), x1 = Math.min(EW - 1, Math.ceil(Math.max.apply(null, xs)));
       var y0 = Math.max(0, Math.floor(Math.min.apply(null, ys))), y1 = Math.min(EH - 1, Math.ceil(Math.max.apply(null, ys)));
-      openness.push((Math.max.apply(null, ys) - Math.min.apply(null, ys)) / Math.max(1, Math.max.apply(null, xs) - Math.min.apply(null, xs)));
+      var eyeTop = Math.min.apply(null, ys), eyeH = Math.max.apply(null, ys) - eyeTop;
+      openness.push(eyeH / Math.max(1, Math.max.apply(null, xs) - Math.min.apply(null, xs)));
       if (x1 <= x0 || y1 <= y0) return;
       var bw = x1 - x0 + 1, box = (hi ? hi.ctx : ctx).getImageData(x0, y0, bw, y1 - y0 + 1).data;
-      var eyePx = [];
+      var cand = [], iris = [], bright = [];
       for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) {
         if (!pointInPoly(x, y, poly)) continue;
-        if (Math.hypot(x - ic[0], y - ic[1]) < ir) continue;
+        var d = Math.hypot(x - ic[0], y - ic[1]);
         var bi = ((y - y0) * bw + (x - x0)) * 4;
         var v = [box[bi], box[bi + 1], box[bi + 2]], mx = Math.max(v[0], v[1], v[2]);
-        eyePx.push([v[0], v[1], v[2], lum(LIN[v[0]], LIN[v[1]], LIN[v[2]]), mx ? (mx - Math.min(v[0], v[1], v[2])) / mx : 1]);
+        var L = lum(LIN[v[0]], LIN[v[1]], LIN[v[2]]), sat = mx ? (mx - Math.min(v[0], v[1], v[2])) / mx : 1;
+        // Iris: the ring between the pupil and the iris edge (the pupil is a
+        // black hole, the rim blends into lashes). Pupil leak, lash shadow and
+        // highlights are dropped below by taking the middle of the range.
+        if (d > ir * 0.4 && d < ir * 0.8) {
+          // Only the sides of the ring, level with the pupil: lids and lashes
+          // cover the top and bottom of the iris on hooded and narrow eyes.
+          if (Math.abs(y - ic[1]) < ir * 0.45) iris.push([L, LIN[v[0]], LIN[v[2]]]);
+          continue;
+        }
+        if (d < ir * 1.25) continue;
+        bright.push(L);
+        // Eye white candidates: the middle band of the eye only (the top and
+        // bottom quarters are lash line and lid), and only low-color pixels.
+        var rel = (y - eyeTop) / Math.max(1, eyeH);
+        if (rel < 0.25 || rel > 0.75) continue;
+        if (sat > 0.32) continue;
+        cand.push([v[0], v[1], v[2], L]);
       }
-      // Eye whites are the least colorful part of the eye (eyelid skin, lashes
-      // and the iris edge all carry color), then the brighter half of those.
-      // Picking by color, not brightness, keeps light eyelid skin out on fair faces.
-      eyePx.sort(function (a, b) { return a[4] - b[4]; });
-      var plain = eyePx.slice(0, Math.ceil(eyePx.length * 0.5));
+      if (iris.length >= 8) {
+        iris.sort(function (a, b) { return a[0] - b[0]; });
+        var mid = iris.slice(Math.floor(iris.length * 0.35), Math.ceil(iris.length * 0.8));
+        irisL.push(median(mid.map(function (q) { return q[0]; })));
+        irisRB.push(median(mid.map(function (q) { return q[1] / Math.max(1e-4, q[2]); })));
+      }
+      if (bright.length >= 8) { bright.sort(function (a, b) { return b - a; }); eyeBright.push(bright[Math.floor(bright.length * 0.05)]); }
+      // Real eye white is at least about as bright as the cheek (lids shade it
+      // a little). Anything darker is lash, shadow or iris rim and is dropped,
+      // which is the v3 failure: those dark pixels made the skin read light.
+      var floor = skinLum != null ? skinLum * SETTINGS.scleraMinRatio : 0;
+      var plain = cand.filter(function (q) { return q[3] >= floor; });
       plain.sort(function (a, b) { return b[3] - a[3]; });
       plain.slice(0, Math.ceil(plain.length * 0.6)).forEach(function (q) {
         if (q[0] >= 250 || q[1] >= 250 || q[2] >= 250) { clipped++; return; }
@@ -227,7 +338,26 @@
     out.whiteClipped = out.whiteCount ? clipped / out.whiteCount : 0;
     out.whiteCount = Math.round(out.whiteCount / (es * es)); // in analysis-size pixels, so the limit is the same on every camera
     if (white.length >= 6) out.white = [0, 1, 2].map(function (c) { return median(white.map(function (q) { return q[c]; })); });
+    if (irisL.length) {
+      out.irisLum = median(irisL);
+      out.irisWarm = median(irisRB) > 1.15; // brown iris (R well above B) vs blue/green/gray
+    }
+    // Brightest 5% of the eye region (any sliver of eye white, even on hooded
+    // eyes) relative to the cheek: a lower bound on how deep the skin is.
+    if (eyeBright.length && skinLum) out.eyeBrightRatio = Math.max.apply(null, eyeBright) / Math.max(1e-4, skinLum);
+    // Under-eye skin vs cheek: well under 1 means the eyes sit in brow shadow,
+    // which dims eye whites and iris alike and would make skin read lighter.
+    if (underEye.length && skinLum) out.underEyeRatio = median(underEye) / Math.max(1e-4, skinLum);
     return out;
+  }
+
+  // Depth from the skin's own color balance, inside the range the iris (or a
+  // clean eye-white reading) says we're in. Exposure-proof: ratios don't move
+  // when the camera brightens or darkens the frame.
+  function depthFromColor(skin, range) {
+    var w = SETTINGS.colorFit[range] || SETTINGS.colorFit.mid, k = SETTINGS.colorContrast;
+    var r = Math.max(1e-4, skin[0]), g = Math.max(1e-4, skin[1]), b = Math.max(1e-4, skin[2]);
+    return Math.max(0, Math.min(100, w[0] + w[1] * k * Math.log(r / b) + w[2] * k * Math.log(g / b)));
   }
 
   // Combines frames, checks conditions, returns the skin's ITA.
@@ -251,36 +381,122 @@
     var open = median(withFace.map(function (f) { return f.eyeOpen; }));
     var count = median(withFace.map(function (f) { return f.whiteCount; }));
     var gaze = withFace.filter(function (f) { return f.gaze && f.gaze.every(function (g) { return g > 0.3 && g < 0.7; }); }).length;
-    if (open < SETTINGS.minEyeOpen || count < SETTINGS.minWhitePixels) return { issue: "eyes" };
+    var withIris = withFace.filter(function (f) { return f.irisLum != null; });
+    // Eyes closed (or covered): nothing to work with. Narrow or hooded eyes
+    // with a visible iris go on; they just use the skin-color reading.
+    if (open < SETTINGS.minEyeOpen && withIris.length < withFace.length / 2) return { issue: "eyes" };
     if (gaze < withFace.length / 2) return { issue: "gaze" };
+    var withUnder = withFace.filter(function (f) { return f.underEyeRatio != null; });
+    var underEye = withUnder.length ? median(withUnder.map(function (f) { return f.underEyeRatio; })) : null;
+    // Eyes sitting in brow shadow dim the eye whites and iris together and make
+    // every eye-based reading too light. Ask for light from the front instead.
+    if (underEye != null && underEye < SETTINGS.minUnderEye) return { issue: "eyeShadow" };
 
     var skin = [0, 1, 2].map(function (c) { return median(withSkin.map(function (f) { return f.skin[c]; })); });
+    var skinLum = lum(skin[0], skin[1], skin[2]);
     var clippedShare = median(withFace.map(function (f) { return f.whiteClipped; }));
     var withWhite = withFace.filter(function (f) { return f.white; });
-    var R = SETTINGS.scleraReflectance, white, eyesClipped = clippedShare > 0.3 || withWhite.length < withFace.length / 2;
-    if (!eyesClipped) {
-      white = [0, 1, 2].map(function (c) { return median(withWhite.map(function (f) { return f.white[c]; })); });
-    } else {
-      // Eye whites blown out: they're at least as bright as the camera can record.
-      white = [1, 1, 1];
+    var eyesClipped = clippedShare > 0.3 && count >= SETTINGS.minWhitePixels;
+    var haveWhite = !eyesClipped && count >= SETTINGS.minWhitePixels && withWhite.length >= withFace.length / 2;
+    var irisRatio = withIris.length ? skinLum / Math.max(1e-4, median(withIris.map(function (f) { return f.irisLum; }))) : null;
+    var irisWarm = withIris.length ? withIris.filter(function (f) { return f.irisWarm; }).length * 2 > withIris.length : null;
+    var withBright = withFace.filter(function (f) { return f.eyeBrightRatio != null; });
+    var eyeBright = withBright.length ? median(withBright.map(function (f) { return f.eyeBrightRatio; })) : null;
+    // Nothing bright anywhere in the eye: eyes nearly shut or all lash. Ask, don't guess.
+    if (eyeBright != null && eyeBright < SETTINGS.eyeBrightNone && !eyesClipped) return { issue: "eyes" };
+    // Moderate brow shadow: the eye whites and iris sit in it, the cheek doesn't.
+    var shadowFix = 1;
+    if (underEye != null && underEye < SETTINGS.compensateUnderEye) shadowFix = 1 / underEye;
+    if (irisRatio != null) irisRatio /= shadowFix;
+    if (eyeBright != null) eyeBright *= shadowFix;
+
+    // --- Reading A: skin compared with the eye whites (v3 method, strict pixels) ---
+    var R = SETTINGS.scleraReflectance, white = null, wl = null, eyeDepth = null, rawEyeDepth = null, lab = null;
+    if (haveWhite || eyesClipped) {
+      white = eyesClipped ? [1, 1, 1] : [0, 1, 2].map(function (c) { return shadowFix * median(withWhite.map(function (f) { return f.white[c]; })); });
+      wl = lum(white[0], white[1], white[2]);
+      var k = SETTINGS.whiteBalanceFromEyes;
+      var refl = [0, 1, 2].map(function (c) {
+        var balance = Math.pow(wl / Math.max(1e-4, white[c]), k);
+        return Math.min(1, skin[c] * balance * R / wl);
+      });
+      lab = labFromLinear(refl[0], refl[1], refl[2]);
+      rawEyeDepth = lab[0];
+      // v4: the stretch only deepens; it never pushes a reading lighter.
+      eyeDepth = rawEyeDepth < SETTINGS.stretchAnchor
+        ? SETTINGS.stretchAnchor + SETTINGS.contrastStretch * (rawEyeDepth - SETTINGS.stretchAnchor)
+        : rawEyeDepth;
+      eyeDepth = Math.max(0, Math.min(100, eyeDepth));
     }
-    var wl = lum(white[0], white[1], white[2]);
-    // On fair skin the cheeks can look brighter than the eye whites (lids shade
-    // them), so only refuse when the eyes are far darker than any skin allows.
-    if (!eyesClipped && wl < lum(skin[0], skin[1], skin[2]) * 0.4) return { issue: "eyeShadow" };
-    var k = SETTINGS.whiteBalanceFromEyes;
-    var refl = [0, 1, 2].map(function (c) {
-      var balance = Math.pow(wl / Math.max(1e-4, white[c]), k);
-      return Math.min(1, skin[c] * balance * R / wl);
-    });
-    var lab = labFromLinear(refl[0], refl[1], refl[2]);
-    var depth = Math.max(0, Math.min(100, SETTINGS.stretchAnchor + SETTINGS.contrastStretch * (lab[0] - SETTINGS.stretchAnchor)));
-    // If the eye whites were blown out, the true skin is at least this deep.
-    return { issue: null, depth: depth, rawDepth: lab[0], ita: ita(lab), lab: lab, deeperThan: eyesClipped };
+
+    // --- Reading B: the skin's own color, in the range the iris (or a trusted eye reading) sets ---
+    // Color balance from the eye whites when we have them; otherwise the camera's own.
+    var wbSkin = skin;
+    if (white && !eyesClipped) {
+      var kk = SETTINGS.whiteBalanceFromEyes;
+      wbSkin = [0, 1, 2].map(function (c) { return skin[c] * Math.pow(wl / Math.max(1e-4, white[c]), kk); });
+    }
+    // Which range? Deep cues are checked first, because deep skin shown light is
+    // the failure we must never repeat. Any one deep cue is enough.
+    var range = "mid";
+    var deepCue = (eyeBright != null && eyeBright >= SETTINGS.eyeBrightDeep) ||
+                  (irisRatio != null && irisWarm && irisRatio <= SETTINGS.irisDeep) ||
+                  (eyeDepth != null && eyeDepth < 41); // a deep eye reading is trustworthy (see below)
+    var lightCue = (irisWarm === false) ||
+                   (irisRatio != null && irisRatio >= SETTINGS.irisLight) ||
+                   (eyeBright != null && eyeBright <= SETTINGS.eyeBrightLight);
+    if (deepCue) range = "deep"; else if (lightCue) range = "light";
+    var colorDepth = depthFromColor(wbSkin, range);
+
+    // --- Fusion ---
+    // Contaminated eye whites (lash, lid, iris rim) are always DARKER than real
+    // ones, which makes skin read LIGHTER. So an eye reading that says deep is
+    // believed; one that says light must agree with the skin-color reading.
+    // How much to trust the eye reading: eye whites well brighter than the
+    // cheek and plenty of them = clean; barely brighter = pigmented or lid-shaded.
+    var scleraRatio = wl != null ? wl / Math.max(1e-4, skinLum) : null;
+    var q = scleraRatio == null ? 0 : Math.max(0, Math.min(1, (scleraRatio - 1.0) / 1.0)) * Math.min(1, count / 60);
+    var wEye = 0.4 + 0.5 * q, diff = eyeDepth == null ? 0 : Math.abs(eyeDepth - colorDepth);
+    var depth, source = "eyes", between = false, deeperThan = false;
+    if (eyesClipped) {
+      // Eye whites brighter than the camera can record: skin is at least this deep.
+      depth = Math.max(eyeDepth, colorDepth); source = "eyes"; deeperThan = true;
+    } else if (eyeDepth == null) {
+      depth = colorDepth; source = "skin"; between = true;
+    } else if (range === "deep" && eyeDepth > colorDepth + SETTINGS.disagreeDepth / 2) {
+      // Confidently deep skin, yet the eye whites say lighter: that is what
+      // pigmented eye whites do (most Black adults have them), so the skin's
+      // color leads and the eye reading only nudges.
+      depth = 0.3 * eyeDepth + 0.7 * colorDepth; between = true;
+    } else if (eyeDepth < 48) {
+      // A deep eye reading is trusted (contamination only lightens).
+      depth = diff <= SETTINGS.disagreeDepth ? wEye * eyeDepth + (1 - wEye) * colorDepth : eyeDepth;
+      between = diff > SETTINGS.disagreeDepth / 2;
+    } else if (colorDepth < eyeDepth - SETTINGS.disagreeDepth) {
+      // Eyes say light, skin says much deeper: the eye reading is contaminated.
+      depth = colorDepth; source = "skin"; between = true;
+    } else {
+      depth = wEye * eyeDepth + (1 - wEye) * colorDepth;
+      between = diff > SETTINGS.disagreeDepth / 2;
+    }
+    // Hard limits from the iris range. Skin about as bright as the iris is deep
+    // skin, whatever the eye whites said; this is what makes Pearl impossible
+    // for a deep-skinned face.
+    if (range === "deep" && depth > SETTINGS.deepCeiling) { depth = SETTINGS.deepCeiling; source = "skin"; between = true; }
+    if (range === "light" && depth < SETTINGS.lightFloor) { depth = SETTINGS.lightFloor; between = true; }
+    depth = Math.max(0, Math.min(100, depth));
+    var outLab = lab || labFromLinear(Math.min(1, wbSkin[0]), Math.min(1, wbSkin[1]), Math.min(1, wbSkin[2]));
+    outLab = [depth, outLab[1], outLab[2]];
+    return {
+      issue: null, depth: depth, between: between, source: source, deeperThan: deeperThan,
+      eyeDepth: eyeDepth, rawDepth: rawEyeDepth, colorDepth: colorDepth, range: range, irisRatio: irisRatio, irisWarm: irisWarm,
+      eyeBright: eyeBright, underEye: underEye, whiteCount: count, scleraRatio: scleraRatio, eyeWeight: eyeDepth == null ? 0 : wEye,
+      ita: ita(outLab), lab: outLab
+    };
   }
 
   // Depth -> gemstone (0 = Pearl ... 9 = Onyx), plus the nearer neighbor as runner-up.
-  function classify(depth, deeperThan) {
+  function classify(depth, deeperThan, forceBetween) {
     var best = GEMSTONES - 1;
     for (var i = 0; i < EDGES.length; i++) if (depth >= EDGES[i]) { best = i; break; }
     if (deeperThan) {
@@ -292,7 +508,7 @@
     var toLighter = top - depth, toDeeper = depth - bottom;
     var alt = toLighter < toDeeper ? best - 1 : best + 1;
     if (alt < 0) alt = 1; if (alt > GEMSTONES - 1) alt = GEMSTONES - 2;
-    return { best: best, alt: alt, between: Math.min(toLighter, toDeeper) < SETTINGS.betweenMargin, depth: depth };
+    return { best: best, alt: alt, between: !!forceBetween || Math.min(toLighter, toDeeper) < SETTINGS.betweenMargin, depth: depth };
   }
 
   var MESSAGES = {
@@ -444,6 +660,7 @@
           '<div class="sf-result"><i data-best-dot></i><div><small>Your Shade</small><strong data-best-name></strong></div></div>' +
           '<p data-note></p>' +
           '<pre class="sf-debug" data-debug hidden></pre>' +
+          '<button type="button" class="sf-btn ghost" data-copy-reading hidden>Copy Reading for the Panel Sheet</button>' +
           '<div class="sf-alt"><i data-alt-dot></i><span>Also close: <button type="button" data-use-alt></button></span></div>' +
           '<button type="button" class="sf-btn" data-use-best></button>' +
           '<div class="sf-row"><button type="button" class="sf-btn ghost" data-retry>Try Again</button><button type="button" class="sf-btn ghost" data-close>Pick Myself</button></div>' +
@@ -578,7 +795,7 @@
             needChecks = SETTINGS.goodChecksBeforeAuto + 2;
             setStatus(res.issue); loop(my); return;
           }
-          result = classify(res.depth, res.deeperThan);
+          result = classify(res.depth, res.deeperThan, res.between);
           result.reading = res;
           stopCamera();
           showResult();
@@ -591,6 +808,7 @@
       // "pulseshadefinder:result" on the trigger and calls preventDefault() to skip the result screen.
       var handoff = new CustomEvent("pulseshadefinder:result", { cancelable: true, detail: {
         gemstone: result.best + 1, alt: result.alt + 1, close: !!result.between, depth: result.depth,
+        source: result.reading ? result.reading.source : null,
         lab: result.reading ? [result.depth, result.reading.lab[1], result.reading.lab[2]] : null
       } });
       if (!trigger.dispatchEvent(handoff)) { handedOff = true; close(); return; }
@@ -598,14 +816,38 @@
       q("[data-best-dot]").style.background = best.color;
       q("[data-best-name]").textContent = best.name;
       q("[data-use-best]").textContent = "Use " + best.name;
-      q("[data-note]").textContent = result.between
-        ? "You're right between " + best.name + " and " + alt.name + ". Go with whichever feels more like you."
-        : "If another shade feels more like you, pick that one instead.";
+      var rd = result.reading;
+      q("[data-note]").textContent = rd && rd.source === "skin"
+        ? "We matched this from your skin's color. You're between " + best.name + " and " + alt.name + ". Go with whichever looks more like you in daylight."
+        : result.between
+          ? "You're right between " + best.name + " and " + alt.name + ". Go with whichever feels more like you."
+          : "If another shade feels more like you, pick that one instead.";
       q("[data-alt-dot]").style.background = alt.color;
-      var dbg = q("[data-debug]"), rd = result.reading;
+      var dbg = q("[data-debug]"), copyBtn = q("[data-copy-reading]");
       dbg.hidden = !(DEBUG && rd);
-      if (DEBUG && rd) dbg.textContent = "depth " + rd.depth.toFixed(1) + " (before contrast correction " + rd.rawDepth.toFixed(1) + ")" + (rd.deeperThan ? " (eyes blown out, at least this deep)" : "") +
-        "\nLab " + rd.lab.map(function (x) { return x.toFixed(1); }).join(", ") + "\nsclera setting " + SETTINGS.scleraReflectance + ", stretch " + SETTINGS.contrastStretch + " around " + SETTINGS.stretchAnchor;
+      copyBtn.hidden = !(CAL && rd);
+      if (CAL && rd) {
+        // One line, tab-separated, in the panel sheet's column order. Numbers only.
+        var cols = ["v" + (window.PulseShadeFinder && window.PulseShadeFinder.VERSION || "4"), new Date().toISOString().slice(0, 16), navigator.userAgent.replace(/\s+/g, " ").slice(0, 60),
+          best.name, alt.name, rd.source, rd.depth.toFixed(1), rd.eyeDepth == null ? "" : rd.eyeDepth.toFixed(1), rd.rawDepth == null ? "" : rd.rawDepth.toFixed(1), rd.colorDepth.toFixed(1), rd.range,
+          rd.irisRatio == null ? "" : rd.irisRatio.toFixed(2), rd.irisWarm == null ? "" : (rd.irisWarm ? "brown" : "light"), rd.eyeBright == null ? "" : rd.eyeBright.toFixed(2), rd.underEye == null ? "" : rd.underEye.toFixed(2),
+          rd.whiteCount == null ? "" : Math.round(rd.whiteCount), rd.scleraRatio == null ? "" : rd.scleraRatio.toFixed(2), rd.eyeWeight == null ? "" : rd.eyeWeight.toFixed(2),
+          rd.lab.map(function (x) { return x.toFixed(1); }).join(" ")];
+        copyBtn.onclick = function () {
+          var text = cols.join("\t");
+          var done = function () { copyBtn.textContent = "Copied. Paste it in the sheet, then add the shade you wear."; };
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { window.prompt("Copy this line:", text); });
+          else window.prompt("Copy this line:", text);
+        };
+      }
+      if (DEBUG && rd) {
+        var f1 = function (x) { return x == null ? "n/a" : (+x).toFixed(1); };
+        dbg.textContent = "depth " + f1(rd.depth) + " from " + rd.source + (rd.deeperThan ? " (eyes blown out, at least this deep)" : "") +
+          "\neye reading " + f1(rd.eyeDepth) + " (raw " + f1(rd.rawDepth) + "), white px " + f1(rd.whiteCount) + ", white/skin " + (rd.scleraRatio == null ? "n/a" : rd.scleraRatio.toFixed(2)) +
+          "\nskin-color reading " + f1(rd.colorDepth) + " in " + rd.range + " range, skin/iris " + (rd.irisRatio == null ? "n/a" : rd.irisRatio.toFixed(2)) +
+          "\nLab " + rd.lab.map(function (x) { return x.toFixed(1); }).join(", ") +
+          "\nsettings: sclera " + SETTINGS.scleraReflectance + ", stretch " + SETTINGS.contrastStretch + " below " + SETTINGS.stretchAnchor + ", iris deep<=" + SETTINGS.irisDeep + " light>=" + SETTINGS.irisLight;
+      }
       q("[data-use-alt]").textContent = alt.name;
       show("result");
       q("[data-use-best]").focus();
@@ -668,7 +910,7 @@
     });
   }
 
-  window.PulseShadeFinder = { EDGES: EDGES, analyzeFrame: analyzeFrame, combine: combine, classify: classify, loadMesh: loadMesh, SETTINGS: SETTINGS, labFromLinear: labFromLinear, ita: ita };
+  window.PulseShadeFinder = { VERSION: "4.0", EDGES: EDGES, analyzeFrame: analyzeFrame, combine: combine, classify: classify, depthFromColor: depthFromColor, loadMesh: loadMesh, SETTINGS: SETTINGS, labFromLinear: labFromLinear, ita: ita };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
