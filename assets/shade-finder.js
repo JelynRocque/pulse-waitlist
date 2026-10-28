@@ -1,5 +1,16 @@
 /*
- * Pulse "Find My Shade" camera helper (v4: two readings that check each other, nothing to hold).
+ * Pulse "Find My Shade" camera helper (v4.1: two readings that check each other, nothing to hold).
+ *
+ * v4.1 (Oct 27, 2026, from two real iPhone readings): a Bronzite face was shown
+ * Citrine because v4 chose the "light" range from the skin-to-iris ratio, and
+ * on a real phone a dark brown iris indoors is crushed to black, so the ratio
+ * was 37. The range is now set first by how bright the camera rendered the
+ * cheek: auto-exposure pulls faces toward the middle, but nothing rendered at
+ * L* 46 or below is light skin and nothing at 68 or above is deep skin. The
+ * iris only counts as a cue when it is readable (not crushed), and only as a
+ * deep cue or, when visibly blue/green/gray, a light cue. Eye whites sitting in
+ * brow shadow (under-eye skin darker than the cheek) are weighted down rather
+ * than trusted. With this the real photo reads Bronzite (runner-up Smoky Quartz).
  *
  * v4 (Oct 27, 2026): deep skin was still sometimes told Pearl or Selenite. The
  * cause was in the math, not the lighting: v3 trusted the eye whites alone, and
@@ -34,7 +45,7 @@
  *
  * Honest limits: the color fit comes from brand swatches and the Monk scale,
  * not yet from Pulse users, and phone cameras lift shadows on deep skin. The
- * final constants (irisDeep, irisLight, the two color fits) must be checked
+ * final constants (renderedDeep/Light, colorContrast, the color fits) must be checked
  * against a real panel of people who know their shade, at least half of them
  * Monk 7-10, on iPhone and Android. ?sfdebug=1 shows every intermediate value
  * so that panel can be run. Launch gate: 90%+ of readings on the right
@@ -126,16 +137,23 @@
     // Eye-white pixels must be at least this bright compared with the cheek
     // (lids shade them, so a little under 1 is normal on fair skin).
     scleraMinRatio: 0.85,
-    // Range cues (which color fit to use). Skin brightness / iris brightness:
-    // at or below irisDeep (brown iris) the skin is deep; at or above irisLight
-    // it is light. A blue/green/gray iris means light skin on its own.
+    // Range cues (which color fit to use). The main cue is how bright the
+    // camera rendered the cheek (CIELAB L* of the frame as recorded): the
+    // camera's auto-exposure pulls every face toward the middle, but nothing
+    // rendered at or below renderedDeep is light skin and nothing rendered at
+    // or above renderedLight is deep skin. (Real phones, Oct 27, 2026: a
+    // Bronzite face rendered at 42.)
+    renderedDeep: 46,
+    renderedLight: 68,
+    // Skin brightness / iris brightness, used only as a DEEP cue (at or below
+    // irisDeep, brown iris) and only when the iris is readable: real phones
+    // crush dark brown irises to black indoors, which made this ratio 30+ on a
+    // Bronzite face. A readable blue/green/gray iris means light skin.
     irisDeep: 3.0,
-    irisLight: 6,
+    irisReadable: 0.008,
     // Brightest sliver of the eye region / cheek: at or above eyeBrightDeep the
-    // skin is deep (eye whites far brighter than skin only happens on deep
-    // skin); at or below eyeBrightLight it is light (cheeks outshine eye whites).
+    // skin is deep (eye whites far brighter than skin only happens on deep skin).
     eyeBrightDeep: 3.5,
-    eyeBrightLight: 0.8,
     // Below eyeBrightNone no eye white is visible at all (eyes nearly shut, or
     // all lash): refuse and ask for wider eyes rather than guess.
     eyeBrightNone: 0.35,
@@ -300,9 +318,10 @@
         // Iris: the ring between the pupil and the iris edge (the pupil is a
         // black hole, the rim blends into lashes). Pupil leak, lash shadow and
         // highlights are dropped below by taking the middle of the range.
-        if (d > ir * 0.4 && d < ir * 0.8) {
-          // Only the sides of the ring, level with the pupil: lids and lashes
-          // cover the top and bottom of the iris on hooded and narrow eyes.
+        if (d > ir * 0.6 && d < ir * 0.95) {
+          // Outer part of the ring (indoors the pupil is wide), sides only,
+          // level with the pupil: lids and lashes cover the top and bottom of
+          // the iris on hooded and narrow eyes.
           if (Math.abs(y - ic[1]) < ir * 0.45) iris.push([L, LIN[v[0]], LIN[v[2]]]);
           continue;
         }
@@ -317,7 +336,7 @@
       }
       if (iris.length >= 8) {
         iris.sort(function (a, b) { return a[0] - b[0]; });
-        var mid = iris.slice(Math.floor(iris.length * 0.35), Math.ceil(iris.length * 0.8));
+        var mid = iris.slice(Math.floor(iris.length * 0.6), Math.ceil(iris.length * 0.85)); // the iris proper, above pupil and lash, below highlights
         irisL.push(median(mid.map(function (q) { return q[0]; })));
         irisRB.push(median(mid.map(function (q) { return q[1] / Math.max(1e-4, q[2]); })));
       }
@@ -398,8 +417,11 @@
     var withWhite = withFace.filter(function (f) { return f.white; });
     var eyesClipped = clippedShare > 0.3 && count >= SETTINGS.minWhitePixels;
     var haveWhite = !eyesClipped && count >= SETTINGS.minWhitePixels && withWhite.length >= withFace.length / 2;
-    var irisRatio = withIris.length ? skinLum / Math.max(1e-4, median(withIris.map(function (f) { return f.irisLum; }))) : null;
-    var irisWarm = withIris.length ? withIris.filter(function (f) { return f.irisWarm; }).length * 2 > withIris.length : null;
+    var irisLum = withIris.length ? median(withIris.map(function (f) { return f.irisLum; })) : null;
+    var irisReadable = irisLum != null && irisLum >= SETTINGS.irisReadable;
+    var irisRatio = irisLum != null ? skinLum / Math.max(1e-4, irisLum) : null;
+    var irisWarm = irisReadable ? withIris.filter(function (f) { return f.irisWarm; }).length * 2 > withIris.length : null;
+    var rendered = labFromLinear(Math.min(1, skin[0]), Math.min(1, skin[1]), Math.min(1, skin[2]))[0];
     var withBright = withFace.filter(function (f) { return f.eyeBrightRatio != null; });
     var eyeBright = withBright.length ? median(withBright.map(function (f) { return f.eyeBrightRatio; })) : null;
     // Nothing bright anywhere in the eye: eyes nearly shut or all lash. Ask, don't guess.
@@ -439,12 +461,11 @@
     // Which range? Deep cues are checked first, because deep skin shown light is
     // the failure we must never repeat. Any one deep cue is enough.
     var range = "mid";
-    var deepCue = (eyeBright != null && eyeBright >= SETTINGS.eyeBrightDeep) ||
-                  (irisRatio != null && irisWarm && irisRatio <= SETTINGS.irisDeep) ||
+    var deepCue = rendered <= SETTINGS.renderedDeep ||
+                  (eyeBright != null && eyeBright >= SETTINGS.eyeBrightDeep) ||
+                  (irisReadable && irisWarm && irisRatio <= SETTINGS.irisDeep) ||
                   (eyeDepth != null && eyeDepth < 41); // a deep eye reading is trustworthy (see below)
-    var lightCue = (irisWarm === false) ||
-                   (irisRatio != null && irisRatio >= SETTINGS.irisLight) ||
-                   (eyeBright != null && eyeBright <= SETTINGS.eyeBrightLight);
+    var lightCue = rendered >= SETTINGS.renderedLight || irisWarm === false;
     if (deepCue) range = "deep"; else if (lightCue) range = "light";
     var colorDepth = depthFromColor(wbSkin, range);
 
@@ -456,7 +477,8 @@
     // cheek and plenty of them = clean; barely brighter = pigmented or lid-shaded.
     var scleraRatio = wl != null ? wl / Math.max(1e-4, skinLum) : null;
     var q = scleraRatio == null ? 0 : Math.max(0, Math.min(1, (scleraRatio - 1.0) / 1.0)) * Math.min(1, count / 60);
-    var wEye = 0.4 + 0.5 * q, diff = eyeDepth == null ? 0 : Math.abs(eyeDepth - colorDepth);
+    if (underEye != null) q *= Math.max(0, Math.min(1, (underEye - 0.7) / 0.25)); // eye whites in brow shadow are worth less
+    var wEye = 0.2 + 0.7 * q, diff = eyeDepth == null ? 0 : Math.abs(eyeDepth - colorDepth);
     var depth, source = "eyes", between = false, deeperThan = false;
     if (eyesClipped) {
       // Eye whites brighter than the camera can record: skin is at least this deep.
@@ -489,7 +511,7 @@
     outLab = [depth, outLab[1], outLab[2]];
     return {
       issue: null, depth: depth, between: between, source: source, deeperThan: deeperThan,
-      eyeDepth: eyeDepth, rawDepth: rawEyeDepth, colorDepth: colorDepth, range: range, irisRatio: irisRatio, irisWarm: irisWarm,
+      eyeDepth: eyeDepth, rawDepth: rawEyeDepth, colorDepth: colorDepth, range: range, rendered: rendered, irisRatio: irisRatio, irisWarm: irisWarm, irisReadable: irisReadable,
       eyeBright: eyeBright, underEye: underEye, whiteCount: count, scleraRatio: scleraRatio, eyeWeight: eyeDepth == null ? 0 : wEye,
       ita: ita(outLab), lab: outLab
     };
@@ -829,7 +851,7 @@
       if (CAL && rd) {
         // One line, tab-separated, in the panel sheet's column order. Numbers only.
         var cols = ["v" + (window.PulseShadeFinder && window.PulseShadeFinder.VERSION || "4"), new Date().toISOString().slice(0, 16), navigator.userAgent.replace(/\s+/g, " ").slice(0, 60),
-          best.name, alt.name, rd.source, rd.depth.toFixed(1), rd.eyeDepth == null ? "" : rd.eyeDepth.toFixed(1), rd.rawDepth == null ? "" : rd.rawDepth.toFixed(1), rd.colorDepth.toFixed(1), rd.range,
+          best.name, alt.name, rd.source, rd.depth.toFixed(1), rd.eyeDepth == null ? "" : rd.eyeDepth.toFixed(1), rd.rawDepth == null ? "" : rd.rawDepth.toFixed(1), rd.colorDepth.toFixed(1), rd.range, rd.rendered == null ? "" : rd.rendered.toFixed(1),
           rd.irisRatio == null ? "" : rd.irisRatio.toFixed(2), rd.irisWarm == null ? "" : (rd.irisWarm ? "brown" : "light"), rd.eyeBright == null ? "" : rd.eyeBright.toFixed(2), rd.underEye == null ? "" : rd.underEye.toFixed(2),
           rd.whiteCount == null ? "" : Math.round(rd.whiteCount), rd.scleraRatio == null ? "" : rd.scleraRatio.toFixed(2), rd.eyeWeight == null ? "" : rd.eyeWeight.toFixed(2),
           rd.lab.map(function (x) { return x.toFixed(1); }).join(" ")];
@@ -844,9 +866,10 @@
         var f1 = function (x) { return x == null ? "n/a" : (+x).toFixed(1); };
         dbg.textContent = "depth " + f1(rd.depth) + " from " + rd.source + (rd.deeperThan ? " (eyes blown out, at least this deep)" : "") +
           "\neye reading " + f1(rd.eyeDepth) + " (raw " + f1(rd.rawDepth) + "), white px " + f1(rd.whiteCount) + ", white/skin " + (rd.scleraRatio == null ? "n/a" : rd.scleraRatio.toFixed(2)) +
-          "\nskin-color reading " + f1(rd.colorDepth) + " in " + rd.range + " range, skin/iris " + (rd.irisRatio == null ? "n/a" : rd.irisRatio.toFixed(2)) +
+          "\nskin-color reading " + f1(rd.colorDepth) + " in " + rd.range + " range (rendered L* " + f1(rd.rendered) + ", eye max/skin " + (rd.eyeBright == null ? "n/a" : rd.eyeBright.toFixed(2)) + ", under-eye/cheek " + (rd.underEye == null ? "n/a" : rd.underEye.toFixed(2)) + ")" +
+          "\niris " + (rd.irisReadable ? (rd.irisWarm ? "brown" : "light") + ", skin/iris " + rd.irisRatio.toFixed(2) : "not readable (crushed to black)") +
           "\nLab " + rd.lab.map(function (x) { return x.toFixed(1); }).join(", ") +
-          "\nsettings: sclera " + SETTINGS.scleraReflectance + ", stretch " + SETTINGS.contrastStretch + " below " + SETTINGS.stretchAnchor + ", iris deep<=" + SETTINGS.irisDeep + " light>=" + SETTINGS.irisLight;
+          "\nsettings: sclera " + SETTINGS.scleraReflectance + ", stretch " + SETTINGS.contrastStretch + " below " + SETTINGS.stretchAnchor + ", rendered deep<=" + SETTINGS.renderedDeep + " light>=" + SETTINGS.renderedLight + ", color k " + SETTINGS.colorContrast;
       }
       q("[data-use-alt]").textContent = alt.name;
       show("result");
@@ -910,7 +933,7 @@
     });
   }
 
-  window.PulseShadeFinder = { VERSION: "4.0", EDGES: EDGES, analyzeFrame: analyzeFrame, combine: combine, classify: classify, depthFromColor: depthFromColor, loadMesh: loadMesh, SETTINGS: SETTINGS, labFromLinear: labFromLinear, ita: ita };
+  window.PulseShadeFinder = { VERSION: "4.1", EDGES: EDGES, analyzeFrame: analyzeFrame, combine: combine, classify: classify, depthFromColor: depthFromColor, loadMesh: loadMesh, SETTINGS: SETTINGS, labFromLinear: labFromLinear, ita: ita };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
