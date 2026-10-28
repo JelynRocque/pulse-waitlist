@@ -37,7 +37,7 @@
     var d = e.detail || {};
     // Skin sits in the red-yellow quarter of color space; a green or blue cast is the room's light, not the skin.
     var lab = d.lab ? [d.lab[0], Math.max(0, d.lab[1]), Math.max(0, d.lab[2])] : null;
-    post({ type: "result", gemstone: d.gemstone, alt: d.alt, close: !!d.close, depth: Math.round(d.depth * 10) / 10, measuredHex: labToHex(lab) });
+    post({ type: "result", gemstone: d.gemstone, alt: d.alt, close: !!d.close, depth: Math.round(d.depth * 10) / 10, measuredHex: labToHex(lab), source: d.source === "skin" ? "skin" : "eyes" });
   });
   trigger.addEventListener("pulseshadefinder:close", function (e) {
     if (!(e.detail && e.detail.handedOff)) post({ type: "cancel" });
