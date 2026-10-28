@@ -3,7 +3,14 @@
   'use strict';
   var API = window.PULSE_TEST_API || 'https://bgagcxdsqnasgegazusf.supabase.co/functions/v1/webtest';   // keep in step with ../test.js
   var $ = function (id) { return document.getElementById(id); };
-  var key = null, testers = [], emailConfigured = false, links = {};   // links: email → link issued in this session (shown once)
+  var key = null, testers = [], emailConfigured = false, syncConfigured = false, links = {};
+  var GEM = ['', 'Pearl', 'Selenite', 'Moonstone', 'Citrine', 'Amber', "Tiger's Eye", 'Bronzite', 'Smoky Quartz', 'Obsidian', 'Onyx'];
+  function shade(t) {
+    if (!t) return '';
+    if (t === 'prefer_not') return 'prefer not to say';
+    var m = /^mst_(\d+)(?:_(\w+))?$/.exec(t); if (!m) return t;
+    return (GEM[+m[1]] || t) + (m[2] ? ' · ' + m[2] : '');
+  }   // links: email → link issued in this session (shown once)
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function api(action, body) {
@@ -19,19 +26,30 @@
     api('admin.check').then(function (r) {
       if (!r.ok) { $('login-err').textContent = r.error === 'unauthorized' ? 'That key is not right.' : 'Could not reach the server.'; $('login-err').hidden = false; return; }
       try { sessionStorage.setItem('pulse_webtest_admin', key); } catch (err) {}
-      emailConfigured = r.email_configured; open();
+      emailConfigured = r.email_configured; syncConfigured = r.sync_configured; open();
     });
   });
   function open() {
     $('login').hidden = true; $('app').hidden = false;
     $('email-note').textContent = emailConfigured ? 'Invitation emails are on: switching someone to Active emails their link from hello@pulseskin.co.' : 'Email is not configured on this project yet (RESEND_API_KEY). Switching someone to Active still creates their link; copy it from the table and send it yourself.';
-    load();
+    if (!syncConfigured) $('sync-note').innerHTML = 'Waitlist sync is not set up yet: add <code>WAITLIST_SYNC_KEY</code> to the Supabase secrets and the same value as <code>WEBTEST_SYNC_KEY</code> in the sheet\'s Apps Script properties (see apps-script/webtest_list.gs). Until then, add people below.';
+    if (syncConfigured) sync(); else load();
   }
+  function sync() {
+    $('sync').disabled = true; $('sync-msg').className = 'msg'; $('sync-msg').textContent = 'Syncing…';
+    api('admin.sync').then(function (r) {
+      $('sync').disabled = false;
+      $('sync-msg').className = 'msg ' + (r.ok ? 'ok' : 'bad');
+      $('sync-msg').textContent = r.ok ? (r.added ? 'Added ' + r.added + ' new from the waitlist (' + r.seen + ' on the sheet).' : 'Up to date: ' + r.seen + ' on the sheet, nobody new.') : 'Sync failed (' + (r.error || 'unknown') + ').';
+      load();
+    });
+  }
+  $('sync').addEventListener('click', sync);
 
   // ---------- list ----------
   function load() {
     api('admin.progress').then(function (r) {
-      if (!r.ok) { $('rows').innerHTML = '<tr><td colspan="7">Could not load (' + esc(r.error) + ').</td></tr>'; return; }
+      if (!r.ok) { $('rows').innerHTML = '<tr><td colspan="8">Could not load (' + esc(r.error) + ').</td></tr>'; return; }
       testers = r.testers || []; render();
     });
   }
@@ -57,8 +75,9 @@
         ? '<button class="btn ghost tiny" data-switch="off" data-email="' + esc(t.email) + '" type="button">Set inactive</button>'
         : '<button class="btn tiny" data-switch="on" data-email="' + esc(t.email) + '" type="button">' + (t.invite_sent_at ? 'Reactivate + email' : 'Activate + email invite') + '</button>';
       var ph = t.photos ? ' <button class="btn ghost tiny" data-photos="' + esc(t.email) + '" type="button">Photos (' + t.photos + ')</button>' : '';
-      return '<tr><td><strong>' + esc(t.name || '') + '</strong><div class="muted">' + esc(t.email) + '</div>' + invite + link + '<div class="photos" id="ph-' + esc(t.id) + '"></div></td><td>' + status + '</td><td class="hide-sm">' + consent + '</td><td>' + sc + '</td><td class="hide-sm">' + cons + '</td><td class="hide-sm">' + flags + '</td><td>' + sw + ph + '</td></tr>';
-    }).join('') || '<tr><td colspan="7" class="muted">Nobody yet. Add a tester above.</td></tr>';
+      var src = t.source === 'waitlist' ? '<div class="muted">waitlist · joined ' + when(t.waitlist_joined) + '</div>' : '';
+      return '<tr><td><strong>' + esc(t.name || '') + '</strong><div class="muted">' + esc(t.email) + '</div>' + src + invite + link + '<div class="photos" id="ph-' + esc(t.id) + '"></div></td><td class="hide-sm">' + esc(shade(t.waitlist_tone)) + '</td><td>' + status + '</td><td class="hide-sm">' + consent + '</td><td>' + sc + '</td><td class="hide-sm">' + cons + '</td><td class="hide-sm">' + flags + '</td><td>' + sw + ph + '</td></tr>';
+    }).join('') || '<tr><td colspan="8" class="muted">Nobody yet. Sync from the waitlist or add a tester above.</td></tr>';
   }
   $('rows').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
@@ -129,5 +148,5 @@
   });
 
   try { key = sessionStorage.getItem('pulse_webtest_admin'); } catch (e) {}
-  if (key) api('admin.check').then(function (r) { if (r.ok) { emailConfigured = r.email_configured; open(); } else key = null; });
+  if (key) api('admin.check').then(function (r) { if (r.ok) { emailConfigured = r.email_configured; syncConfigured = r.sync_configured; open(); } else key = null; });
 })();
