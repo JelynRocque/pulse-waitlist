@@ -56,7 +56,11 @@
     <p class="muted" id="email-note"></p>
     <div class="cards" id="cards"></div>
 
-    <h2>Add a tester</h2>
+    <h2>Waitlist</h2>
+    <p class="muted" id="sync-note">Everyone on the Pulse Waitlist sheet is pulled in here automatically (when you open this page and once an hour) as <strong>Inactive</strong>, with the shade they picked. Nobody hears from Pulse until you switch them on.</p>
+    <div class="row"><button class="btn ghost tiny" id="sync" type="button">Sync from waitlist now</button><span class="msg" id="sync-msg"></span></div>
+
+    <h2>Add someone who isn't on the waitlist</h2>
     <p class="muted">Adding someone does <strong>not</strong> send anything. Switch them to <strong>Active</strong> when you are ready: that creates their private link and emails the invitation (what the test is, that it is not the full app, the consent, the 14 days). Switching to Inactive kills the link; their data stays until they withdraw.</p>
     <form id="add-form" class="row">
       <input type="text" id="add-name" placeholder="First and last name" style="min-width:200px">
@@ -69,7 +73,7 @@
 
     <h2>Testers</h2>
     <div class="row" style="margin-bottom:10px"><button class="btn ghost tiny" id="refresh" type="button">Refresh</button><button class="btn ghost tiny" id="export" type="button">Download scans (CSV)</button><span class="muted" id="count"></span></div>
-    <table id="table"><thead><tr><th>Person</th><th>Status</th><th class="hide-sm">Consent</th><th>Scans</th><th class="hide-sm">Consistency</th><th class="hide-sm">Flags</th><th>Switch</th></tr></thead><tbody id="rows"></tbody></table>
+    <table id="table"><thead><tr><th>Person</th><th class="hide-sm">Shade</th><th>Status</th><th class="hide-sm">Consent</th><th>Scans</th><th class="hide-sm">Consistency</th><th class="hide-sm">Flags</th><th>Switch</th></tr></thead><tbody id="rows"></tbody></table>
     <p class="muted" style="margin-top:14px"><strong>Consistency</strong> is the spread (standard deviation) of a person's skin score across their scans; the accuracy gate wants rescans within 5 points. <strong>Flags</strong> are scans with a lighting or framing issue, and scans where a measure was skipped. Skin L* is the engine's measured skin lightness (lower is deeper), to check the panel covers the range.</p>
   </section>
 </main>
