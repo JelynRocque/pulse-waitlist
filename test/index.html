@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Pulse Skin Analysis Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&family=Raleway:wght@400;500;600;700&display=swap">
+<link rel="icon" href="/apple-touch-icon.png">
+<!--
+  Friends-and-family web test (Stage 1). Invite-only: the link carries the tester's token (?t=...). The consent notice
+  comes first; the camera does not start until it is agreed. The photo is analyzed here in the browser by the same
+  engine as the app (engine.html, exported from the app repo); only scores and capture-quality data are sent to Pulse.
+  No products, no brands, no purchase links: the routine is by step and ingredient only.
+-->
+<style>
+  :root {
+    --warm-white: #FFFBF7; --paper: #FFF3E8; --espresso: #261000; --espresso-soft: #5B4436; --line: #E7D6C8;
+    --auburn: #96262C; --brick: #882E1A; --burnt-orange: #AB5B1E; --gold: #E4A524;
+    --ok: #2F6B3A; --warn: #A66A00; --bad: #96262C;
+    --display: "Gilda Display", "Didot", Georgia, serif;
+    --body: "Raleway", "Helvetica Neue", Arial, sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--warm-white); color: var(--espresso); font-family: var(--body); -webkit-font-smoothing: antialiased; }
+  main { max-width: 560px; margin: 0 auto; padding: 20px 20px 48px; }
+  header.top { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 18px; }
+  .wordmark { font-family: var(--display); letter-spacing: .28em; font-size: 14px; text-transform: uppercase; }
+  .pill { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brick); border: 1px solid var(--brick); border-radius: 999px; padding: 4px 10px; }
+  h1 { font-family: var(--display); font-weight: 400; font-size: 30px; line-height: 1.15; margin: 0 0 10px; }
+  h2 { font-family: var(--display); font-weight: 400; font-size: 22px; margin: 26px 0 8px; }
+  h3 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--brick); margin: 20px 0 8px; }
+  p, li { line-height: 1.55; font-size: 16px; margin: 0 0 12px; }
+  .muted { color: var(--espresso-soft); font-size: 14px; }
+  .screen { display: none; } .screen.on { display: block; }
+  .btn { font: inherit; font-weight: 700; font-size: 16px; border: 0; border-radius: 999px; padding: 15px 22px; cursor: pointer; background: linear-gradient(90deg, var(--brick), var(--gold)); color: #fff; width: 100%; }
+  .btn.ghost { background: transparent; color: var(--espresso); border: 1.2px solid var(--espresso); }
+  .btn.small { width: auto; padding: 10px 16px; font-size: 14px; }
+  .btn[disabled] { opacity: .45; cursor: default; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row .btn { flex: 1; }
+  input[type=text], input[type=email] { width: 100%; font: inherit; font-size: 16px; padding: 13px 14px; border: 1.2px solid var(--espresso); border-radius: 12px; background: #fff; }
+  .notice { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin: 14px 0; }
+  .notice p { font-size: 15px; }
+  .check { display: flex; gap: 12px; align-items: flex-start; margin: 14px 0; font-size: 15px; line-height: 1.5; }
+  .check input { width: 22px; height: 22px; margin: 2px 0 0; flex: none; accent-color: var(--brick); }
+  .err { color: var(--bad); font-size: 14px; margin: 8px 0; }
+  /* camera */
+  .cam { position: relative; width: 100%; aspect-ratio: 3 / 4; background: #111; border-radius: 20px; overflow: hidden; }
+  .cam video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  .cam .guide { position: absolute; inset: 0; pointer-events: none; }
+  .cam .guide ellipse { fill: none; stroke: rgba(255,255,255,.85); stroke-width: 3; stroke-dasharray: 8 8; }
+  .cam .guide.ok ellipse { stroke: #7ED99A; stroke-dasharray: none; }
+  .tip { text-align: center; min-height: 44px; margin: 12px 0 8px; font-size: 15px; font-weight: 600; }
+  .tip.ok { color: var(--ok); }
+  .count { position: absolute; inset: 0; display: grid; place-content: center; font-family: var(--display); font-size: 96px; color: #fff; text-shadow: 0 2px 20px rgba(0,0,0,.5); pointer-events: none; }
+  /* results */
+  .score { display: flex; align-items: baseline; gap: 10px; margin: 6px 0 2px; }
+  .score b { font-family: var(--display); font-weight: 400; font-size: 56px; line-height: 1; }
+  .measures { display: grid; gap: 10px; margin-top: 12px; }
+  .m { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 12px 14px; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
+  .m .name { font-weight: 600; }
+  .m .val { font-family: var(--display); font-size: 24px; text-align: right; }
+  .m .bar { grid-column: 1 / -1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .m .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--brick), var(--gold)); }
+  .m .band { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  .m.nm { opacity: .7; } .m.nm .val { font-size: 14px; font-family: var(--body); align-self: center; }
+  .band.good { color: var(--ok); } .band.watch { color: var(--warn); } .band.focus { color: var(--bad); }
+  .steps { display: grid; gap: 8px; }
+  .step { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+  .step .l { font-weight: 600; } .step .f { font-size: 13px; color: var(--brick); font-weight: 700; letter-spacing: .04em; margin: 2px 0 4px; }
+  .step .w { font-size: 14px; color: var(--espresso-soft); margin: 0; }
+  .step .c { font-size: 13px; color: var(--warn); margin: 6px 0 0; }
+  .cautions li { font-size: 14px; color: var(--espresso-soft); }
+  .chart { width: 100%; height: auto; background: #fff; border: 1px solid var(--line); border-radius: 14px; margin: 8px 0; }
+  .history { font-size: 14px; border-collapse: collapse; width: 100%; }
+  .history td, .history th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+  footer { margin-top: 36px; font-size: 13px; color: var(--espresso-soft); border-top: 1px solid var(--line); padding-top: 14px; }
+  footer a, .link { color: var(--brick); text-decoration: underline; background: none; border: 0; font: inherit; font-size: inherit; cursor: pointer; padding: 0; }
+  .day { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brick); }
+  .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--brick); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #engine { position: absolute; width: 1px; height: 1px; opacity: 0; left: -10px; top: -10px; border: 0; }
+  .photo-note { font-size: 13px; color: var(--espresso-soft); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top"><span class="wordmark">Pulse</span><span class="pill">Private test</span></header>
+
+  <!-- no link / unknown link -->
+  <section class="screen" id="s-gate">
+    <h1>Pulse skin analysis test</h1>
+    <p>This is a private two-week test for people Jelyn invited. It is not the Pulse app. If you were invited, open the link from your email on your phone.</p>
+    <p class="muted">Lost the link? Enter the email it was sent to and a fresh one will be sent if you are on the list.</p>
+    <form id="relink"><input type="email" name="email" placeholder="you@example.com" required autocomplete="email"><div style="height:10px"></div><button class="btn" type="submit">Send me a new link</button></form>
+    <p class="muted" id="relink-done" hidden>If that email is on the test list, a new link is on its way.</p>
+  </section>
+
+  <!-- consent -->
+  <section class="screen" id="s-consent">
+    <p class="day">Before you start</p>
+    <h1>How Pulse uses your face in this test</h1>
+    <div class="notice" id="notice-text">
+      <p><strong>What this is.</strong> A private two-week test of Pulse's skin analysis for people the founder invited. It is not the Pulse app and not a public service.</p>
+      <p><strong>What we collect.</strong> Each day you choose to scan, Pulse takes a photo of your face in your phone's browser, measures face points from it (face geometry) and reads 8 skin measures: dark spots and uneven tone, redness, shine, texture, pores, breakouts, dark circles and radiance. The analysis runs on your phone. The face points never leave your phone. Your scores, and data about the photo's lighting and sharpness, are saved to your test record with your email. Under Illinois and Texas law the face points are biometric identifiers and the scores are biometric information.</p>
+      <p><strong>Why.</strong> Only to test how accurate and consistent Pulse's analysis is across skin tones, and to fix it where it falls short. Never to identify you, never for advertising, never sold.</p>
+      <p><strong>Who sees it.</strong> Pulse (the founder) sees your scores. No outside company receives your photo or face points. Pulse's database provider, Supabase, stores the scores in the United States.</p>
+      <p><strong>How long.</strong> Your scores are kept for 12 months after the test ends, then destroyed. If you withdraw, everything tied to you is destroyed within 30 days. Pulse's full retention rules are at pulseskin.co/biometric-retention.</p>
+      <p><strong>Your choices.</strong> This is optional. You can stop at any time using the Withdraw link on this page or in any email from Pulse, and nothing changes between us.</p>
+      <p><strong>Access.</strong> You have the test page for 14 days from today. Scan every day if you can; even four scans across the two weeks helps.</p>
+    </div>
+    <label class="check"><input type="checkbox" id="c-main"><span><strong>I have read this notice. I consent to Pulse Cosmetic Solutions LLC collecting, storing and using my face image, face geometry and skin analysis results as described, for the period stated, and I release it for that purpose.</strong> (required)</span></label>
+    <label class="check"><input type="checkbox" id="c-photos"><span><strong>Optional: keep my scan photos until Pulse's accuracy study is complete, and no later than 12 months after the test ends, so a dermatologist or licensed esthetician can check Pulse's accuracy against them.</strong> Photos are stored with your test record, seen only by Pulse and the graders, never published, and destroyed on schedule or sooner if you withdraw. Leaving this unticked changes nothing about the test.</span></label>
+    <p style="margin-top:14px"><label>Full name<br><input type="text" id="c-name" autocomplete="name" maxlength="120" placeholder="Type your full name"></label></p>
+    <p class="err" id="c-err" hidden></p>
+    <div class="row"><button class="btn" id="c-agree" type="button">Agree and start</button><button class="btn ghost" id="c-notnow" type="button">Not now</button></div>
+    <p class="muted" style="margin-top:12px">Questions first? Email hello@pulsecosmeticsolutions.com.</p>
+  </section>
+
+  <!-- home -->
+  <section class="screen" id="s-home">
+    <p class="day" id="home-day"></p>
+    <h1 id="home-title">Ready for today's scan?</h1>
+    <p id="home-sub" class="muted">Face a window or a lamp, no hat or glasses, phone at eye level.</p>
+    <p class="muted" id="engine-status"><span class="loading"></span>Loading the analysis engine (about 10 seconds the first time)…</p>
+    <button class="btn" id="home-scan" type="button" disabled>Start scan</button>
+    <div id="home-history"></div>
+  </section>
+
+  <!-- camera -->
+  <section class="screen" id="s-cam">
+    <div class="cam">
+      <video id="video" playsinline muted autoplay></video>
+      <svg class="guide" id="guide" viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice"><ellipse cx="150" cy="190" rx="95" ry="130"/></svg>
+      <div class="count" id="count"></div>
+    </div>
+    <p class="tip" id="tip">Starting the camera…</p>
+    <div class="row"><button class="btn" id="cam-shoot" type="button" disabled>Scan now</button><button class="btn ghost" id="cam-cancel" type="button">Cancel</button></div>
+    <p class="muted" style="margin-top:10px">The photo is read on your phone. It is not uploaded unless you ticked the study box.</p>
+  </section>
+
+  <!-- analyzing -->
+  <section class="screen" id="s-busy"><h1>Reading your skin…</h1><p class="muted"><span class="loading"></span><span id="busy-msg">This takes a few seconds.</span></p></section>
+
+  <!-- results -->
+  <section class="screen" id="s-result">
+    <p class="day" id="r-day"></p>
+    <h1>Today's reading</h1>
+    <div class="score"><b id="r-score">—</b><span class="muted">skin score (0–100, higher is better)</span></div>
+    <p class="muted" id="r-note"></p>
+    <div class="measures" id="r-measures"></div>
+    <div id="r-again" hidden class="notice"><p><strong>One more, right away.</strong> On your first day a second scan straight after the first shows how steady the reading is. Same spot, same light.</p><button class="btn small" id="r-again-btn" type="button">Scan again now</button></div>
+    <h2>Your routine suggestion</h2>
+    <p class="muted">What to do and how often, by step and ingredient. This test suggests no products and names no brands.</p>
+    <h3>Morning</h3><div class="steps" id="r-am"></div>
+    <h3>Night</h3><div class="steps" id="r-pm"></div>
+    <ul class="cautions" id="r-cautions"></ul>
+    <p class="muted" style="margin-top:10px">This is general skincare guidance from a test, not medical advice. For anything that hurts, spreads or worries you, see a dermatologist.</p>
+    <div class="row" style="margin-top:16px"><button class="btn ghost" id="r-home" type="button">Done for today</button></div>
+  </section>
+
+  <!-- ended -->
+  <section class="screen" id="s-ended">
+    <h1>Your two weeks are done. Thank you.</h1>
+    <p>Your scans are helping Pulse check that its analysis is fair and accurate across skin tones. Your scores are kept for the accuracy study for the period stated in the notice, and you can still withdraw below.</p>
+    <div id="ended-history"></div>
+  </section>
+
+  <!-- withdrawn -->
+  <section class="screen" id="s-withdrawn">
+    <h1>You have withdrawn.</h1>
+    <p>Your scores and any photos are being destroyed, and this link no longer works. Thank you for trying Pulse. Nothing changes between us.</p>
+  </section>
+
+  <footer>
+    <p>Pulse Cosmetic Solutions LLC · <a href="/privacy/">Privacy</a> · <a href="mailto:hello@pulsecosmeticsolutions.com">hello@pulsecosmeticsolutions.com</a></p>
+    <p id="withdraw-row" hidden><button class="link" id="withdraw" type="button">Withdraw from the test</button> — stops everything and destroys your data.</p>
+  </footer>
+</main>
+<script src="test.js"></script>
+</body>
+</html>
