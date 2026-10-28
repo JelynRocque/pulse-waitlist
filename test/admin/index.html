@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Pulse Test · Founder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&family=Raleway:wght@400;500;600;700&display=swap">
+<!-- Founder-only page for the friends-and-family test. Everything here goes through the webtest Edge Function with
+     the founder key (WEBTEST_ADMIN_KEY); the key is kept in this browser's session storage only. No photos are shown
+     unless a tester ticked the study box; even then they come as 5-minute signed links. -->
+<style>
+  :root { --warm-white: #FFFBF7; --paper: #FFF3E8; --espresso: #261000; --soft: #5B4436; --line: #E7D6C8; --brick: #882E1A; --gold: #E4A524; --ok: #2F6B3A; --warn: #A66A00; --bad: #96262C;
+    --display: "Gilda Display", Georgia, serif; --body: "Raleway", "Helvetica Neue", Arial, sans-serif; color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--warm-white); color: var(--espresso); font-family: var(--body); }
+  main { max-width: 1080px; margin: 0 auto; padding: 24px 20px 60px; }
+  h1 { font-family: var(--display); font-weight: 400; font-size: 30px; margin: 0 0 4px; }
+  h2 { font-family: var(--display); font-weight: 400; font-size: 20px; margin: 28px 0 10px; }
+  p { line-height: 1.5; margin: 0 0 10px; } .muted { color: var(--soft); font-size: 14px; }
+  .wordmark { font-family: var(--display); letter-spacing: .28em; font-size: 13px; text-transform: uppercase; margin-bottom: 14px; }
+  input[type=text], input[type=email], input[type=password] { font: inherit; font-size: 15px; padding: 10px 12px; border: 1.2px solid var(--espresso); border-radius: 10px; background: #fff; }
+  .btn { font: inherit; font-weight: 700; font-size: 14px; border: 0; border-radius: 999px; padding: 10px 16px; cursor: pointer; background: linear-gradient(90deg, var(--brick), var(--gold)); color: #fff; }
+  .btn.ghost { background: #fff; color: var(--espresso); border: 1.2px solid var(--espresso); }
+  .btn.tiny { padding: 6px 12px; font-size: 13px; }
+  .btn[disabled] { opacity: .5; cursor: default; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--brick); background: var(--paper); }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 3px 9px; }
+  .on { background: #E3F2E6; color: var(--ok); } .off { background: #F1E7E0; color: var(--soft); } .wd { background: #F8E1E1; color: var(--bad); } .warn { background: #FFF1D6; color: var(--warn); }
+  .link-box { font-family: ui-monospace, Menlo, monospace; font-size: 12px; word-break: break-all; background: var(--paper); padding: 6px 8px; border-radius: 8px; margin-top: 4px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 10px 0 20px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .card b { font-family: var(--display); font-weight: 400; font-size: 28px; display: block; } .card span { font-size: 12px; color: var(--soft); }
+  .msg { font-size: 14px; margin: 8px 0; } .msg.bad { color: var(--bad); } .msg.ok { color: var(--ok); }
+  details { margin-top: 8px; } summary { cursor: pointer; font-size: 14px; color: var(--brick); }
+  .photos img { width: 120px; height: 160px; object-fit: cover; border-radius: 8px; margin: 4px; border: 1px solid var(--line); }
+  @media (max-width: 720px) { .hide-sm { display: none; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="wordmark">Pulse · Founder</div>
+  <section id="login">
+    <h1>Friends-and-family test</h1>
+    <p class="muted">Enter the founder key (Supabase › Edge Functions › Secrets › WEBTEST_ADMIN_KEY). It stays in this browser tab only.</p>
+    <form id="login-form" class="row"><input type="password" id="key" placeholder="Founder key" autocomplete="current-password" style="flex:1;min-width:240px"><button class="btn" type="submit">Open</button></form>
+    <p class="msg bad" id="login-err" hidden></p>
+  </section>
+
+  <section id="app" hidden>
+    <h1>Friends-and-family test</h1>
+    <p class="muted" id="email-note"></p>
+    <div class="cards" id="cards"></div>
+
+    <h2>Add a tester</h2>
+    <p class="muted">Adding someone does <strong>not</strong> send anything. Switch them to <strong>Active</strong> when you are ready: that creates their private link and emails the invitation (what the test is, that it is not the full app, the consent, the 14 days). Switching to Inactive kills the link; their data stays until they withdraw.</p>
+    <form id="add-form" class="row">
+      <input type="text" id="add-name" placeholder="First and last name" style="min-width:200px">
+      <input type="email" id="add-email" placeholder="email@example.com" required style="min-width:240px">
+      <button class="btn ghost" type="submit">Add to list</button>
+      <button class="btn ghost" type="button" id="add-bulk-toggle">Paste a list</button>
+    </form>
+    <div id="bulk" hidden style="margin-top:10px"><textarea id="bulk-text" rows="5" style="width:100%;font:inherit;font-size:14px;padding:10px;border:1.2px solid var(--espresso);border-radius:10px" placeholder="One per line: Name, email  (or just the email)"></textarea><div class="row" style="margin-top:8px"><button class="btn ghost" type="button" id="bulk-add">Add all</button></div></div>
+    <p class="msg" id="add-msg"></p>
+
+    <h2>Testers</h2>
+    <div class="row" style="margin-bottom:10px"><button class="btn ghost tiny" id="refresh" type="button">Refresh</button><button class="btn ghost tiny" id="export" type="button">Download scans (CSV)</button><span class="muted" id="count"></span></div>
+    <table id="table"><thead><tr><th>Person</th><th>Status</th><th class="hide-sm">Consent</th><th>Scans</th><th class="hide-sm">Consistency</th><th class="hide-sm">Flags</th><th>Switch</th></tr></thead><tbody id="rows"></tbody></table>
+    <p class="muted" style="margin-top:14px"><strong>Consistency</strong> is the spread (standard deviation) of a person's skin score across their scans; the accuracy gate wants rescans within 5 points. <strong>Flags</strong> are scans with a lighting or framing issue, and scans where a measure was skipped. Skin L* is the engine's measured skin lightness (lower is deeper), to check the panel covers the range.</p>
+  </section>
+</main>
+<script src="admin.js"></script>
+</body>
+</html>

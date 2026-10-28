@@ -18,3 +18,12 @@
   to = "/waitlist/?ref=:code"
   status = 302
   force = true
+
+# Friends-and-family test: invite-only, never indexed, camera allowed only on this origin.
+[[headers]]
+  for = "/test/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Permissions-Policy = "camera=(self)"
+    Referrer-Policy = "no-referrer"
+    Cache-Control = "no-store"
