@@ -72,7 +72,7 @@
     }).then(function (r) {
       $('c-agree').disabled = false;
       if (!r.ok) { err.textContent = r.error === 'withdrawn' ? 'This link was withdrawn.' : 'Something went wrong. Check your connection and try again.'; err.hidden = false; return; }
-      state = r; renderHome();
+      state = r; if (needsShade()) openShade(renderHome); else renderHome();
     });
   });
   $('c-notnow').addEventListener('click', function () { show('s-gate'); $('relink').hidden = true; $('relink-done').hidden = true; });
@@ -86,6 +86,7 @@
     var today = history.filter(function (s) { return s.date === localDate(); }).length;
     $('home-title').textContent = today ? (today === 1 && d === 1 ? 'One more scan today?' : 'Scanned today. Come back tomorrow.') : "Ready for today's scan?";
     $('home-sub').textContent = today === 1 && d === 1 ? 'A second scan straight after the first shows how steady the reading is.' : 'Face a window or a lamp, no hat or glasses, phone at eye level. Daylight is best.';
+    $('home-shade-row').innerHTML = shadeChip();
     $('home-history').innerHTML = historyHtml();
     show('s-home');
   }
@@ -196,14 +197,16 @@
     $('r-note').textContent = (a.status === 'low_confidence' ? 'Low-confidence reading (' + (TIP[a.reason] ? TIP[a.reason].replace(/\.$/, '').toLowerCase() : a.reason) + '). Scores still count, but a rescan in better light is worth it. ' : '')
       + (a.skin_type ? 'Skin reads as ' + a.skin_type + ' today.' : '');
     var by = {}; a.concerns.forEach(function (c) { by[c.concern] = c; });
-    var b0 = bandOf(a.skin_score);
+    var regions = {}; ((a.overlay_map && a.overlay_map.regions) || []).forEach(function (g) { if (g.zone && Z_ANCHORS[g.zone]) (regions[g.concern] = regions[g.concern] || {})[g.zone] = g.intensity; });
+    var where = {}; (a.concerns || []).forEach(function (c) { if (CHIP[c.concern]) where[c.concern] = heatSummary(c.concern, heatFor(c.concern, c.score, regions)); });
+    lastRead = { by: by, nm: nm, where: where };
     $('r-hero-ring').innerHTML = ringSvg(a.skin_score, 140, 62, 9, '#F2B95C', 14) + '<span class="big"><b>' + a.skin_score + '</b><small>OF 100</small></span>';
     var scored = ORDER.filter(function (k) { return by[k]; }).sort(function (p, q) { return by[p].score - by[q].score; });
     var focus = scored.filter(function (k) { return by[k].score < 70; }), well = scored.filter(function (k) { return by[k].score >= 70; });
     var skipped = ORDER.filter(function (k) { return !by[k]; });
     $('r-hero-sub').textContent = focus.length ? 'Higher is better. ' + (focus.length === 1 ? 'One measure' : ['Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight'][focus.length - 2] + ' measures') + ' to focus on first.' : 'Higher is better. Every measure is doing well today.';
-    var tile = function (k) { var v = by[k].score, b = bandOf(v); return '<div class="tile"><span class="tring">' + ringSvg(v, 98, 40, 7, b.col, 6 + Math.floor(v / 10)) + '<b>' + v + '</b></span><span class="tname">' + CHIP[k] + '</span><span class="tband" style="color:' + b.col + '">' + b.word + '</span></div>'; };
-    var skipTile = function (k) { return '<div class="tile nm"><span class="tring">' + ringSvg(0, 98, 40, 7, 'rgba(255,246,234,.3)', 0) + '<b>–</b></span><span class="tname">' + CHIP[k] + '</span><span class="tband">' + (nm.indexOf(k) >= 0 ? 'Skipped: ' + NM_WHY[k] : 'Not measured') + '</span></div>'; };
+    var tile = function (k) { var v = by[k].score, b = bandOf(v); return '<button type="button" class="tile" data-learn="' + k + '" aria-label="' + CHIP[k] + ' ' + v + ', ' + b.word + '. Learn more"><span class="ti" aria-hidden="true">i</span><span class="tring">' + ringSvg(v, 98, 40, 7, b.col, 6 + Math.floor(v / 10)) + '<b>' + v + '</b></span><span class="tname">' + CHIP[k] + '</span><span class="tband" style="color:' + b.col + '">' + b.word + '</span></button>'; };
+    var skipTile = function (k) { return '<button type="button" class="tile nm" data-learn="' + k + '" aria-label="' + CHIP[k] + ', not measured. Learn more"><span class="ti" aria-hidden="true">i</span><span class="tring">' + ringSvg(0, 98, 40, 7, 'rgba(255,246,234,.3)', 0) + '<b>–</b></span><span class="tname">' + CHIP[k] + '</span><span class="tband">' + (nm.indexOf(k) >= 0 ? 'Skipped: ' + NM_WHY[k] : 'Not measured') + '</span></button>'; };
     $('r-focus-wrap').hidden = !focus.length; $('r-focus').innerHTML = focus.map(tile).join('');
     $('r-well-wrap').hidden = !well.length; $('r-well').innerHTML = well.map(tile).join('');
     $('r-skip-wrap').hidden = !skipped.length; $('r-skip').innerHTML = skipped.map(skipTile).join('');
@@ -425,6 +428,7 @@
     $('map-band').textContent = b.word + ' · ' + (m.i + 1) + ' of ' + m.list.length; $('map-band').style.color = b.col;
     $('map-name').textContent = CHIP[concern];
     $('map-line').textContent = heatSummary(concern, lit);
+    $('map-learn').dataset.learn = concern;
     var strip = $('map-cards');
     strip.querySelectorAll('.mcard').forEach(function (c, i) { c.classList.toggle('on', i === m.i); c.setAttribute('aria-pressed', i === m.i); });
     var on = strip.querySelector('.mcard.on');
@@ -446,6 +450,129 @@
   })();
   $('map-next').addEventListener('click', function () { show('s-result'); });
   $('r-map').addEventListener('click', function () { if (mapState) { show('s-map'); drawMap(true); } });
+
+  // ---------- learn more (4B pop-up sheet, approved Oct 30, 2026) ----------
+  // Short, sourced explanations for each measure (Pulse Skin Research Library: definitions, how each measure presents by
+  // depth, evidence-checked tips). "On Your Shade" speaks to the tester's own gemstone, never to skin-tone groups. The
+  // sources describe differences by depth only, so the undertone shows on the chip but does not change the wording.
+  // The shade comes from the tester's waitlist Find My Shade (state.tone, e.g. mst_6_warm); without one, the sheet asks
+  // them to tap their gemstone once and remembers it on this phone.
+  var EDU = {"gems": ["Pearl", "Selenite", "Moonstone", "Citrine", "Amber", "Tiger's Eye", "Bronzite", "Smoky Quartz", "Obsidian", "Onyx"], "group": {"Pearl": "A", "Selenite": "A", "Moonstone": "A", "Citrine": "B", "Amber": "B", "Tiger's Eye": "B", "Bronzite": "C", "Smoky Quartz": "C", "Obsidian": "C", "Onyx": "C"}, "swatch": {"Pearl": {"Cool": "#ffe8df", "Neutral": "#fbeae1", "Warm": "#ffe8d0"}, "Selenite": {"Cool": "#f1c4b5", "Neutral": "#e6c6ad", "Warm": "#e8c6a3"}, "Moonstone": {"Cool": "#e0a999", "Neutral": "#d4ab8f", "Warm": "#d6ab82", "Olive": "#c8af8f"}, "Citrine": {"Cool": "#c9907c", "Neutral": "#bc9373", "Warm": "#bd9364", "Olive": "#af9873"}, "Amber": {"Neutral": "#a97b5a", "Warm": "#aa7b4a", "Olive": "#9c805a"}, "Tiger's Eye": {"Cool": "#a56457", "Neutral": "#99684b", "Warm": "#9b683b", "Olive": "#8c6e49", "Red": "#a65d3f"}, "Bronzite": {"Neutral": "#83583d", "Warm": "#85582f", "Olive": "#785d3c", "Red": "#8e4e33"}, "Smoky Quartz": {"Neutral": "#73462f", "Warm": "#754620", "Red": "#7e3b26"}, "Obsidian": {"Cool": "#683431", "Warm": "#623519", "Olive": "#573b22", "Red": "#682c1e"}, "Onyx": {"Cool": "#341a18", "Neutral": "#2d1c14", "Warm": "#311a09", "Olive": "#2b1d10", "Red": "#33140b"}}, "base": {"Pearl": "#fceae0", "Selenite": "#e9c5aa", "Moonstone": "#d7aa8b", "Citrine": "#bf926e", "Amber": "#ac7a55", "Tiger's Eye": "#9c6746", "Bronzite": "#865739", "Smoky Quartz": "#76452b", "Obsidian": "#623522", "Onyx": "#2e1b13"}, "c": {"spots": {"what": "Flat patches that are darker than the skin around them, from extra melanin. Most are marks left after a breakout or irritation, sun spots, or melasma (patches linked to sun and hormones).", "how": "Pulse looks for areas darker than your own skin around them.", "shade": {"A": "On your {G} skin, spots usually look tan to light brown with fairly clear edges, often where your face sees the most sun.", "B": "On your {G} skin, spots usually look medium to dark brown, and marks from breakouts or picking can stay for months, so fading them takes patience.", "C": "On your {G} skin, marks from a breakout or irritation can come out darker and last longer than the breakout itself, from dark brown to gray. Calming irritation early helps most."}, "helps": "Daily SPF, ideally tinted with iron oxides, plus calming whatever is causing the marks. Azelaic acid or niacinamide help them fade over 8 to 12 weeks."}, "redness": {"what": "Color from extra blood flow just under the surface, usually from irritation, inflammation or flushing. It can come and go, or stick around.", "how": "Pulse looks at how much redder each zone is than the rest of your skin.", "shade": {"A": "On your {G} skin, redness shows up pink to bright red, so you'll usually spot it right away.", "B": "On your {G} skin, redness often looks muted, more red-brown or dusky than bright red, and it can leave a brown mark behind.", "C": "On your {G} skin, redness often looks purplish, dark brown or gray instead of red, so it's easy to miss. Warmth, stinging or bumps are better clues."}, "helps": "Fewer actives for two weeks, a fragrance-free cleanser, a barrier moisturizer and mineral SPF. Redness that burns, spreads or won't settle is worth a dermatologist visit."}, "oiliness": {"what": "The gloss of oil (sebum) on your skin's surface. Oil glands are densest on your forehead, nose and chin. A soft sheen is healthy, and a higher score means more balanced oil.", "how": "Pulse looks for bright, glossy highlights across your face.", "shade": {"A": "On your {G} skin, shine shows as a soft gloss, mostly across your T-zone.", "B": "On your {G} skin, shine catches the light as brighter highlights on your T-zone, so a little oil can look like more in a photo.", "C": "On your {G} skin, highlights stand out more, so the same oil can look shinier in a photo than it does in person."}, "helps": "Keep moisturizing (oily skin still needs it), wash with a gel cleanser, and try niacinamide in the morning."}, "texture": {"what": "How smooth your skin's surface is: fine roughness, small bumps, or dips like old breakout scars. A flat dark mark is a color change, not texture.", "how": "Pulse reads fine unevenness across the surface of your skin.", "shade": {"A": "On your {G} skin, texture mostly shows as shadow: small dips, bumps or roughness, sometimes with pink marks around them.", "B": "On your {G} skin, old breakout scars often carry a brown tint, so one spot can read as both texture and a dark mark.", "C": "On your {G} skin, small bumps can look brown or dark rather than red, and harsh scrubs can leave marks behind. Gentle wins."}, "helps": "A gentle exfoliant like lactic or mandelic acid once or twice a week, and moisturizer every night. Never exfoliate and use retinol on the same night."}, "pores": {"what": "The openings where oil reaches your skin's surface. They look bigger when they're clogged, stretched or catching shadow, mostly on your nose, forehead and inner cheeks.", "how": "Pulse reads the fine detail on your nose and cheeks, where pores show most.", "shade": {"A": "On your {G} skin, pores show as small round openings and look bigger when there's shadow.", "B": "On your {G} skin, pores can look a little darker than the skin around them, especially on your nose and cheeks.", "C": "On your {G} skin, pores show more through shadow and shine than as dark dots, so even, front-facing light gives the truest read."}, "helps": "Salicylic acid a few nights a week keeps pores clear, and niacinamide helps over about 8 weeks. Clear pores look smaller."}, "acne": {"what": "Acne starts when oil and dead skin plug a pore. It can stay a blackhead or whitehead, or turn into an inflamed bump.", "how": "Pulse looks for small spots that stand out from the skin around them.", "shade": {"A": "On your {G} skin, breakouts usually look red and often leave pink marks that fade with time.", "B": "On your {G} skin, breakouts can look pink to brown, and the brown mark they leave can outlast the breakout itself.", "C": "On your {G} skin, breakouts can look dark or skin-toned rather than red, and the mark they leave is often the bigger issue. Hands off."}, "helps": "Wash gently with your fingertips twice a day. Benzoyl peroxide or salicylic acid, and adapalene a few nights a week. Painful or scarring breakouts belong with a dermatologist."}, "dark_circles": {"what": "Darker skin under your eyes from some mix of extra pigment, blood vessels showing through thin skin, and shadow from the shape of the area.", "how": "Pulse compares your under-eyes to your cheeks.", "shade": {"A": "On your {G} skin, circles often look blue, violet or pinkish, from blood vessels showing through thin under-eye skin.", "B": "On your {G} skin, circles usually mix brown pigment with a little shadow, and can reach your upper lids too.", "C": "On your {G} skin, circles are mostly pigment, brown to near-black, sometimes on your upper lids too. For a lot of people that's simply their natural coloring."}, "helps": "SPF around your eyes, a caffeine eye gel in the morning, and a vitamin C or niacinamide eye cream. Face the light when you scan, since overhead light deepens shadows."}, "radiance": {"what": "Your glow: how even, smooth and softly luminous your skin looks. It comes from even tone, smooth texture, hydration and a soft, not greasy, sheen. It's never about being lighter.", "how": "Pulse reads how even your tone and surface are across your face.", "shade": {"A": "On your {G} skin, dullness tends to look sallow or grayish, often with blotchy redness.", "B": "On your {G} skin, radiance dips mostly when tone gets uneven from patches or marks, or when skin loses its natural shine.", "C": "On your {G} skin, dullness often shows as ashiness, a gray, dry cast. Hydration is what brings your glow back."}, "helps": "Moisturize morning and night, vitamin C in the morning to even your tone, and a gentle exfoliant once a week."}}, "band": {"Doing Well": "This is a strength right now. Keep doing what you're doing.", "Watch": "Not a problem, just worth a little attention in your routine.", "Needs Focus": "This is where your routine can make the biggest difference."}};
+  var lastRead = null;   // { by, nm, where } from the latest scan
+  function myShade() {
+    var m = /^mst_(\d+)(?:_([a-z]+))?$/.exec(savedTone() || ''), gem = null, und = null;
+    if (m && +m[1] >= 1 && +m[1] <= 10) { gem = EDU.gems[+m[1] - 1]; und = m[2] && m[2] !== 'unsure' ? m[2][0].toUpperCase() + m[2].slice(1) : null; }
+    if (und && !(EDU.swatch[gem] || {})[und]) und = null;
+    return gem ? { gem: gem, und: und, sw: und ? EDU.swatch[gem][und] : EDU.base[gem] } : null;
+  }
+  function openLearn(k) {
+    var c = EDU.c[k]; if (!c || !lastRead) return;
+    var v = lastRead.by[k] ? lastRead.by[k].score : null, b = v == null ? null : bandOf(v), sh = myShade();
+    var shadeBox = sh ? '<div class="lshade"><span class="lk">On Your Shade</span><p>' + esc(c.shade[EDU.group[sh.gem]].replace('{G}', sh.gem)) + '</p></div>' : '';
+    var why = v == null
+      ? (lastRead.nm.indexOf(k) >= 0 ? 'Not measured on this scan: ' + NM_WHY[k] + '.' : 'Not measured on this scan.') + ' ' + c.how
+      : (lastRead.where[k] ? lastRead.where[k] + ' ' : '') + EDU.band[b.word] + ' ' + c.how;
+    $('learn-body').innerHTML =
+      '<div class="lhead"><div class="lring">' + (v == null ? ringSvg(0, 72, 30, 6, 'rgba(255,246,234,.3)', 0) + '<b>–</b>' : ringSvg(v, 72, 30, 6, b.col, 6 + Math.floor(v / 10)) + '<b>' + v + '</b>') + '</div>'
+      + '<div class="lt"><h2 id="learn-title">' + CHIP[k] + '</h2><span class="lband" style="color:' + (b ? b.col : '#C4AD9F') + '">' + (b ? b.word : 'Not Measured') + '</span></div>'
+      + '<button type="button" class="lclose" id="learn-close" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F8EDE4" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'
+      + '<div class="lscroll">' + (sh ? '<span class="lchip"><i style="background:' + sh.sw + '"></i>Your Shade · ' + esc(sh.gem) + (sh.und ? ' · ' + sh.und : '') + '</span>' : '')
+      + '<div class="lsec"><span class="lk">What It Is</span><p>' + esc(c.what) + '</p></div>' + shadeBox
+      + '<div class="lsec"><span class="lk">' + (v == null ? 'Why No Score' : 'Why You Scored ' + v) + '</span><p>' + esc(why) + '</p></div>'
+      + '<div class="lsec"><span class="lk">What Helps</span><p>' + esc(c.helps) + '</p></div>'
+      + '<p class="lnote">Pulse describes how your skin looks. It doesn&#39;t diagnose.</p>'
+      + (mapState && mapState.list.indexOf(k) >= 0 ? '<button class="btn" type="button" id="learn-map" data-k="' + k + '">See It On My Skin Map</button>' : '') + '</div>';
+    var l = $('learn'); l.dataset.k = k;
+    if (l.hidden) { l.hidden = false; document.body.classList.add('locked'); requestAnimationFrame(function () { l.classList.add('on'); $('learn-close').focus(); }); }
+  }
+  function closeLearn() {
+    var l = $('learn'); l.classList.remove('on'); document.body.classList.remove('locked');
+    setTimeout(function () { if (!l.classList.contains('on')) l.hidden = true; }, 280);
+  }
+  $('learn').addEventListener('click', function (e) {
+    if (e.target === $('learn') || e.target.closest('#learn-close')) return closeLearn();
+    var mb = e.target.closest('#learn-map');
+    if (mb && mapState) { closeLearn(); mapState.i = mapState.list.indexOf(mb.dataset.k); show('s-map'); drawMap(true); }
+  });
+  $('learn').addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLearn(); });
+  document.addEventListener('click', function (e) { var t = e.target.closest('[data-learn]'); if (t) openLearn(t.dataset.learn); });
+
+  // ---------- your shade (before the first scan) ----------
+  // The learn-more sheets speak to the tester's shade. It comes from their waitlist sign-up (state.tone, e.g.
+  // mst_6_warm). Anyone without one is asked before scanning: Find My Shade (the site's camera finder, opened from
+  // /app/find-my-shade/, which hands back only the gemstone) or pick it themselves, then pick an undertone. The camera
+  // picks the gemstone; the person always picks the undertone (Pulse Shade System). Saved to the tester record when the
+  // backend supports it (action set_tone), and on this phone either way.
+  var UNDERTONES = [['cool', 'Cool', 'Pink or rosy'], ['neutral', 'Neutral', 'Neither pink nor golden'], ['warm', 'Warm', 'Golden, peach or bronze'], ['olive', 'Olive', 'Green-gray or olive'], ['red', 'Red', 'Red or deep copper'], ['unsure', 'Not Sure', 'That’s fine']];
+  var shadePick = { gem: null, und: null, alt: null }, afterShade = null;
+  function validTone(t) { return /^mst_(10|[1-9])(_(cool|neutral|warm|olive|red|unsure))?$/.test(t || ''); }
+  function savedTone() {
+    if (state && validTone(state.tone)) return state.tone;
+    try { var t = localStorage.getItem('pulse_webtest_tone'); if (validTone(t)) return t; } catch (e) {}
+    return null;
+  }
+  function needsShade() { return !savedTone(); }
+  function openShade(next) {
+    afterShade = next || renderHome;
+    var cur = /^mst_(\d+)(?:_([a-z]+))?$/.exec(savedTone() || '');
+    shadePick = { gem: cur ? +cur[1] : null, und: cur && cur[2] ? cur[2] : null, alt: null };
+    $('shade-found').hidden = true;
+    renderShade(); show('s-shade');
+  }
+  function renderShade() {
+    $('shade-gems').innerHTML = EDU.gems.map(function (g, i) {
+      var n = i + 1, on = shadePick.gem === n, alt = shadePick.alt === n;
+      return '<button type="button" class="gemsel' + (on ? ' on' : '') + (alt ? ' alt' : '') + '" data-g="' + n + '" aria-pressed="' + on + '"><i style="background:' + EDU.base[g] + '"></i><span>' + esc(g) + '</span></button>';
+    }).join('');
+    var g = shadePick.gem ? EDU.gems[shadePick.gem - 1] : null;
+    $('shade-und-wrap').hidden = !g;
+    if (g) {
+      var sw = EDU.swatch[g] || {};
+      $('shade-und').innerHTML = UNDERTONES.filter(function (u) { return u[0] === 'unsure' || sw[u[1]]; }).map(function (u) {
+        var on = shadePick.und === u[0];
+        return '<button type="button" class="undsel' + (on ? ' on' : '') + '" data-u="' + u[0] + '" aria-pressed="' + on + '"><i style="background:' + (sw[u[1]] || EDU.base[g]) + '"></i><span><b>' + u[1] + '</b> · ' + u[2] + '</span></button>';
+      }).join('');
+    }
+    $('shade-save').disabled = !(shadePick.gem && shadePick.und);
+  }
+  $('s-shade').addEventListener('click', function (e) {
+    var b = e.target.closest('.gemsel'); if (b) { var n = +b.dataset.g; if (shadePick.gem !== n) shadePick.und = null; shadePick.gem = n; renderShade(); return; }
+    var u = e.target.closest('.undsel'); if (u) { shadePick.und = u.dataset.u; renderShade(); return; }
+  });
+  $('shade-skip').addEventListener('click', function () { (afterShade || renderHome)(); });
+  $('shade-save').addEventListener('click', function () {
+    if (!shadePick.gem || !shadePick.und) return;
+    var tone = 'mst_' + shadePick.gem + '_' + shadePick.und;
+    try { localStorage.setItem('pulse_webtest_tone', tone); } catch (e) {}
+    if (state) state.tone = tone;
+    $('shade-save').disabled = true;
+    api('set_tone', { tone: tone }).then(function () { $('shade-save').disabled = false; (afterShade || renderHome)(); });
+  });
+  // Find My Shade: the site's camera finder in a full-screen frame; it posts {type:'result', gemstone, alt, close} or {type:'cancel'}.
+  $('shade-find').addEventListener('click', function () {
+    var w = $('sf-wrap'); w.innerHTML = '<iframe src="/app/find-my-shade/" title="Find My Shade" allow="camera"></iframe>'; w.hidden = false; document.body.classList.add('locked');
+  });
+  function closeFinder() { var w = $('sf-wrap'); w.hidden = true; w.innerHTML = ''; document.body.classList.remove('locked'); }
+  window.addEventListener('message', function (e) {
+    if (e.origin !== location.origin || !e.data || typeof e.data !== 'object' || !e.data.type || e.data.pulseEngine) return;
+    if ($('sf-wrap').hidden) return;
+    var d = e.data;
+    if (d.type === 'result' && d.gemstone >= 1 && d.gemstone <= 10) {
+      closeFinder();
+      shadePick.gem = d.gemstone; shadePick.und = null; shadePick.alt = d.close && d.alt >= 1 && d.alt <= 10 && d.alt !== d.gemstone ? d.alt : null;
+      var name = EDU.gems[d.gemstone - 1];
+      $('shade-found').textContent = shadePick.alt ? 'Find My Shade says you’re between ' + name + ' and ' + EDU.gems[shadePick.alt - 1] + '. Go with whichever looks more like you in daylight, then pick your undertone.' : 'Find My Shade matched you to ' + name + '. Now pick your undertone.';
+      $('shade-found').hidden = false;
+      renderShade();
+      $('shade-und-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (d.type === 'cancel' || d.type === 'error') closeFinder();
+  });
+  function shadeChip() {
+    var m = /^mst_(\d+)(?:_([a-z]+))?$/.exec(savedTone() || ''); if (!m) return '';
+    var g = EDU.gems[+m[1] - 1], u = m[2] && m[2] !== 'unsure' ? m[2][0].toUpperCase() + m[2].slice(1) : null, sw = u && (EDU.swatch[g] || {})[u] || EDU.base[g];
+    return '<span class="lchip light"><i style="background:' + sw + '"></i>Your Shade · ' + esc(g) + (u ? ' · ' + u : '') + '</span> <button class="link" type="button" id="home-shade">Change</button>';
+  }
+  document.addEventListener('click', function (e) { if (e.target.closest('#home-shade')) openShade(renderHome); });
 
   // ---------- routine plan: a port of public.routine_plan (migration 17) for the 8 measured concerns ----------
   // No skin profile in the test (adults only, no pregnancy or sensitivity answers), so those branches are off;
@@ -550,7 +677,7 @@
       state = r.state; history = r.scans || [];
       if (state.withdrawn) { show('s-withdrawn'); return; }
       if (!state.consented) { show('s-consent'); return; }
-      renderHome();
+      if (needsShade()) openShade(renderHome); else renderHome();
     });
   }
   boot();
