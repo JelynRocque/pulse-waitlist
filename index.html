@@ -129,7 +129,7 @@ img{max-width:100%}
 .demo-sweep{position:absolute;left:6%;right:6%;top:12%;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,#FFD530,transparent);box-shadow:0 0 18px 4px rgba(255,213,48,.45);opacity:0}
 .demo-screen.is-active .demo-sweep{animation:demoSweep 1.6s ease-in-out .3s 2}
 @keyframes demoSweep{0%{top:12%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:52%;opacity:0}}
-.demo-ping{position:absolute;left:50%;top:44%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;border:2px solid rgba(255,213,48,.9);opacity:0}
+.demo-ping{position:absolute;left:50%;top:33%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;border:2px solid rgba(255,213,48,.9);opacity:0}
 .demo-screen.is-active .demo-ping{animation:demoPing 1.6s ease-out .5s 3}
 @keyframes demoPing{0%{transform:scale(.5);opacity:0}25%{opacity:1}100%{transform:scale(1.9);opacity:0}}
 .demo-screen[data-k="map"].is-active img{animation:demoZoom 4s ease-in-out both}
@@ -377,9 +377,9 @@ img{max-width:100%}
 <div class="float" style="position: relative; z-index: 2">
 <div class="phone-tilt" style="width: 300px; border-radius: 52px; padding: 10px; background: linear-gradient(160deg, #3a2a20, #0B0604 40%, #1a110c); box-shadow: 0 70px 120px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,251,247,0.14), inset 0 1px 0 rgba(255,251,247,0.2); transform: perspective(1600px) rotateY(-14deg) rotateX(5deg) rotateZ(2deg)">
 <div class="demo" id="demo" role="group" aria-roledescription="app walkthrough" aria-label="Pulse app walkthrough: scan, heat map, results, routine and home">
-<div class="demo-screen is-active" data-k="scan"><img src="/assets/home/scan-lineup.webp" alt="Pulse Face Scan: line up your face" fetchpriority="high"><span class="demo-sweep" aria-hidden="true"></span></div>
-<div class="demo-screen" data-k="map"><img src="/assets/home/scan-heatmap.webp" alt="Pulse heat map showing pores on the nose with a score of 65"><span class="demo-ping" aria-hidden="true"></span></div>
-<div class="demo-screen demo-scroll" data-k="results"><img src="/assets/home/skin-report-full.webp" alt="Pulse Skin Report: skin score 73, focus areas, doing well and what it means" loading="lazy"></div>
+<div class="demo-screen is-active" data-k="scan"><img src="/assets/home/scan-lineup.webp" alt="Pulse Face Scan: Jelyn lining up her face" fetchpriority="high"><span class="demo-sweep" aria-hidden="true"></span></div>
+<div class="demo-screen" data-k="map"><img src="/assets/home/scan-heatmap.webp" alt="Pulse Skin Map: a soft heat map on Jelyn's face showing pores on the T-zone, scored 40"><span class="demo-ping" aria-hidden="true"></span></div>
+<div class="demo-screen demo-scroll" data-k="results"><img src="/assets/home/skin-report-full.webp" alt="Pulse Skin Report: skin score 66, with Focus First and Doing Well score tiles" loading="lazy"></div>
 <div class="demo-screen" data-k="routine"><img src="/assets/home/todays-routine.webp" alt="Pulse Today screen with a four-step AM routine" loading="lazy"></div>
 <div class="demo-screen" data-k="home"><img src="/assets/home/home-morning.webp" alt="Pulse Home screen: skin score 81, up 8 this month" loading="lazy"></div>
 </div>
@@ -476,7 +476,7 @@ img{max-width:100%}
 
 <div style="flex: none; width: 236px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 16px">
 <div style="border-radius: 38px; padding: 7px; background: #120906; box-shadow: 0 24px 48px rgba(38,16,0,0.2)">
-<img loading="lazy" decoding="async" src="/assets/home/scan-lineup.webp" alt="Pulse app Face Scan screen with the Line Up Your Face guide" style="display: block; width: 100%; height: auto; border-radius: 31px">
+<img loading="lazy" decoding="async" src="/assets/home/scan-lineup.webp" alt="Pulse app Face Scan screen with Jelyn lining up her face" style="display: block; width: 100%; height: auto; border-radius: 31px">
 </div>
 <div>
 <p style="margin: 0; font-family: 'Gilda Display', Georgia, serif; font-size: 15px; color: #882E1A">01</p>
@@ -487,7 +487,7 @@ img{max-width:100%}
 
 <div style="flex: none; width: 236px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 16px">
 <div style="border-radius: 38px; padding: 7px; background: #120906; box-shadow: 0 24px 48px rgba(38,16,0,0.2)">
-<img src="/assets/home/scan-heatmap.webp" alt="Pulse app Face Scan heat map screen showing pores on the nose" style="display: block; width: 100%; height: auto; border-radius: 31px">
+<img src="/assets/home/scan-heatmap.webp" alt="Pulse app Skin Map with a soft heat map showing pores on the T-zone" style="display: block; width: 100%; height: auto; border-radius: 31px">
 </div>
 <div>
 <p style="margin: 0; font-family: 'Gilda Display', Georgia, serif; font-size: 15px; color: #882E1A">02</p>
@@ -498,7 +498,7 @@ img{max-width:100%}
 
 <div style="flex: none; width: 236px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 16px">
 <div style="border-radius: 38px; padding: 7px; background: #120906; box-shadow: 0 24px 48px rgba(38,16,0,0.2)">
-<img loading="lazy" decoding="async" src="/assets/home/skin-report.webp" alt="Pulse app Skin Report screen with a skin score of 73 and focus areas" style="display: block; width: 100%; height: auto; border-radius: 31px">
+<img loading="lazy" decoding="async" src="/assets/home/skin-report.webp" alt="Pulse app Skin Report with a skin score of 66 and score tiles for each measure" style="display: block; width: 100%; height: auto; border-radius: 31px">
 </div>
 <div>
 <p style="margin: 0; font-family: 'Gilda Display', Georgia, serif; font-size: 15px; color: #882E1A">03</p>
@@ -565,11 +565,11 @@ img{max-width:100%}
 <div style="position: relative; width: 300px; border-radius: 52px; padding: 10px; background: linear-gradient(160deg, #3a2a20, #0B0604 40%, #1a110c); box-shadow: 0 60px 110px rgba(38,16,0,0.32), 0 0 0 1px rgba(38,16,0,0.12)">
 <div style="position: relative; width: 280px; height: 606px; border-radius: 42px; overflow: hidden; background: #120906">
 
-<img loading="lazy" decoding="async" class="story-screen" data-step="0" src="/assets/home/scan-lineup.webp" alt="Pulse app Face Scan screen with the Line Up Your Face guide" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 1; transform: scale(1)">
+<img loading="lazy" decoding="async" class="story-screen" data-step="0" src="/assets/home/scan-lineup.webp" alt="Pulse app Face Scan screen with Jelyn lining up her face" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 1; transform: scale(1)">
 
-<img class="story-screen" src="/assets/home/scan-heatmap.webp" alt="Pulse app Face Scan heat map screen showing pores on the nose" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(0.96)">
+<img class="story-screen" src="/assets/home/scan-heatmap.webp" alt="Pulse app Skin Map with a soft heat map showing pores on the T-zone" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(0.96)">
 
-<img loading="lazy" decoding="async" class="story-screen" data-step="1" src="/assets/home/skin-report.webp" alt="Pulse app Skin Report screen with a skin score of 73 and focus areas" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(0.96)">
+<img loading="lazy" decoding="async" class="story-screen" data-step="1" src="/assets/home/skin-report.webp" alt="Pulse app Skin Report with a skin score of 66 and score tiles for each measure" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(0.96)">
 
 <img loading="lazy" decoding="async" class="story-screen" data-step="2" src="/assets/home/todays-routine.webp" alt="Pulse app Today screen with a four-step AM routine" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(0.96)">
 
