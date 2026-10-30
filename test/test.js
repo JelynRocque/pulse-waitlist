@@ -11,7 +11,7 @@
   var token = null, state = null, history = [], engineReady = false, engineFailed = false;
 
   // ---------- helpers ----------
-  function show(id) { document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('on'); }); $(id).classList.add('on'); window.scrollTo(0, 0); }
+  function show(id) { document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('on'); }); $(id).classList.add('on'); document.body.classList.toggle('dark', $(id).classList.contains('dk')); window.scrollTo(0, 0); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function localDate() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function dayIndex() {
@@ -163,14 +163,19 @@
 
   // ---------- analyze + save ----------
   function analyze(b64) {
-    show('s-busy'); $('busy-msg').textContent = 'Reading 8 measures on your phone…';
-    engineRun(b64, 'analyze', true).then(function (r) {
-      if (!r.ok || !r.face || !r.analysis) { alert(!r.ok ? 'The engine could not read that photo. Try again in better light.' : 'No face found. Try again, closer to the camera.'); renderHome(); return; }
+    startBusy(b64);
+    var fail = function (msg) { stopBusy(); alert(msg); renderHome(); };
+    // A quick face-points pass places the zones for the sweep; then the full read. Face points stay on the phone.
+    engineRun(b64, 'check', true).then(function (c) {
+      if (c && c.ok && c.face) busyZones(c.landmarks, c.width, c.height);
+      return engineRun(b64, 'analyze', true);
+    }).then(function (r) {
+      if (!r.ok || !r.face || !r.analysis) return fail(!r.ok ? 'The engine could not read that photo. Try again in better light.' : 'No face found. Try again, closer to the camera.');
       var a = r.analysis;
-      $('busy-msg').textContent = 'Saving your scores…';
       var body = { local_date: localDate(), result: { model_version: a.model_version, skin_score: a.skin_score, skin_type: a.skin_type, confidence: a.confidence, concerns: a.concerns, quality: a.quality, lighting_signature: a.lighting_signature } };
       if (state && state.keep_photos) body.photo_b64 = b64;
-      api('scan', body).then(function (res) {
+      Promise.all([api('scan', body), busyDone()]).then(function (out) {
+        var res = out[0]; stopBusy();
         if (!res.ok) { alert('Your reading could not be saved (' + (res.error || 'network') + '). It is shown below but will not count.'); }
         else history.push({ id: res.scan_id, date: localDate(), day: res.day_index, skin_score: a.skin_score, concerns: a.concerns, not_measured: a.quality.not_measured || [], issues: a.quality.issues || [] });
         var day = res.ok ? res.day_index : dayIndex();
@@ -187,17 +192,21 @@
   function band(v) { return v < 50 ? ['focus', 'Needs focus'] : v < 70 ? ['watch', 'Watch'] : ['good', 'Doing well']; }
   function renderResult(a, day) {
     $('r-day').textContent = 'Day ' + day + ' of ' + TEST_DAYS;
-    $('r-score').textContent = a.skin_score;
     var nm = a.quality.not_measured || [];
     $('r-note').textContent = (a.status === 'low_confidence' ? 'Low-confidence reading (' + (TIP[a.reason] ? TIP[a.reason].replace(/\.$/, '').toLowerCase() : a.reason) + '). Scores still count, but a rescan in better light is worth it. ' : '')
       + (a.skin_type ? 'Skin reads as ' + a.skin_type + ' today.' : '');
     var by = {}; a.concerns.forEach(function (c) { by[c.concern] = c; });
-    $('r-measures').innerHTML = ORDER.map(function (k) {
-      var c = by[k];
-      if (!c) return '<div class="m nm"><span class="name">' + NAME[k] + '</span><span class="val">Not measured</span><span class="muted" style="grid-column:1/-1;font-size:13px">' + (nm.indexOf(k) >= 0 ? 'Skipped: ' + NM_WHY[k] + '.' : 'Skipped in this photo.') + '</span></div>';
-      var b = band(c.score);
-      return '<div class="m"><span class="name">' + NAME[k] + '</span><span class="val">' + c.score + '</span><span class="bar"><i style="width:' + c.score + '%"></i></span><span class="band ' + b[0] + '">' + b[1] + '</span></div>';
-    }).join('');
+    var b0 = bandOf(a.skin_score);
+    $('r-hero-ring').innerHTML = ringSvg(a.skin_score, 140, 62, 9, '#F2B95C', 14) + '<span class="big"><b>' + a.skin_score + '</b><small>OF 100</small></span>';
+    var scored = ORDER.filter(function (k) { return by[k]; }).sort(function (p, q) { return by[p].score - by[q].score; });
+    var focus = scored.filter(function (k) { return by[k].score < 70; }), well = scored.filter(function (k) { return by[k].score >= 70; });
+    var skipped = ORDER.filter(function (k) { return !by[k]; });
+    $('r-hero-sub').textContent = focus.length ? 'Higher is better. ' + (focus.length === 1 ? 'One measure' : ['Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight'][focus.length - 2] + ' measures') + ' to focus on first.' : 'Higher is better. Every measure is doing well today.';
+    var tile = function (k) { var v = by[k].score, b = bandOf(v); return '<div class="tile"><span class="tring">' + ringSvg(v, 98, 40, 7, b.col, 6 + Math.floor(v / 10)) + '<b>' + v + '</b></span><span class="tname">' + CHIP[k] + '</span><span class="tband" style="color:' + b.col + '">' + b.word + '</span></div>'; };
+    var skipTile = function (k) { return '<div class="tile nm"><span class="tring">' + ringSvg(0, 98, 40, 7, 'rgba(255,246,234,.3)', 0) + '<b>–</b></span><span class="tname">' + CHIP[k] + '</span><span class="tband">' + (nm.indexOf(k) >= 0 ? 'Skipped: ' + NM_WHY[k] : 'Not measured') + '</span></div>'; };
+    $('r-focus-wrap').hidden = !focus.length; $('r-focus').innerHTML = focus.map(tile).join('');
+    $('r-well-wrap').hidden = !well.length; $('r-well').innerHTML = well.map(tile).join('');
+    $('r-skip-wrap').hidden = !skipped.length; $('r-skip').innerHTML = skipped.map(skipTile).join('');
     var plan = routinePlan(a);
     $('r-am').innerHTML = plan.steps.filter(function (s) { return s.period === 'am'; }).map(stepHtml).join('');
     $('r-pm').innerHTML = plan.steps.filter(function (s) { return s.period === 'pm'; }).map(stepHtml).join('');
@@ -218,11 +227,12 @@
   }
   $('r-home').addEventListener('click', renderHome);
 
-  // ---------- skin map (heat map) ----------
-  // A port of the app's Face Scan · Heat Map (pulse-app/src/lib/face-core.ts zonesFor/superellipse/heatFor/heatSummary
-  // and components/FaceOverlay.tsx): zones are placed from the face points, lit with one champagne-gold glow whose
+  // ---------- skin map (heat map) + scan animation ----------
+  // Ported from the app (pulse-app/src/lib/face-core.ts zonesFor/superellipse/heatFor/heatSummary and
+  // components/FaceOverlay.tsx): zones are placed from the face points, lit with one champagne-gold glow whose
   // intensity carries severity, traced with a faint dotted outline, with a glass label beside the strongest zone.
-  // Nothing anatomical is drawn (no mesh, dots or face outline). The photo is shown mirrored, like the camera preview.
+  // Nothing anatomical is drawn (no mesh, landmark dots or face outline). Photos are shown mirrored, like the
+  // camera preview. Layout follows the approved mockups (Oct 30, 2026): 1A Scan Sweep, 2B Swipe Concerns, 3 Ring Tiles.
   var Z_KEYS = ['forehead', 'tzone', 'underEyeL', 'underEyeR', 'cheekL', 'cheekR', 'chin'];
   var Z_ANCHORS = { forehead: [151, 9, 108, 337, 69, 299], tzone: [168, 6, 197, 195, 5, 4, 1, 98, 327], underEyeL: [228, 229, 230, 231, 117, 118, 119],
     underEyeR: [448, 449, 450, 451, 346, 347, 348], cheekL: [50, 101, 36, 205, 187, 123, 147, 207, 206], cheekR: [280, 330, 266, 425, 411, 352, 376, 427, 426], chin: [175, 199, 200, 171, 396, 208, 428] };
@@ -233,10 +243,16 @@
     redness: { cheekL: 0.85, cheekR: 0.85, tzone: 0.7 }, acne: { chin: 1, cheekL: 0.7, cheekR: 0.7, forehead: 0.55 }, oiliness: { tzone: 1, forehead: 0.8, chin: 0.5 },
     dark_circles: { underEyeL: 1, underEyeR: 1 }, radiance: { cheekL: 0.8, cheekR: 0.8, forehead: 0.8, chin: 0.6, tzone: 0.6 } };
   var CHIP = { spots: 'Dark Spots', texture: 'Texture', pores: 'Pores', redness: 'Redness', acne: 'Breakouts', oiliness: 'Shine', dark_circles: 'Dark Circles', radiance: 'Radiance' };
-  var CHIP_FIRST = ['spots', 'texture', 'pores', 'redness'];
+  var READ_ORDER = ['spots', 'redness', 'oiliness', 'pores', 'texture', 'acne', 'dark_circles', 'radiance'];
   var PLURAL = { spots: 1, pores: 1, acne: 1, dark_circles: 1 };
   var GLOW = '#F2B95C', G_FOCUS = 0.7, G_WELL = 0.42;
-  var mapState = null;
+  function bandOf(v) { return v < 50 ? { word: 'Needs Focus', col: '#E0663A' } : v < 70 ? { word: 'Watch', col: '#F0B04A' } : { word: 'Doing Well', col: '#F2D08A' }; }
+  function ringSvg(v, size, r, sw, col, glowPx) {
+    var c = 2 * Math.PI * r, h = size / 2;
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" aria-hidden="true" style="filter:drop-shadow(0 0 ' + glowPx + 'px ' + col + ')">'
+      + '<circle cx="' + h + '" cy="' + h + '" r="' + r + '" fill="none" stroke="rgba(255,246,234,.12)" stroke-width="' + sw + '"/>'
+      + '<circle cx="' + h + '" cy="' + h + '" r="' + r + '" fill="none" stroke="' + col + '" stroke-width="' + sw + '" stroke-linecap="round" stroke-dasharray="' + (c * v / 100).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 ' + h + ' ' + h + ')"/></svg>';
+  }
 
   function superellipse(c, rx, ry, ax, ay, scale, n) {
     n = n || 48; var p = [];
@@ -248,7 +264,8 @@
     return p;
   }
   function pathOf(pts) { return 'M' + pts.map(function (q) { return q[0].toFixed(1) + ' ' + q[1].toFixed(1); }).join(' L') + ' Z'; }
-  // Zones in display pixels of a W×H photo shown mirrored (x → W − x).
+  function zonePath(q, s) { return pathOf(superellipse(q.c, q.rx, q.ry, q.ax, q.ay, s)); }
+  // Zones in pixels of a W×H photo shown mirrored (x → W − x).
   function zonesFor(lm, W, H) {
     var P = function (i) { return { x: (1 - lm[i * 3]) * W, y: lm[i * 3 + 1] * H }; };
     var a = P(263), b = P(33);   // after mirroring, the image-right eye corner sits on the display left
@@ -280,80 +297,155 @@
   function joinWords(xs) { return xs.length <= 1 ? xs.join('') : xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1]; }
   function heatSummary(concern, lit) {
     var words = []; lit.forEach(function (l) { var wd = Z_WORD[l.zone]; if (l.weight >= 0.6 && words.indexOf(wd) < 0) words.push(wd); });
-    return words.length ? CHIP[concern] + (PLURAL[concern] ? ' show' : ' shows') + ' most on your ' + joinWords(words) + '.' : 'No clear pattern for ' + CHIP[concern].toLowerCase() + ' this scan.';
+    return words.length ? CHIP[concern] + (PLURAL[concern] ? ' show' : ' shows') + ' most on your ' + joinWords(words) + '.' : 'No clear pattern for ' + CHIP[concern].toLowerCase() + ' on this scan.';
+  }
+  // The photo box crops the photo like CSS object-fit: cover; this maps photo pixels to box pixels.
+  function fitBox(box, W, H) { var bw = box.clientWidth, bh = box.clientHeight, s = Math.max(bw / W, bh / H); return { s: s, ox: (bw - W * s) / 2, oy: (bh - H * s) / 2, bw: bw, bh: bh }; }
+  function faceLayers(W, H, idp) {
+    var vb = 'viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid slice"';
+    return '<svg class="glow" ' + vb + ' aria-hidden="true"><defs><filter id="' + idp + 'h" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="STDH"/></filter>'
+      + '<filter id="' + idp + 'c" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="STDC"/></filter></defs><g class="g-glow"></g></svg>'
+      + '<svg ' + vb + ' aria-hidden="true"><defs><filter id="' + idp + 's" x="-20%" y="-20%" width="140%" height="140%"><feOffset dx="0" dy="0.5"/><feGaussianBlur stdDeviation="1"/></filter></defs><g class="g-dots"></g></svg>';
+  }
+  function zoneMarkup(z, lit, W, idp, delayFn) {
+    var eye = z._eye, sw = Math.max(1.8, W / 360 * 1.8), gap = (eye * 0.075).toFixed(1), glow = '', dots = '';
+    lit.forEach(function (l, i) {
+      var q = z[l.zone], d = delayFn ? ' style="animation-delay:' + delayFn(q, i) + '"' : '';
+      glow += '<g class="zone"' + d + '><path d="' + zonePath(q, 1.12) + '" fill="' + GLOW + '" fill-opacity="' + (l.opacity * 0.75).toFixed(3) + '" filter="url(#' + idp + 'h)"/>'
+        + '<path d="' + zonePath(q, 0.62) + '" fill="' + GLOW + '" fill-opacity="' + Math.min(1, l.opacity * 1.05).toFixed(3) + '" filter="url(#' + idp + 'c)"/></g>';
+      var o = zonePath(q, 1);
+      dots += '<g class="zone"' + d + '><path d="' + o + '" fill="none" stroke="rgba(30,14,6,.75)" stroke-width="' + (sw * 1.22).toFixed(2) + '" stroke-linecap="round" stroke-dasharray="0.1 ' + gap + '" filter="url(#' + idp + 's)"/>'
+        + '<path d="' + o + '" fill="none" stroke="rgba(255,246,234,.85)" stroke-width="' + sw.toFixed(2) + '" stroke-linecap="round" stroke-dasharray="0.1 ' + gap + '"/></g>';
+    });
+    return { glow: glow, dots: dots, halo: Math.max(6, Math.abs(z.cheekR.c.x - z.cheekL.c.x) * 0.09), core: Math.max(3, Math.abs(z.cheekR.c.x - z.cheekL.c.x) * 0.04) };
+  }
+  function paintFace(box, W, H, z, lit, idp, delayFn) {
+    var mk = zoneMarkup(z, lit, W, idp, delayFn);
+    var svgs = box.querySelectorAll('svg');
+    svgs[0].querySelector('#' + idp + 'h feGaussianBlur').setAttribute('stdDeviation', mk.halo.toFixed(1));
+    svgs[0].querySelector('#' + idp + 'c feGaussianBlur').setAttribute('stdDeviation', mk.core.toFixed(1));
+    svgs[0].querySelector('.g-glow').innerHTML = mk.glow;
+    svgs[1].querySelector('.g-dots').innerHTML = mk.dots;
   }
 
-  // Returns false (and the caller goes straight to the scores) if there is nothing to map.
+  // ---------- 1A · Scan Sweep (while the engine reads) ----------
+  var busyTimer = null, busyStep = 0;
+  function startBusy(b64) {
+    var f = $('busy-face');
+    f.innerHTML = '<img alt="Your scan photo" src="data:image/jpeg;base64,' + b64 + '">' + '<div class="veil"></div>' + faceLayers(1, 1, 'b') + '<div class="pts" id="busy-pts"></div>'
+      + '<div class="sweep"><i></i><b></b></div><span class="live"><span class="dot"></span>Analyzing On Your Phone</span>';
+    $('busy-chips').innerHTML = READ_ORDER.map(function (k) { return '<span class="rchip" data-k="' + k + '">' + CHIP[k] + '</span>'; }).join('');
+    busyStep = 0; setBusy(0, 'Finding Your Face', 'Lining up 7 zones on your face.');
+    show('s-busy');
+    clearInterval(busyTimer);
+    busyTimer = setInterval(function () {
+      if (busyStep < READ_ORDER.length) { busyStep++; setBusy(busyStep, busyStep < READ_ORDER.length ? 'Reading Your ' + CHIP[READ_ORDER[busyStep]] : 'Building Your Skin Map', busyStep < READ_ORDER.length ? 'Mapping 7 zones and 8 measures. This takes a few seconds.' : 'Putting it all on your face.'); }
+    }, 480);
+  }
+  function setBusy(n, title, msg) {
+    $('busy-count').textContent = Math.min(n, 8) + '/8';
+    $('busy-title').textContent = title; $('busy-msg').textContent = msg;
+    var c = 2 * Math.PI * 36; $('busy-ring').setAttribute('stroke-dasharray', (c * Math.min(n, 8) / 8).toFixed(1) + ' ' + c.toFixed(1));
+    document.querySelectorAll('#busy-chips .rchip').forEach(function (el, i) { el.className = 'rchip' + (i < n ? ' done' : i === n ? ' now' : ''); });
+  }
+  function busyZones(lm, W, H) {
+    var f = $('busy-face'); if (!f || !lm || lm.length < 468 * 3) return;
+    var svgs = f.querySelectorAll('svg'); svgs.forEach(function (s) { s.setAttribute('viewBox', '0 0 ' + W + ' ' + H); });
+    var z = zonesFor(lm, W, H), all = Z_KEYS.map(function (k) { return { zone: k, opacity: 0.55, weight: 1 }; });
+    paintFace(f, W, H, z, all, 'b', function (q) { return (2.6 * q.c.y / H - 0.2).toFixed(2) + 's'; });
+    var fb = fitBox(f, W, H), pts = '';
+    Z_KEYS.forEach(function (k) {
+      var q = z[k];
+      [[0, 0], [-0.55, -0.3], [0.55, 0.3], [-0.5, 0.35], [0.5, -0.35]].forEach(function (o, j) {
+        var x = q.c.x + o[0] * q.rx * q.ax.x + o[1] * q.ry * q.ay.x, y = q.c.y + o[0] * q.rx * q.ax.y + o[1] * q.ry * q.ay.y;
+        pts += '<span style="left:' + (fb.ox + x * fb.s).toFixed(0) + 'px;top:' + (fb.oy + y * fb.s).toFixed(0) + 'px;animation-delay:' + (((x * 3 + y * 7) % 13) / 5).toFixed(2) + 's"></span>';
+      });
+    });
+    $('busy-pts').innerHTML = pts;
+    f.classList.add('mapped');
+  }
+  function busyDone() {   // resolves once the reading animation has run through all 8 measures
+    return new Promise(function (resolve) {
+      (function wait() { if (busyStep >= READ_ORDER.length) { setTimeout(resolve, 350); } else setTimeout(wait, 120); })();
+    });
+  }
+  function stopBusy() { clearInterval(busyTimer); busyTimer = null; }
+
+  // ---------- 2B · Skin Map, concern by concern ----------
+  var mapState = null;
+  // Returns false (and the caller goes straight to the report) if there is nothing to map.
   function renderMap(a, r, b64, day) {
     var lm = r.landmarks;
     if (!lm || lm.length < 468 * 3 || !r.width || !r.height || !a.concerns || !a.concerns.length) { mapState = null; $('r-map').hidden = true; return false; }
     var measured = {};
     ((a.overlay_map && a.overlay_map.regions) || []).forEach(function (g) { if (g.zone && Z_ANCHORS[g.zone]) (measured[g.concern] = measured[g.concern] || {})[g.zone] = g.intensity; });
     var by = {}; a.concerns.forEach(function (c) { if (CHIP[c.concern]) by[c.concern] = c.score; });
-    var chips = CHIP_FIRST.filter(function (k) { return by[k] != null; })
-      .concat(Object.keys(by).filter(function (k) { return CHIP_FIRST.indexOf(k) < 0; }).sort(function (p, q) { return by[p] - by[q]; }));
-    if (!chips.length) { mapState = null; $('r-map').hidden = true; return false; }
-    mapState = { W: r.width, H: r.height, zones: zonesFor(lm, r.width, r.height), photo: 'data:image/jpeg;base64,' + b64, by: by, chips: chips, measured: measured, pick: chips[0] };
+    var list = Object.keys(by).sort(function (p, q) { return by[p] - by[q] || READ_ORDER.indexOf(p) - READ_ORDER.indexOf(q); });   // lowest first
+    if (!list.length) { mapState = null; $('r-map').hidden = true; return false; }
+    mapState = { W: r.width, H: r.height, zones: zonesFor(lm, r.width, r.height), photo: 'data:image/jpeg;base64,' + b64, by: by, list: list, measured: measured, i: 0 };
     $('r-map').hidden = false;
     $('map-day').textContent = 'Day ' + day + ' of ' + TEST_DAYS;
-    $('map-chips').innerHTML = chips.map(function (k) { return '<button class="chip" type="button" role="tab" data-c="' + k + '">' + CHIP[k] + '</button>'; }).join('');
-    var f = $('map-face'); f.style.aspectRatio = r.width + ' / ' + r.height;
-    drawMap(true);
+    $('map-face').innerHTML = '<img alt="Your scan photo" src="' + mapState.photo + '">' + faceLayers(r.width, r.height, 'm') + '<span class="tag" id="map-tag"></span>'
+      + '<button class="arrow prev" id="map-prev" type="button" aria-label="Previous concern"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>'
+      + '<button class="arrow next" id="map-nextc" type="button" aria-label="Next concern"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>'
+      + '<div class="pager" id="map-dots" aria-hidden="true"></div>';
+    $('map-cards').innerHTML = list.map(function (k, i) {
+      var b = bandOf(by[k]);
+      return '<button class="mcard" type="button" data-i="' + i + '" aria-label="' + CHIP[k] + ' ' + by[k] + '"><span class="mring">' + ringSvg(by[k], 54, 22, 4.5, b.col, 6) + '<b>' + by[k] + '</b></span><span class="mname">' + CHIP[k] + '</span></button>';
+    }).join('');
+    $('map-dots').innerHTML = list.map(function () { return '<i></i>'; }).join('');
     show('s-map');
+    drawMap(true);
     return true;
   }
   function drawMap(reveal) {
     var m = mapState, W = m.W, H = m.H, z = m.zones, eye = z._eye;
-    var concern = m.pick, score = m.by[concern], lit = heatFor(concern, score, m.measured);
-    document.querySelectorAll('#map-chips .chip').forEach(function (b) { var on = b.dataset.c === concern; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
-    var halo = Math.max(6, Math.abs(z.cheekR.c.x - z.cheekL.c.x) * 0.09), core = Math.max(3, Math.abs(z.cheekR.c.x - z.cheekL.c.x) * 0.04);
-    var step = 160, glow = '', dots = '';
-    lit.forEach(function (l, i) {
-      var q = z[l.zone], d = ' style="animation-delay:' + (i * step) + 'ms"';
-      glow += '<g class="zone"' + d + '><path d="' + pathOf(superellipse(q.c, q.rx, q.ry, q.ax, q.ay, 1.12)) + '" fill="' + GLOW + '" fill-opacity="' + (l.opacity * 0.75).toFixed(3) + '" filter="url(#mh)"/>'
-        + '<path d="' + pathOf(superellipse(q.c, q.rx, q.ry, q.ax, q.ay, 0.62)) + '" fill="' + GLOW + '" fill-opacity="' + Math.min(1, l.opacity * 1.05).toFixed(3) + '" filter="url(#mc)"/></g>';
-      var o = pathOf(superellipse(q.c, q.rx, q.ry, q.ax, q.ay, 1));
-      var sw = Math.max(1.8, W / 360 * 1.8), gap = (eye * 0.075).toFixed(1);
-      dots += '<g class="zone"' + d + '><path d="' + o + '" fill="none" stroke="rgba(30,14,6,.75)" stroke-width="' + (sw * 1.22).toFixed(2) + '" stroke-linecap="round" stroke-dasharray="0.1 ' + gap + '" filter="url(#ms)"/>'
-        + '<path d="' + o + '" fill="none" stroke="rgba(255,246,234,.8)" stroke-width="' + sw.toFixed(2) + '" stroke-linecap="round" stroke-dasharray="0.1 ' + gap + '"/></g>';
-    });
-    var vb = 'viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none"';
-    // Label pill beside the strongest zone, on the outer side of the face (right of the T-zone), kept on the photo.
-    var tag = '';
-    if (lit.length) {
-      var t = z[lit[0].zone], faceMid = (z.cheekL.c.x + z.cheekR.c.x) / 2, left = t.key !== 'tzone' && t.key !== 'forehead' && t.key !== 'chin' && t.c.x < faceMid;
-      var x = t.key === 'tzone' ? t.c.x + t.rx * 0.6 + eye * 0.06 : left ? t.c.x - t.rx - eye * 0.06 : t.c.x + t.rx + eye * 0.06;
-      var px = Math.max(1, Math.min(99, x / W * 100));
-      tag = '<span class="tag' + (left ? ' left' : '') + '" style="left:' + px.toFixed(2) + '%;top:' + (t.c.y / H * 100).toFixed(2) + '%">' + esc(CHIP[concern] + ' · ' + score) + '</span>';
-    }
+    var concern = m.list[m.i], score = m.by[concern], lit = heatFor(concern, score, m.measured), b = bandOf(score);
     var f = $('map-face');
-    f.className = 'face' + (reveal ? ' reveal' : '');
-    f.innerHTML = '<img alt="Your scan photo" src="' + m.photo + '">'
-      + '<svg class="glow" ' + vb + ' aria-hidden="true"><defs><filter id="mh" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="' + halo.toFixed(1) + '"/></filter>'
-      + '<filter id="mc" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="' + core.toFixed(1) + '"/></filter></defs>' + glow + '</svg>'
-      + '<svg ' + vb + ' aria-hidden="true"><defs><filter id="ms" x="-20%" y="-20%" width="140%" height="140%"><feOffset dx="0" dy="0.5"/><feGaussianBlur stdDeviation="1"/></filter></defs>' + dots + '</svg>' + tag;
-    f.setAttribute('aria-label', CHIP[concern] + ' heat map on your scan photo. ' + heatSummary(concern, lit));
-    var tg = f.querySelector('.tag');
-    if (tg) {   // keep the whole pill on the photo: flip to the zone's other side if it would run off, then clamp
-      var fw = f.clientWidth, tw = tg.offsetWidth, k = fw / W, t0 = z[lit[0].zone], lx = parseFloat(tg.style.left) / 100 * fw, isLeft = tg.classList.contains('left');
-      var start = isLeft ? lx - tw : lx;
-      if (start + tw > fw - 6 || start < 6) {   // no room beside it: sit just below the zone, centered on it
-        start = t0.c.x * k - tw / 2; tg.style.top = ((t0.c.y + t0.ry) * k + 20) + 'px';
-      }
-      start = Math.max(6, Math.min(fw - tw - 6, start));
-      tg.classList.remove('left'); tg.style.left = start + 'px';
+    f.classList.toggle('reveal', !!reveal);
+    paintFace(f, W, H, z, lit, 'm', reveal ? function (q, i) { return (i * 160) + 'ms'; } : null);
+    // Label pill beside the strongest zone (right of the T-zone, outer side of a cheek or under-eye); below the zone if it would run off the photo.
+    var tag = $('map-tag'); tag.classList.remove('on');
+    if (lit.length) {
+      var t = z[lit[0].zone], fb = fitBox(f, W, H);
+      tag.textContent = CHIP[concern] + ' · ' + score;
+      var tw = tag.offsetWidth, faceMid = (z.cheekL.c.x + z.cheekR.c.x) / 2, k = fb.s;
+      var left = t.key !== 'tzone' && t.key !== 'forehead' && t.key !== 'chin' && t.c.x < faceMid;
+      var x = t.key === 'tzone' ? t.c.x + t.rx * 0.6 + eye * 0.06 : left ? t.c.x - t.rx - eye * 0.06 : t.c.x + t.rx + eye * 0.06;
+      var px = fb.ox + x * k - (left ? tw : 0), py = fb.oy + t.c.y * k;
+      var edge = 62;   // keep clear of the prev/next arrows on both sides of the photo
+      if (px + tw > fb.bw - edge || px < edge) { px = fb.ox + t.c.x * k - tw / 2; py = fb.oy + (t.c.y + t.ry) * k + 20; }
+      px = Math.max(edge, Math.min(fb.bw - tw - edge, px)); py = Math.max(20, Math.min(fb.bh - 50, py));
+      tag.style.left = px.toFixed(0) + 'px'; tag.style.top = py.toFixed(0) + 'px';
+      setTimeout(function () { tag.classList.add('on'); }, reveal ? 160 * lit.length + 450 : 0);
     }
-    if (tg) setTimeout(function () { tg.classList.add('on'); }, reveal ? step * lit.length + 500 : 0);
+    f.setAttribute('aria-label', CHIP[concern] + ' heat map on your scan photo. ' + heatSummary(concern, lit));
+    document.querySelectorAll('#map-dots i').forEach(function (d, i) { d.className = i === m.i ? 'on' : ''; });
+    $('map-ring').innerHTML = ringSvg(score, 76, 30, 5.5, b.col, 9) + '<b>' + score + '</b>';
+    $('map-band').textContent = b.word + ' · ' + (m.i + 1) + ' of ' + m.list.length; $('map-band').style.color = b.col;
     $('map-name').textContent = CHIP[concern];
-    $('map-score').textContent = score;
     $('map-line').textContent = heatSummary(concern, lit);
+    var strip = $('map-cards');
+    strip.querySelectorAll('.mcard').forEach(function (c, i) { c.classList.toggle('on', i === m.i); c.setAttribute('aria-pressed', i === m.i); });
+    var on = strip.querySelector('.mcard.on');
+    if (on) strip.scrollTo({ left: Math.max(0, on.offsetLeft - strip.clientWidth / 2 + on.offsetWidth / 2), behavior: reveal ? 'smooth' : 'auto' });
   }
-  $('map-chips').addEventListener('click', function (e) {
-    var b = e.target.closest('.chip'); if (!b || !mapState || b.dataset.c === mapState.pick) return;
-    mapState.pick = b.dataset.c; drawMap(true);
+  function stepMap(d) { if (!mapState) return; mapState.i = (mapState.i + d + mapState.list.length) % mapState.list.length; drawMap(true); }
+  $('s-map').addEventListener('click', function (e) {
+    if (e.target.closest('#map-prev')) return stepMap(-1);
+    if (e.target.closest('#map-nextc')) return stepMap(1);
+    var c = e.target.closest('.mcard'); if (c && mapState && +c.dataset.i !== mapState.i) { mapState.i = +c.dataset.i; drawMap(true); }
   });
+  (function swipe() {   // swipe the photo left/right to move between concerns
+    var x0 = null, y0 = null, box = $('map-face');
+    box.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+    box.addEventListener('touchend', function (e) {
+      if (x0 == null) return; var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) stepMap(dx < 0 ? 1 : -1);
+    });
+  })();
   $('map-next').addEventListener('click', function () { show('s-result'); });
-  $('r-map').addEventListener('click', function () { if (mapState) { drawMap(true); show('s-map'); } });
+  $('r-map').addEventListener('click', function () { if (mapState) { show('s-map'); drawMap(true); } });
 
   // ---------- routine plan: a port of public.routine_plan (migration 17) for the 8 measured concerns ----------
   // No skin profile in the test (adults only, no pregnancy or sensitivity answers), so those branches are off;
