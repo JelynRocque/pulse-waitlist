@@ -1,6 +1,7 @@
 /* Pulse friends-and-family web test. See index.html for what this is.
    Flow: link token → consent → (engine ready) → camera with live checks → analyze in the browser → send scores → results + routine → history.
-   Only `analysis` (scores, confidence, quality) ever leaves the phone. Landmarks are never requested. */
+   Only `analysis` (scores, confidence, quality) ever leaves the phone. Face points (landmarks) are requested only to place
+   the heat-map zones on this screen; they stay in memory on the phone and are never sent. */
 (function () {
   'use strict';
   var API = window.PULSE_TEST_API || 'https://bgagcxdsqnasgegazusf.supabase.co/functions/v1/webtest';   // Pulse dev project; switch to staging before the first real tester. PULSE_TEST_API: local end-to-end test only
@@ -38,13 +39,13 @@
     if (m.type === 'init_error') { engineFailed = true; onEngineReady(); return; }
     if (m.type === 'result' && m.id && pending[m.id]) { var cb = pending[m.id]; delete pending[m.id]; cb(m); }
   });
-  function engineRun(b64, mode) {
+  function engineRun(b64, mode, wantLandmarks) {
     return new Promise(function (resolve) {
       if (!engineReady) return resolve({ ok: false, error: engineFailed ? 'engine_unavailable' : 'engine_loading' });
       var id = 'j' + (++seq); pending[id] = resolve;
       var t = setTimeout(function () { if (pending[id]) { delete pending[id]; resolve({ ok: false, error: 'timeout' }); } }, 30000);
       pending[id] = function (r) { clearTimeout(t); resolve(r); };
-      try { $('engine').contentWindow.__pulse({ id: id, b64: b64, mode: mode, wantLandmarks: false }); }
+      try { $('engine').contentWindow.__pulse({ id: id, b64: b64, mode: mode, wantLandmarks: !!wantLandmarks }); }
       catch (err) { delete pending[id]; clearTimeout(t); resolve({ ok: false, error: 'engine_unavailable' }); }
     });
   }
@@ -163,7 +164,7 @@
   // ---------- analyze + save ----------
   function analyze(b64) {
     show('s-busy'); $('busy-msg').textContent = 'Reading 8 measures on your phone…';
-    engineRun(b64, 'analyze').then(function (r) {
+    engineRun(b64, 'analyze', true).then(function (r) {
       if (!r.ok || !r.face || !r.analysis) { alert(!r.ok ? 'The engine could not read that photo. Try again in better light.' : 'No face found. Try again, closer to the camera.'); renderHome(); return; }
       var a = r.analysis;
       $('busy-msg').textContent = 'Saving your scores…';
@@ -172,7 +173,9 @@
       api('scan', body).then(function (res) {
         if (!res.ok) { alert('Your reading could not be saved (' + (res.error || 'network') + '). It is shown below but will not count.'); }
         else history.push({ id: res.scan_id, date: localDate(), day: res.day_index, skin_score: a.skin_score, concerns: a.concerns, not_measured: a.quality.not_measured || [], issues: a.quality.issues || [] });
-        renderResult(a, res.ok ? res.day_index : dayIndex());
+        var day = res.ok ? res.day_index : dayIndex();
+        renderResult(a, day);
+        if (!renderMap(a, r, b64, day)) show('s-result');
       });
     });
   }
@@ -201,7 +204,6 @@
     $('r-cautions').innerHTML = plan.cautions.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('');
     var firstDayScans = history.filter(function (s) { return s.day === 1; }).length;
     $('r-again').hidden = !(day === 1 && firstDayScans === 1);
-    show('s-result');
   }
   function stepHtml(s) {
     return '<div class="step"><div class="l">' + esc(s.label) + '</div><div class="f">' + esc(frequency(s)) + (s.ingredients.length ? ' · ' + esc(s.ingredients.join(', ')) : '') + '</div><p class="w">' + esc(s.why) + '</p>' + (s.caution ? '<p class="c">' + esc(s.caution) + '</p>' : '') + '</div>';
@@ -215,6 +217,143 @@
     return s.per_week >= 7 ? 'Every ' + when : n(s.per_week) + ' a week';
   }
   $('r-home').addEventListener('click', renderHome);
+
+  // ---------- skin map (heat map) ----------
+  // A port of the app's Face Scan · Heat Map (pulse-app/src/lib/face-core.ts zonesFor/superellipse/heatFor/heatSummary
+  // and components/FaceOverlay.tsx): zones are placed from the face points, lit with one champagne-gold glow whose
+  // intensity carries severity, traced with a faint dotted outline, with a glass label beside the strongest zone.
+  // Nothing anatomical is drawn (no mesh, dots or face outline). The photo is shown mirrored, like the camera preview.
+  var Z_KEYS = ['forehead', 'tzone', 'underEyeL', 'underEyeR', 'cheekL', 'cheekR', 'chin'];
+  var Z_ANCHORS = { forehead: [151, 9, 108, 337, 69, 299], tzone: [168, 6, 197, 195, 5, 4, 1, 98, 327], underEyeL: [228, 229, 230, 231, 117, 118, 119],
+    underEyeR: [448, 449, 450, 451, 346, 347, 348], cheekL: [50, 101, 36, 205, 187, 123, 147, 207, 206], cheekR: [280, 330, 266, 425, 411, 352, 376, 427, 426], chin: [175, 199, 200, 171, 396, 208, 428] };
+  var Z_PAD = { forehead: [1.3, 1.7, 0.3, 0.12], tzone: [1.6, 1.15, 0.1, 0.2], underEyeL: [1.15, 1.4, 0.12, 0.05], underEyeR: [1.15, 1.4, 0.12, 0.05],
+    cheekL: [1.15, 1.2, 0.15, 0.12], cheekR: [1.15, 1.2, 0.15, 0.12], chin: [1.2, 1.35, 0.18, 0.06] };
+  var Z_WORD = { forehead: 'forehead', tzone: 'T-zone', underEyeL: 'under-eyes', underEyeR: 'under-eyes', cheekL: 'cheeks', cheekR: 'cheeks', chin: 'chin' };
+  var CONCERN_ZONES = { spots: { cheekL: 1, cheekR: 0.9, forehead: 0.6 }, texture: { forehead: 1, chin: 0.75, cheekL: 0.5, cheekR: 0.5 }, pores: { tzone: 1, cheekL: 0.65, cheekR: 0.65 },
+    redness: { cheekL: 0.85, cheekR: 0.85, tzone: 0.7 }, acne: { chin: 1, cheekL: 0.7, cheekR: 0.7, forehead: 0.55 }, oiliness: { tzone: 1, forehead: 0.8, chin: 0.5 },
+    dark_circles: { underEyeL: 1, underEyeR: 1 }, radiance: { cheekL: 0.8, cheekR: 0.8, forehead: 0.8, chin: 0.6, tzone: 0.6 } };
+  var CHIP = { spots: 'Dark Spots', texture: 'Texture', pores: 'Pores', redness: 'Redness', acne: 'Breakouts', oiliness: 'Shine', dark_circles: 'Dark Circles', radiance: 'Radiance' };
+  var CHIP_FIRST = ['spots', 'texture', 'pores', 'redness'];
+  var PLURAL = { spots: 1, pores: 1, acne: 1, dark_circles: 1 };
+  var GLOW = '#F2B95C', G_FOCUS = 0.7, G_WELL = 0.42;
+  var mapState = null;
+
+  function superellipse(c, rx, ry, ax, ay, scale, n) {
+    n = n || 48; var p = [];
+    for (var i = 0; i < n; i++) {
+      var t = 2 * Math.PI * i / n, cs = Math.cos(t), sn = Math.sin(t);
+      var u = rx * scale * Math.sign(cs) * Math.pow(Math.abs(cs), 0.6), v = ry * scale * Math.sign(sn) * Math.pow(Math.abs(sn), 0.6);
+      p.push([c.x + u * ax.x + v * ay.x, c.y + u * ax.y + v * ay.y]);
+    }
+    return p;
+  }
+  function pathOf(pts) { return 'M' + pts.map(function (q) { return q[0].toFixed(1) + ' ' + q[1].toFixed(1); }).join(' L') + ' Z'; }
+  // Zones in display pixels of a W×H photo shown mirrored (x → W − x).
+  function zonesFor(lm, W, H) {
+    var P = function (i) { return { x: (1 - lm[i * 3]) * W, y: lm[i * 3 + 1] * H }; };
+    var a = P(263), b = P(33);   // after mirroring, the image-right eye corner sits on the display left
+    var eye = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    var ax = { x: (b.x - a.x) / eye, y: (b.y - a.y) / eye }, ay = { x: -ax.y, y: ax.x };
+    var out = {};
+    Z_KEYS.forEach(function (key) {
+      var pts = Z_ANCHORS[key].map(P), c = { x: 0, y: 0 };
+      pts.forEach(function (q) { c.x += q.x / pts.length; c.y += q.y / pts.length; });
+      var mx = 0, my = 0;
+      pts.forEach(function (q) { var dx = q.x - c.x, dy = q.y - c.y; mx = Math.max(mx, Math.abs(dx * ax.x + dy * ax.y)); my = Math.max(my, Math.abs(dx * ay.x + dy * ay.y)); });
+      var pd = Z_PAD[key], rx = Math.max(mx * pd[0], pd[2] * eye), ry = Math.max(my * pd[1], pd[3] * eye);
+      out[key] = { key: key, c: c, rx: rx, ry: ry, ax: ax, ay: ay };
+    });
+    out._eye = eye;
+    return out;
+  }
+  function heatFor(concern, score, measured) {
+    var m = measured[concern];
+    if (m && Object.keys(m).length) {
+      var e = Object.keys(m).map(function (k) { return [k, m[k]]; }).sort(function (p, q) { return q[1] - p[1]; });
+      var top = e[0][1] || 1;
+      return e.filter(function (x, i) { return i === 0 || x[1] >= Math.max(0.12, top * 0.35); })
+        .map(function (x) { return { zone: x[0], weight: x[1] / top, opacity: G_WELL * 0.75 + (G_FOCUS - G_WELL * 0.75) * Math.min(1, x[1]) }; });
+    }
+    var w = CONCERN_ZONES[concern] || {}, base = score < 70 ? G_FOCUS : G_WELL;
+    return Object.keys(w).sort(function (p, q) { return w[q] - w[p]; }).map(function (k) { return { zone: k, weight: w[k], opacity: base * (0.55 + 0.45 * w[k]) }; });
+  }
+  function joinWords(xs) { return xs.length <= 1 ? xs.join('') : xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1]; }
+  function heatSummary(concern, lit) {
+    var words = []; lit.forEach(function (l) { var wd = Z_WORD[l.zone]; if (l.weight >= 0.6 && words.indexOf(wd) < 0) words.push(wd); });
+    return words.length ? CHIP[concern] + (PLURAL[concern] ? ' show' : ' shows') + ' most on your ' + joinWords(words) + '.' : 'No clear pattern for ' + CHIP[concern].toLowerCase() + ' this scan.';
+  }
+
+  // Returns false (and the caller goes straight to the scores) if there is nothing to map.
+  function renderMap(a, r, b64, day) {
+    var lm = r.landmarks;
+    if (!lm || lm.length < 468 * 3 || !r.width || !r.height || !a.concerns || !a.concerns.length) { mapState = null; $('r-map').hidden = true; return false; }
+    var measured = {};
+    ((a.overlay_map && a.overlay_map.regions) || []).forEach(function (g) { if (g.zone && Z_ANCHORS[g.zone]) (measured[g.concern] = measured[g.concern] || {})[g.zone] = g.intensity; });
+    var by = {}; a.concerns.forEach(function (c) { if (CHIP[c.concern]) by[c.concern] = c.score; });
+    var chips = CHIP_FIRST.filter(function (k) { return by[k] != null; })
+      .concat(Object.keys(by).filter(function (k) { return CHIP_FIRST.indexOf(k) < 0; }).sort(function (p, q) { return by[p] - by[q]; }));
+    if (!chips.length) { mapState = null; $('r-map').hidden = true; return false; }
+    mapState = { W: r.width, H: r.height, zones: zonesFor(lm, r.width, r.height), photo: 'data:image/jpeg;base64,' + b64, by: by, chips: chips, measured: measured, pick: chips[0] };
+    $('r-map').hidden = false;
+    $('map-day').textContent = 'Day ' + day + ' of ' + TEST_DAYS;
+    $('map-chips').innerHTML = chips.map(function (k) { return '<button class="chip" type="button" role="tab" data-c="' + k + '">' + CHIP[k] + '</button>'; }).join('');
+    var f = $('map-face'); f.style.aspectRatio = r.width + ' / ' + r.height;
+    drawMap(true);
+    show('s-map');
+    return true;
+  }
+  function drawMap(reveal) {
+    var m = mapState, W = m.W, H = m.H, z = m.zones, eye = z._eye;
+    var concern = m.pick, score = m.by[concern], lit = heatFor(concern, score, m.measured);
+    document.querySelectorAll('#map-chips .chip').forEach(function (b) { var on = b.dataset.c === concern; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+    var halo = Math.max(6, Math.abs(z.cheekR.c.x - z.cheekL.c.x) * 0.09), core = Math.max(3, Math.abs(z.cheekR.c.x - z.cheekL.c.x) * 0.04);
+    var step = 160, glow = '', dots = '';
+    lit.forEach(function (l, i) {
+      var q = z[l.zone], d = ' style="animation-delay:' + (i * step) + 'ms"';
+      glow += '<g class="zone"' + d + '><path d="' + pathOf(superellipse(q.c, q.rx, q.ry, q.ax, q.ay, 1.12)) + '" fill="' + GLOW + '" fill-opacity="' + (l.opacity * 0.75).toFixed(3) + '" filter="url(#mh)"/>'
+        + '<path d="' + pathOf(superellipse(q.c, q.rx, q.ry, q.ax, q.ay, 0.62)) + '" fill="' + GLOW + '" fill-opacity="' + Math.min(1, l.opacity * 1.05).toFixed(3) + '" filter="url(#mc)"/></g>';
+      var o = pathOf(superellipse(q.c, q.rx, q.ry, q.ax, q.ay, 1));
+      var sw = Math.max(1.8, W / 360 * 1.8), gap = (eye * 0.075).toFixed(1);
+      dots += '<g class="zone"' + d + '><path d="' + o + '" fill="none" stroke="rgba(30,14,6,.75)" stroke-width="' + (sw * 1.22).toFixed(2) + '" stroke-linecap="round" stroke-dasharray="0.1 ' + gap + '" filter="url(#ms)"/>'
+        + '<path d="' + o + '" fill="none" stroke="rgba(255,246,234,.8)" stroke-width="' + sw.toFixed(2) + '" stroke-linecap="round" stroke-dasharray="0.1 ' + gap + '"/></g>';
+    });
+    var vb = 'viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none"';
+    // Label pill beside the strongest zone, on the outer side of the face (right of the T-zone), kept on the photo.
+    var tag = '';
+    if (lit.length) {
+      var t = z[lit[0].zone], faceMid = (z.cheekL.c.x + z.cheekR.c.x) / 2, left = t.key !== 'tzone' && t.key !== 'forehead' && t.key !== 'chin' && t.c.x < faceMid;
+      var x = t.key === 'tzone' ? t.c.x + t.rx * 0.6 + eye * 0.06 : left ? t.c.x - t.rx - eye * 0.06 : t.c.x + t.rx + eye * 0.06;
+      var px = Math.max(1, Math.min(99, x / W * 100));
+      tag = '<span class="tag' + (left ? ' left' : '') + '" style="left:' + px.toFixed(2) + '%;top:' + (t.c.y / H * 100).toFixed(2) + '%">' + esc(CHIP[concern] + ' · ' + score) + '</span>';
+    }
+    var f = $('map-face');
+    f.className = 'face' + (reveal ? ' reveal' : '');
+    f.innerHTML = '<img alt="Your scan photo" src="' + m.photo + '">'
+      + '<svg class="glow" ' + vb + ' aria-hidden="true"><defs><filter id="mh" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="' + halo.toFixed(1) + '"/></filter>'
+      + '<filter id="mc" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="' + core.toFixed(1) + '"/></filter></defs>' + glow + '</svg>'
+      + '<svg ' + vb + ' aria-hidden="true"><defs><filter id="ms" x="-20%" y="-20%" width="140%" height="140%"><feOffset dx="0" dy="0.5"/><feGaussianBlur stdDeviation="1"/></filter></defs>' + dots + '</svg>' + tag;
+    f.setAttribute('aria-label', CHIP[concern] + ' heat map on your scan photo. ' + heatSummary(concern, lit));
+    var tg = f.querySelector('.tag');
+    if (tg) {   // keep the whole pill on the photo: flip to the zone's other side if it would run off, then clamp
+      var fw = f.clientWidth, tw = tg.offsetWidth, k = fw / W, t0 = z[lit[0].zone], lx = parseFloat(tg.style.left) / 100 * fw, isLeft = tg.classList.contains('left');
+      var start = isLeft ? lx - tw : lx;
+      if (start + tw > fw - 6 || start < 6) {   // no room beside it: sit just below the zone, centered on it
+        start = t0.c.x * k - tw / 2; tg.style.top = ((t0.c.y + t0.ry) * k + 20) + 'px';
+      }
+      start = Math.max(6, Math.min(fw - tw - 6, start));
+      tg.classList.remove('left'); tg.style.left = start + 'px';
+    }
+    if (tg) setTimeout(function () { tg.classList.add('on'); }, reveal ? step * lit.length + 500 : 0);
+    $('map-name').textContent = CHIP[concern];
+    $('map-score').textContent = score;
+    $('map-line').textContent = heatSummary(concern, lit);
+  }
+  $('map-chips').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b || !mapState || b.dataset.c === mapState.pick) return;
+    mapState.pick = b.dataset.c; drawMap(true);
+  });
+  $('map-next').addEventListener('click', function () { show('s-result'); });
+  $('r-map').addEventListener('click', function () { if (mapState) { drawMap(true); show('s-map'); } });
 
   // ---------- routine plan: a port of public.routine_plan (migration 17) for the 8 measured concerns ----------
   // No skin profile in the test (adults only, no pregnancy or sensitivity answers), so those branches are off;

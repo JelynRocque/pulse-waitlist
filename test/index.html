@@ -85,6 +85,33 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   #engine { position: absolute; width: 1px; height: 1px; opacity: 0; left: -10px; top: -10px; border: 0; }
   .photo-note { font-size: 13px; color: var(--espresso-soft); }
+  /* skin map (mirrors the app's Face Scan · Heat Map: pulse-app/src/app/scan/heat.tsx + components/FaceOverlay.tsx) */
+  .map-card { background: radial-gradient(120% 70% at 50% 0%, #2E1A14 0%, #140C0A 60%); color: #F8EDE4; border-radius: 26px; padding: 18px 16px 18px; margin: 0 -6px; }
+  .map-card h1 { color: #F8EDE4; margin: 2px 4px 12px; }
+  .map-card .day { color: #F0B04A; margin: 0 4px 4px; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 0 2px 4px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; font: inherit; font-weight: 700; font-size: 14px; color: #F8EDE4; background: rgba(255,246,234,.06); border: 1px solid rgba(255,246,234,.28); border-radius: 999px; padding: 9px 15px; cursor: pointer; }
+  .chip.on { background: #B8501E; border-color: #B8501E; color: #fff; }
+  .face { position: relative; width: 100%; border-radius: 24px; overflow: hidden; margin-top: 12px; background: #0C0706; }
+  .face img, .face svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .face img { transform: scaleX(-1); }
+  .face .glow { mix-blend-mode: screen; }
+  .face .zone { opacity: 1; }
+  .face.reveal .zone { opacity: 0; animation: zoneIn .6s ease forwards; }
+  @keyframes zoneIn { to { opacity: 1; } }
+  .face .tag { position: absolute; height: 26px; line-height: 24px; padding: 0 10px; border-radius: 13px; background: rgba(24,13,8,.58); border: 1px solid rgba(255,246,234,.35); color: #fff; font-size: 12.5px; font-weight: 700; white-space: nowrap; transform: translateY(-50%); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 0; transition: opacity .4s; }
+  .face .tag.left { transform: translate(-100%, -50%); }
+  .face .tag.on { opacity: 1; }
+  .legend { display: flex; align-items: center; gap: 10px; margin: 12px 22px 0; font-size: 11.5px; font-weight: 700; color: #C4AD9F; }
+  .legend .ramp { flex: 1; height: 6px; border-radius: 3px; background: linear-gradient(90deg, rgba(242,185,92,.2), rgba(242,185,92,.8)); }
+  .map-sum { background: rgba(255,246,234,.06); border: 1px solid rgba(255,246,234,.14); border-radius: 18px; padding: 14px 16px; margin-top: 14px; }
+  .map-sum .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .map-sum .top strong { font-size: 15px; }
+  .map-sum .top b { font-family: var(--display); font-weight: 400; font-size: 26px; color: #F0B04A; }
+  .map-sum p { color: #C4AD9F; font-size: 14.5px; margin: 6px 0 0; }
+  .map-card .btn { margin-top: 16px; }
+  @media (prefers-reduced-motion: reduce) { .face.reveal .zone { animation: none; opacity: 1; } .face .tag { transition: none; } }
 </style>
 </head>
 <body>
@@ -146,6 +173,20 @@
   <!-- analyzing -->
   <section class="screen" id="s-busy"><h1>Reading your skin…</h1><p class="muted"><span class="loading"></span><span id="busy-msg">This takes a few seconds.</span></p></section>
 
+  <!-- skin map: the heat map step between the scan and the scores -->
+  <section class="screen" id="s-map">
+    <div class="map-card">
+      <p class="day" id="map-day"></p>
+      <h1>Your Skin Map</h1>
+      <div class="chips" id="map-chips" role="tablist" aria-label="Skin concerns"></div>
+      <div class="face" id="map-face" role="img" aria-label="Heat map on your scan photo"></div>
+      <div class="legend" aria-hidden="true"><span>Mild</span><span class="ramp"></span><span>Notable</span></div>
+      <div class="map-sum"><div class="top"><strong id="map-name"></strong><b id="map-score"></b></div><p id="map-line"></p></div>
+      <button class="btn" id="map-next" type="button">See My Full Report</button>
+    </div>
+    <p class="muted" style="margin-top:12px">Glow shows where each measure reads strongest on this photo. Brighter means more notable. The photo stays on your phone unless you ticked the study box.</p>
+  </section>
+
   <!-- results -->
   <section class="screen" id="s-result">
     <p class="day" id="r-day"></p>
@@ -160,7 +201,7 @@
     <h3>Night</h3><div class="steps" id="r-pm"></div>
     <ul class="cautions" id="r-cautions"></ul>
     <p class="muted" style="margin-top:10px">This is general skincare guidance from a test, not medical advice. For anything that hurts, spreads or worries you, see a dermatologist.</p>
-    <div class="row" style="margin-top:16px"><button class="btn ghost" id="r-home" type="button">Done for today</button></div>
+    <div class="row" style="margin-top:16px"><button class="btn ghost" id="r-map" type="button">View Skin Map</button><button class="btn ghost" id="r-home" type="button">Done for today</button></div>
   </section>
 
   <!-- ended -->
