@@ -154,6 +154,33 @@
   .tname { font-size: 15px; font-weight: 700; } .tband { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-top: -4px; color: #C4AD9F; }
   .tile.nm { opacity: .7; } .tile.nm .tband { letter-spacing: 0; text-transform: none; font-weight: 600; font-size: 12px; line-height: 1.3; }
   @media (prefers-reduced-motion: reduce) { #busy-face.mapped .zone, .pts span, .sweep, .rchip.now, .live .dot, .swipe-hint svg { animation: none; } #busy-face.mapped .zone { opacity: .8; } .sweep { display: none; } #map-face.reveal .zone { animation: none; opacity: 1; } .face .tag { transition: none; } }
+  /* 4B learn-more sheet */
+  .tile { font: inherit; color: #F8EDE4; cursor: pointer; position: relative; width: 100%; }
+  .tile .ti { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 12px; border: 1px solid rgba(255,246,234,.3); display: grid; place-content: center; font-family: var(--display); font-style: italic; font-size: 14px; color: #F2D08A; }
+  .tile:active { transform: scale(.98); }
+  .learn-link { font: inherit; font-size: 13.5px; font-weight: 700; color: #F2D08A; background: none; border: 0; padding: 8px 0 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  body.locked { overflow: hidden; }
+  #learn { position: fixed; inset: 0; z-index: 50; background: rgba(8,4,3,0); -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); transition: background .28s, backdrop-filter .28s; }
+  #learn.on { background: rgba(8,4,3,.62); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+  #learn-body { position: absolute; left: 0; right: 0; bottom: 0; max-width: 560px; margin: 0 auto; height: min(86vh, 720px); display: flex; flex-direction: column; color: #F8EDE4; border-radius: 30px 30px 0 0; background: linear-gradient(180deg, #2A1A14, #1A100C 40%); border-top: 1px solid rgba(255,246,234,.22); box-shadow: 0 -20px 60px rgba(0,0,0,.6); transform: translateY(100%); transition: transform .28s cubic-bezier(.2,.8,.2,1); }
+  #learn.on #learn-body { transform: none; }
+  #learn-body::before { content: ""; align-self: center; width: 40px; height: 5px; border-radius: 3px; background: rgba(255,246,234,.3); margin-top: 10px; flex: none; }
+  .lhead { display: flex; align-items: center; gap: 16px; padding: 14px 20px; border-bottom: 1px solid rgba(255,246,234,.1); flex: none; }
+  .lring { position: relative; width: 72px; height: 72px; flex: none; } .lring b { position: absolute; inset: 0; display: grid; place-content: center; font-family: var(--display); font-weight: 400; font-size: 26px; }
+  .lt { flex: 1; } .lt h2 { margin: 0 0 4px; font-size: 28px; line-height: 1.1; color: #F8EDE4; }
+  .lband { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .lclose { align-self: flex-start; width: 44px; height: 44px; border-radius: 22px; border: 1px solid rgba(255,246,234,.25); background: rgba(255,246,234,.08); display: grid; place-content: center; padding: 0; cursor: pointer; }
+  .lscroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 18px 20px 30px; display: flex; flex-direction: column; gap: 18px; }
+  .lchip { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px 0 6px; border-radius: 15px; background: rgba(255,246,234,.08); border: 1px solid rgba(255,246,234,.2); font-size: 12.5px; font-weight: 700; }
+  .lchip i { width: 20px; height: 20px; border-radius: 10px; border: 1.5px solid rgba(255,246,234,.6); }
+  .lk { display: block; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #F2D08A; margin-bottom: 6px; }
+  .lsec p, .lshade p { font-size: 15px; line-height: 1.55; margin: 0; color: #F8EDE4; }
+  .lshade { padding: 14px 16px; border-radius: 18px; background: rgba(184,80,30,.18); border: 1px solid rgba(240,176,74,.3); }
+  .gems { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .gem { width: 36px; height: 36px; border-radius: 18px; border: 2px solid rgba(255,246,234,.55); padding: 0; cursor: pointer; }
+  .lnote { font-size: 12.5px; color: #A8917F; line-height: 1.5; margin: 0; }
+  #learn .btn { background: linear-gradient(90deg, #8A2E14, #C4561F 45%, #E9A63A); }
+  @media (prefers-reduced-motion: reduce) { #learn, #learn-body { transition: none; } }
 </style>
 </head>
 <body>
@@ -226,7 +253,7 @@
     <p class="day" id="map-day"></p>
     <h1>Your Skin Map</h1>
     <div class="face" id="map-face" role="img" aria-label="Heat map on your scan photo"></div>
-    <div class="ccard"><div class="cring" id="map-ring"></div><div><div class="cb" id="map-band"></div><div class="cn" id="map-name"></div><p class="cl" id="map-line"></p></div></div>
+    <div class="ccard"><div class="cring" id="map-ring"></div><div><div class="cb" id="map-band"></div><div class="cn" id="map-name"></div><p class="cl" id="map-line"></p><button class="learn-link" type="button" id="map-learn" data-learn="">What Is This?</button></div></div>
     <div class="swipe-hint">All Your Measures<span>Swipe Or Tap<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2D08A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span></div>
     <div class="mcards" id="map-cards"></div>
     <button class="btn" id="map-next" type="button" style="margin-top:18px">See My Full Report</button>
@@ -238,7 +265,7 @@
     <h1>Skin Report</h1>
     <div class="hero"><div class="hring" id="r-hero-ring"></div><div><p class="day" id="r-day" style="margin:0"></p><p class="ht">Skin Score</p><p class="hs" id="r-hero-sub"></p></div></div>
     <p class="muted" id="r-note"></p>
-    <div id="r-focus-wrap"><div class="sec"><h2>Focus First</h2><span>Lowest first</span></div><div class="tiles" id="r-focus"></div></div>
+    <div id="r-focus-wrap"><div class="sec"><h2>Focus First</h2><span>Tap any tile to learn more</span></div><div class="tiles" id="r-focus"></div></div>
     <div id="r-well-wrap"><div class="sec"><h2>Doing Well</h2><span>Keep it up</span></div><div class="tiles" id="r-well"></div></div>
     <div id="r-skip-wrap" hidden><div class="sec"><h2>Not Measured Today</h2></div><div class="tiles" id="r-skip"></div></div>
     <div class="row" style="margin-top:16px"><button class="btn ghost" id="r-map" type="button">View My Skin Map</button></div>
@@ -270,6 +297,7 @@
     <p id="withdraw-row" hidden><button class="link" id="withdraw" type="button">Withdraw from the test</button> — stops everything and destroys your data.</p>
   </footer>
 </main>
+<div id="learn" hidden><div id="learn-body" role="dialog" aria-modal="true" aria-labelledby="learn-title"></div></div>
 <script src="test.js"></script>
 </body>
 </html>
