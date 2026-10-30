@@ -85,33 +85,75 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   #engine { position: absolute; width: 1px; height: 1px; opacity: 0; left: -10px; top: -10px; border: 0; }
   .photo-note { font-size: 13px; color: var(--espresso-soft); }
-  /* skin map (mirrors the app's Face Scan · Heat Map: pulse-app/src/app/scan/heat.tsx + components/FaceOverlay.tsx) */
-  .map-card { background: radial-gradient(120% 70% at 50% 0%, #2E1A14 0%, #140C0A 60%); color: #F8EDE4; border-radius: 26px; padding: 18px 16px 18px; margin: 0 -6px; }
-  .map-card h1 { color: #F8EDE4; margin: 2px 4px 12px; }
-  .map-card .day { color: #F0B04A; margin: 0 4px 4px; }
-  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 0 2px 4px; scrollbar-width: none; }
-  .chips::-webkit-scrollbar { display: none; }
-  .chip { flex: none; font: inherit; font-weight: 700; font-size: 14px; color: #F8EDE4; background: rgba(255,246,234,.06); border: 1px solid rgba(255,246,234,.28); border-radius: 999px; padding: 9px 15px; cursor: pointer; }
-  .chip.on { background: #B8501E; border-color: #B8501E; color: #fff; }
-  .face { position: relative; width: 100%; border-radius: 24px; overflow: hidden; margin-top: 12px; background: #0C0706; }
-  .face img, .face svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  .face img { transform: scaleX(-1); }
-  .face .glow { mix-blend-mode: screen; }
-  .face .zone { opacity: 1; }
-  .face.reveal .zone { opacity: 0; animation: zoneIn .6s ease forwards; }
+  /* ---- dark scan screens (approved mockups Oct 30, 2026: 1A Scan Sweep, 2B Swipe Concerns, 3 Ring Tiles) ---- */
+  body.dark { background: radial-gradient(120% 60% at 0% 0%, #5A2412 0%, #2A120B 38%, #140C0A 70%) fixed, #140C0A; color: #F8EDE4; }
+  body.dark .wordmark { color: #F8EDE4; } body.dark .pill { color: #F2D08A; border-color: rgba(242,208,138,.6); }
+  body.dark footer { color: #C4AD9F; border-top-color: rgba(255,246,234,.14); } body.dark footer a, body.dark .link { color: #F2D08A; }
+  .dk h1 { color: #F8EDE4; } .dk .day { color: #F2D08A; } .dk .muted { color: #C4AD9F; }
+  .dk h2 { font-size: 24px; margin: 26px 0 10px; } .dk h3 { color: #F2D08A; }
+  .dk .btn.ghost { color: #F8EDE4; border-color: rgba(255,246,234,.45); }
+  .dk .btn:not(.ghost) { background: linear-gradient(90deg, #8A2E14, #C4561F 45%, #E9A63A); box-shadow: 0 8px 28px rgba(196,86,31,.4); }
+  .dk .step { background: rgba(255,246,234,.06); border-color: rgba(255,246,234,.14); } .dk .step .f { color: #F0B04A; } .dk .step .w { color: #C4AD9F; } .dk .step .c { color: #F2D08A; }
+  .dk .cautions li { color: #C4AD9F; } .dk .notice { background: rgba(255,246,234,.06); border-color: rgba(255,246,234,.16); color: #F8EDE4; }
+  .face { position: relative; width: 100%; aspect-ratio: 7 / 8; border-radius: 28px; overflow: hidden; background: #0C0706; }
+  .face > img, .face > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .face > img { object-fit: cover; transform: scaleX(-1); }
+  .face > svg.glow { mix-blend-mode: screen; }
+  .face .veil { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,12,10,.35), rgba(20,12,10,.12) 40%, rgba(20,12,10,.45)); }
+  /* 1A scan sweep */
+  #busy-face .zone { opacity: 0; } #busy-face.mapped .zone { animation: zp 2.6s ease-out infinite; }
+  .pts span { position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 3px; background: #FFE7B8; box-shadow: 0 0 8px 2px rgba(242,185,92,.9); animation: twinkle 1.6s ease-in-out infinite; }
+  .sweep { position: absolute; left: 0; right: 0; height: 90px; top: -12%; animation: sweep 2.6s cubic-bezier(.45,0,.55,1) infinite; pointer-events: none; }
+  .sweep i { position: absolute; left: 0; right: 0; bottom: 0; height: 90px; background: linear-gradient(180deg, rgba(242,185,92,0), rgba(242,185,92,.28)); }
+  .sweep b { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #FFE2A8; box-shadow: 0 0 14px 4px rgba(242,185,92,.85), 0 0 40px 10px rgba(184,80,30,.5); }
+  .live { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); height: 30px; padding: 0 14px; border-radius: 15px; background: rgba(24,13,8,.58); border: 1px solid rgba(255,246,234,.35); display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; white-space: nowrap; color: #fff; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .live .dot { width: 7px; height: 7px; border-radius: 4px; background: #F2B95C; box-shadow: 0 0 8px #F2B95C; animation: hop 1s ease-in-out infinite; }
+  .prog { display: flex; align-items: center; gap: 18px; margin: 20px 4px 14px; }
+  .prog .ring { position: relative; width: 84px; height: 84px; flex: none; }
+  .prog .ring svg { filter: drop-shadow(0 0 10px rgba(242,185,92,.55)); } .prog .ring circle:last-child { transition: stroke-dasharray .45s ease; }
+  .prog .ring b { position: absolute; inset: 0; display: grid; place-content: center; font-family: var(--display); font-weight: 400; font-size: 24px; }
+  .prog .t { font-size: 18px; font-weight: 700; } .prog .s { font-size: 14px; color: #C4AD9F; line-height: 1.45; margin-top: 4px; }
+  .rchips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 4px; }
+  .rchip { font-size: 12.5px; font-weight: 600; padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(255,246,234,.22); color: #C4AD9F; }
+  .rchip.done { font-weight: 700; background: rgba(240,176,74,.16); border-color: rgba(240,176,74,.5); color: #F2D08A; }
+  .rchip.now { font-weight: 700; background: #B8501E; border-color: #B8501E; color: #fff; box-shadow: 0 0 14px rgba(196,86,31,.6); }
+  @keyframes sweep { 0% { top: -12%; } 100% { top: 104%; } }
+  @keyframes zp { 0% { opacity: 0; } 12% { opacity: 1; } 55% { opacity: .65; } 100% { opacity: 0; } }
+  @keyframes twinkle { 0%, 100% { opacity: .15; transform: scale(.6); } 50% { opacity: 1; transform: scale(1); } }
+  @keyframes hop { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+  /* 2B skin map */
+  #map-face .zone { opacity: 1; } #map-face.reveal .zone { opacity: 0; animation: zoneIn .6s ease forwards; }
   @keyframes zoneIn { to { opacity: 1; } }
-  .face .tag { position: absolute; height: 26px; line-height: 24px; padding: 0 10px; border-radius: 13px; background: rgba(24,13,8,.58); border: 1px solid rgba(255,246,234,.35); color: #fff; font-size: 12.5px; font-weight: 700; white-space: nowrap; transform: translateY(-50%); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 0; transition: opacity .4s; }
-  .face .tag.left { transform: translate(-100%, -50%); }
+  .face .tag { position: absolute; height: 26px; line-height: 24px; padding: 0 10px; border-radius: 13px; background: rgba(24,13,8,.6); border: 1px solid rgba(255,246,234,.35); color: #fff; font-size: 12.5px; font-weight: 700; white-space: nowrap; transform: translateY(-50%); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 0; transition: opacity .4s; }
   .face .tag.on { opacity: 1; }
-  .legend { display: flex; align-items: center; gap: 10px; margin: 12px 22px 0; font-size: 11.5px; font-weight: 700; color: #C4AD9F; }
-  .legend .ramp { flex: 1; height: 6px; border-radius: 3px; background: linear-gradient(90deg, rgba(242,185,92,.2), rgba(242,185,92,.8)); }
-  .map-sum { background: rgba(255,246,234,.06); border: 1px solid rgba(255,246,234,.14); border-radius: 18px; padding: 14px 16px; margin-top: 14px; }
-  .map-sum .top { display: flex; justify-content: space-between; align-items: baseline; }
-  .map-sum .top strong { font-size: 15px; }
-  .map-sum .top b { font-family: var(--display); font-weight: 400; font-size: 26px; color: #F0B04A; }
-  .map-sum p { color: #C4AD9F; font-size: 14.5px; margin: 6px 0 0; }
-  .map-card .btn { margin-top: 16px; }
-  @media (prefers-reduced-motion: reduce) { .face.reveal .zone { animation: none; opacity: 1; } .face .tag { transition: none; } }
+  .arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 22px; background: rgba(24,13,8,.55); border: 1px solid rgba(255,246,234,.35); display: grid; place-content: center; padding: 0; cursor: pointer; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .arrow.prev { left: 10px; } .arrow.next { right: 10px; }
+  .pager { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center; gap: 6px; }
+  .pager i { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,246,234,.45); transition: all .3s; } .pager i.on { width: 18px; background: #F2B95C; }
+  .ccard { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 14px 16px; border-radius: 20px; background: rgba(255,246,234,.06); border: 1px solid rgba(255,246,234,.14); }
+  .cring { position: relative; width: 76px; height: 76px; flex: none; } .cring b { position: absolute; inset: 0; display: grid; place-content: center; font-family: var(--display); font-weight: 400; font-size: 26px; }
+  .ccard .cb { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; } .ccard .cn { font-size: 18px; font-weight: 700; margin: 2px 0; } .ccard .cl { font-size: 14px; color: #C4AD9F; line-height: 1.4; margin: 0; }
+  .mcards { display: flex; gap: 10px; overflow-x: auto; margin: 14px -20px 0; padding: 0 20px 4px; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .mcards::-webkit-scrollbar { display: none; }
+  .mcard { flex: none; width: 112px; height: 112px; border-radius: 20px; background: rgba(255,246,234,.06); border: 1px solid rgba(255,246,234,.16); color: #F8EDE4; font: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0; cursor: pointer; scroll-snap-align: center; }
+  .mcard.on { background: rgba(184,80,30,.32); border-color: #B8501E; }
+  .mring { position: relative; width: 54px; height: 54px; } .mring b { position: absolute; inset: 0; display: grid; place-content: center; font-family: var(--display); font-weight: 400; font-size: 19px; }
+  .mname { font-size: 13px; font-weight: 700; }
+  .swipe-hint { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; font-size: 15px; font-weight: 700; }
+  .swipe-hint span { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #F2D08A; } .swipe-hint svg { animation: nudge 1.2s ease-in-out infinite; }
+  @keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+  /* 3 report ring tiles */
+  .hero { display: flex; align-items: center; gap: 18px; padding: 20px; border-radius: 28px; background: linear-gradient(150deg, rgba(184,80,30,.42), rgba(184,80,30,.12) 60%, rgba(255,246,234,.04)); border: 1px solid rgba(240,176,74,.3); margin: 8px 0 4px; }
+  .hring { position: relative; width: 140px; height: 140px; flex: none; }
+  .hring .big { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; } .hring .big b { font-family: var(--display); font-weight: 400; font-size: 50px; line-height: 1; } .hring .big small { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: #F2D08A; margin-top: 4px; }
+  .hero .ht { font-family: var(--display); font-size: 24px; line-height: 1.15; margin: 4px 0 6px; } .hero .hs { font-size: 14px; color: #E2CFC2; line-height: 1.4; margin: 0; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 24px 4px 10px; } .sec h2 { margin: 0; } .sec span { font-size: 13px; color: #C4AD9F; }
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .tile { height: 176px; border-radius: 24px; background: linear-gradient(160deg, rgba(255,246,234,.09), rgba(255,246,234,.03)); border: 1px solid rgba(255,246,234,.14); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 0 8px; }
+  .tring { position: relative; width: 98px; height: 98px; } .tring b { position: absolute; inset: 0; display: grid; place-content: center; font-family: var(--display); font-weight: 400; font-size: 32px; }
+  .tname { font-size: 15px; font-weight: 700; } .tband { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-top: -4px; color: #C4AD9F; }
+  .tile.nm { opacity: .7; } .tile.nm .tband { letter-spacing: 0; text-transform: none; font-weight: 600; font-size: 12px; line-height: 1.3; }
+  @media (prefers-reduced-motion: reduce) { #busy-face.mapped .zone, .pts span, .sweep, .rchip.now, .live .dot, .swipe-hint svg { animation: none; } #busy-face.mapped .zone { opacity: .8; } .sweep { display: none; } #map-face.reveal .zone { animation: none; opacity: 1; } .face .tag { transition: none; } }
 </style>
 </head>
 <body>
@@ -171,37 +213,43 @@
   </section>
 
   <!-- analyzing -->
-  <section class="screen" id="s-busy"><h1>Reading your skin…</h1><p class="muted"><span class="loading"></span><span id="busy-msg">This takes a few seconds.</span></p></section>
+  <section class="screen dk" id="s-busy">
+    <h1>Face Scan</h1>
+    <div class="face" id="busy-face" role="img" aria-label="Your photo being analyzed"></div>
+    <div class="prog"><div class="ring"><svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,246,234,.12)" stroke-width="6"/><circle id="busy-ring" cx="42" cy="42" r="36" fill="none" stroke="#F0B04A" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 226.2" transform="rotate(-90 42 42)"/></svg><b id="busy-count">0/8</b></div>
+      <div><div class="t" id="busy-title" aria-live="polite">Finding Your Face</div><div class="s" id="busy-msg">This takes a few seconds.</div></div></div>
+    <div class="rchips" id="busy-chips" aria-hidden="true"></div>
+  </section>
 
-  <!-- skin map: the heat map step between the scan and the scores -->
-  <section class="screen" id="s-map">
-    <div class="map-card">
-      <p class="day" id="map-day"></p>
-      <h1>Your Skin Map</h1>
-      <div class="chips" id="map-chips" role="tablist" aria-label="Skin concerns"></div>
-      <div class="face" id="map-face" role="img" aria-label="Heat map on your scan photo"></div>
-      <div class="legend" aria-hidden="true"><span>Mild</span><span class="ramp"></span><span>Notable</span></div>
-      <div class="map-sum"><div class="top"><strong id="map-name"></strong><b id="map-score"></b></div><p id="map-line"></p></div>
-      <button class="btn" id="map-next" type="button">See My Full Report</button>
-    </div>
+  <!-- skin map: concern by concern (2B) -->
+  <section class="screen dk" id="s-map">
+    <p class="day" id="map-day"></p>
+    <h1>Your Skin Map</h1>
+    <div class="face" id="map-face" role="img" aria-label="Heat map on your scan photo"></div>
+    <div class="ccard"><div class="cring" id="map-ring"></div><div><div class="cb" id="map-band"></div><div class="cn" id="map-name"></div><p class="cl" id="map-line"></p></div></div>
+    <div class="swipe-hint">All Your Measures<span>Swipe Or Tap<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2D08A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span></div>
+    <div class="mcards" id="map-cards"></div>
+    <button class="btn" id="map-next" type="button" style="margin-top:18px">See My Full Report</button>
     <p class="muted" style="margin-top:12px">Glow shows where each measure reads strongest on this photo. Brighter means more notable. The photo stays on your phone unless you ticked the study box.</p>
   </section>
 
   <!-- results -->
-  <section class="screen" id="s-result">
-    <p class="day" id="r-day"></p>
-    <h1>Today's reading</h1>
-    <div class="score"><b id="r-score">—</b><span class="muted">skin score (0–100, higher is better)</span></div>
+  <section class="screen dk" id="s-result">
+    <h1>Skin Report</h1>
+    <div class="hero"><div class="hring" id="r-hero-ring"></div><div><p class="day" id="r-day" style="margin:0"></p><p class="ht">Skin Score</p><p class="hs" id="r-hero-sub"></p></div></div>
     <p class="muted" id="r-note"></p>
-    <div class="measures" id="r-measures"></div>
-    <div id="r-again" hidden class="notice"><p><strong>One more, right away.</strong> On your first day a second scan straight after the first shows how steady the reading is. Same spot, same light.</p><button class="btn small" id="r-again-btn" type="button">Scan again now</button></div>
-    <h2>Your routine suggestion</h2>
+    <div id="r-focus-wrap"><div class="sec"><h2>Focus First</h2><span>Lowest first</span></div><div class="tiles" id="r-focus"></div></div>
+    <div id="r-well-wrap"><div class="sec"><h2>Doing Well</h2><span>Keep it up</span></div><div class="tiles" id="r-well"></div></div>
+    <div id="r-skip-wrap" hidden><div class="sec"><h2>Not Measured Today</h2></div><div class="tiles" id="r-skip"></div></div>
+    <div class="row" style="margin-top:16px"><button class="btn ghost" id="r-map" type="button">View My Skin Map</button></div>
+    <div id="r-again" hidden class="notice"><p><strong>One more, right away.</strong> On your first day a second scan straight after the first shows how steady the reading is. Same spot, same light.</p><button class="btn small" id="r-again-btn" type="button">Scan Again Now</button></div>
+    <h2>Your Routine Suggestion</h2>
     <p class="muted">What to do and how often, by step and ingredient. This test suggests no products and names no brands.</p>
     <h3>Morning</h3><div class="steps" id="r-am"></div>
     <h3>Night</h3><div class="steps" id="r-pm"></div>
     <ul class="cautions" id="r-cautions"></ul>
     <p class="muted" style="margin-top:10px">This is general skincare guidance from a test, not medical advice. For anything that hurts, spreads or worries you, see a dermatologist.</p>
-    <div class="row" style="margin-top:16px"><button class="btn ghost" id="r-map" type="button">View Skin Map</button><button class="btn ghost" id="r-home" type="button">Done for today</button></div>
+    <div class="row" style="margin-top:16px"><button class="btn ghost" id="r-home" type="button">Done For Today</button></div>
   </section>
 
   <!-- ended -->
