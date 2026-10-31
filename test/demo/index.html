@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Pulse Skin Analysis Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&family=Raleway:wght@400;500;600;700&display=swap">
+<link rel="icon" href="/apple-touch-icon.png">
+<!--
+  Demo mode (Oct 31, 2026). The same page, engine, skin map, report and routine as the friends-and-family test, with
+  nothing saved: no link, no consent record, no scores or photos sent anywhere, no history, no training data. For
+  showing Pulse to people in person. The photo is analyzed in this browser and stays in memory until the page is left.
+-->
+<link rel="stylesheet" href="/test/test.css">
+</head>
+<body>
+<main>
+  <header class="top"><span class="wordmark">Pulse</span><span class="pill">Demo · Nothing Saved</span></header>
+
+  <!-- demo intro -->
+  <section class="screen" id="s-gate">
+    <p class="day">Demo</p>
+    <h1>See how Pulse reads your skin</h1>
+    <p>A guided photo, a skin map and a report of 8 measures with a routine suggestion, all in about a minute.</p>
+    <div class="notice">
+      <p><strong>Nothing is saved.</strong> The photo is analyzed on this phone and never uploaded. No account, no scores kept, no photo kept, and nothing from this demo is used to train Pulse. Close the page and it is gone.</p>
+      <p><strong>Not medical advice.</strong> Pulse describes how your skin looks in a photo; it does not diagnose. Readings depend on light and camera, and this is a preview of a product still in testing.</p>
+    </div>
+    <button class="btn" id="demo-start" type="button">Start The Demo</button>
+    <p class="muted" style="margin-top:12px">Best in daylight or facing a lamp, bare skin, no glasses or hat.</p>
+  </section>
+
+  <!-- consent -->
+  <section class="screen" id="s-consent">
+    <p class="day">Before you start</p>
+    <h1>How Pulse uses your face in this test</h1>
+    <div class="notice" id="notice-text">
+      <p><strong>What this is.</strong> A private two-week test of Pulse's skin analysis for people the founder invited. It is not the Pulse app and not a public service.</p>
+      <p><strong>What we collect.</strong> Each day you choose to scan, Pulse takes a photo of your face in your phone's browser, measures face points from it (face geometry) and reads 8 skin measures: dark spots and uneven tone, redness, shine, texture, pores, breakouts, dark circles and radiance. The analysis runs on your phone. The face points never leave your phone. Your scores, and data about the photo's lighting and sharpness, are saved to your test record with your email. Under Illinois and Texas law the face points are biometric identifiers and the scores are biometric information.</p>
+      <p><strong>Why.</strong> Only to test how accurate and consistent Pulse's analysis is across skin tones, and to fix it where it falls short. Never to identify you, never for advertising, never sold.</p>
+      <p><strong>Who sees it.</strong> Pulse (the founder) sees your scores. No outside company receives your photo or face points. Pulse's database provider, Supabase, stores the scores in the United States.</p>
+      <p><strong>How long.</strong> Your scores are kept for 12 months after the test ends, then destroyed. If you withdraw, everything tied to you is destroyed within 30 days. Pulse's full retention rules are at pulseskin.co/biometric-retention.</p>
+      <p><strong>Your choices.</strong> This is optional. You can stop at any time using the Withdraw link on this page or in any email from Pulse, and nothing changes between us.</p>
+      <p><strong>Access.</strong> You have the test page for 14 days from today. Scan every day if you can; even four scans across the two weeks helps.</p>
+    </div>
+    <label class="check"><input type="checkbox" id="c-main"><span><strong>I have read this notice. I consent to Pulse Cosmetic Solutions LLC collecting, storing and using my face image, face geometry and skin analysis results as described, for the period stated, and I release it for that purpose.</strong> (required)</span></label>
+    <label class="check"><input type="checkbox" id="c-photos"><span><strong>Optional: keep my scan photos until Pulse's accuracy study is complete, and no later than 12 months after the test ends, so a dermatologist or licensed esthetician can check Pulse's accuracy against them.</strong> Photos are stored with your test record, seen only by Pulse and the graders, never published, and destroyed on schedule or sooner if you withdraw. Leaving this unticked changes nothing about the test.</span></label>
+    <p style="margin-top:14px"><label>Full name<br><input type="text" id="c-name" autocomplete="name" maxlength="120" placeholder="Type your full name"></label></p>
+    <p class="err" id="c-err" hidden></p>
+    <div class="row"><button class="btn" id="c-agree" type="button">Agree and start</button><button class="btn ghost" id="c-notnow" type="button">Not now</button></div>
+    <p class="muted" style="margin-top:12px">Questions first? Email hello@pulsecosmeticsolutions.com.</p>
+  </section>
+
+  <!-- your shade (before the first scan, if the waitlist didn't give us one) -->
+  <section class="screen dk" id="s-shade">
+    <p class="day">Before You Scan</p>
+    <h1>Your Shade</h1>
+    <p class="muted">Pulse explains every result for your shade. Find it with your camera, or pick it yourself.</p>
+    <button class="btn" type="button" id="shade-find" style="margin-top:8px">Find My Shade</button>
+    <p class="muted" style="margin-top:8px;font-size:13px">Uses your camera for a few seconds. Nothing is saved but the shade it finds.</p>
+    <p class="found" id="shade-found" hidden></p>
+    <div class="or">Or Pick It Yourself</div>
+    <div class="gemgrid" id="shade-gems"></div>
+    <div id="shade-und-wrap" hidden><h3 style="margin-top:22px">Your Undertone</h3><p class="muted">Pick the undertone that looks most like your skin.</p><div class="undgrid" id="shade-und"></div></div>
+    <button class="btn" type="button" id="shade-save" style="margin-top:22px" disabled>Save My Shade</button>
+    <p style="text-align:center;margin-top:14px"><button class="link" type="button" id="shade-skip">Skip For Now</button></p>
+  </section>
+
+  <!-- home -->
+  <section class="screen" id="s-home">
+    <p class="day" id="home-day"></p>
+    <h1 id="home-title">Ready for today's scan?</h1>
+    <div id="home-shade-row"></div>
+    <p id="home-sub" class="muted">Face a window or a lamp, no hat or glasses, phone at eye level.</p>
+    <p class="muted" id="engine-status"><span class="loading"></span>Loading the analysis engine (about 10 seconds the first time)…</p>
+    <button class="btn" id="home-scan" type="button" disabled>Start scan</button>
+    <div id="home-history"></div>
+  </section>
+
+  <!-- camera -->
+  <section class="screen" id="s-cam">
+    <div class="cam">
+      <video id="video" playsinline muted autoplay></video>
+      <svg class="guide" id="guide" viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice"><ellipse cx="150" cy="190" rx="95" ry="130"/></svg>
+      <div class="count" id="count"></div>
+    </div>
+    <p class="tip" id="tip">Starting the camera…</p>
+    <div class="row"><button class="btn" id="cam-shoot" type="button" disabled>Scan now</button><button class="btn ghost" id="cam-cancel" type="button">Cancel</button></div>
+    <p class="muted" style="margin-top:10px">The photo is read on this phone and is not uploaded.</p>
+  </section>
+
+  <!-- analyzing -->
+  <section class="screen dk" id="s-busy">
+    <h1>Face Scan</h1>
+    <div class="face" id="busy-face" role="img" aria-label="Your photo being analyzed"></div>
+    <div class="prog"><div class="ring"><svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,246,234,.12)" stroke-width="6"/><circle id="busy-ring" cx="42" cy="42" r="36" fill="none" stroke="#F0B04A" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 226.2" transform="rotate(-90 42 42)"/></svg><b id="busy-count">0/8</b></div>
+      <div><div class="t" id="busy-title" aria-live="polite">Finding Your Face</div><div class="s" id="busy-msg">This takes a few seconds.</div></div></div>
+    <div class="rchips" id="busy-chips" aria-hidden="true"></div>
+  </section>
+
+  <!-- skin map: concern by concern (2B) -->
+  <section class="screen dk" id="s-map">
+    <p class="day" id="map-day"></p>
+    <h1>Your Skin Map</h1>
+    <div class="face" id="map-face" role="img" aria-label="Heat map on your scan photo"></div>
+    <div class="ccard"><div class="cring" id="map-ring"></div><div><div class="cb" id="map-band"></div><div class="cn" id="map-name"></div><p class="cl" id="map-line"></p><button class="learn-link" type="button" id="map-learn" data-learn="">What Is This?</button></div></div>
+    <div class="swipe-hint">All Your Measures<span>Swipe Or Tap<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2D08A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span></div>
+    <div class="mcards" id="map-cards"></div>
+    <button class="btn" id="map-next" type="button" style="margin-top:18px">See My Full Report</button>
+    <p class="muted" style="margin-top:12px">Glow shows where each measure reads strongest on this photo. Brighter means more notable. The photo stays on this phone.</p>
+  </section>
+
+  <!-- results -->
+  <section class="screen dk" id="s-result">
+    <h1>Skin Report</h1>
+    <div class="hero"><div class="hring" id="r-hero-ring"></div><div><p class="day" id="r-day" style="margin:0"></p><p class="ht">Skin Score</p><p class="hs" id="r-hero-sub"></p></div></div>
+    <p class="muted" id="r-note"></p>
+    <div id="r-focus-wrap"><div class="sec"><h2>Focus First</h2><span>Tap any tile to learn more</span></div><div class="tiles" id="r-focus"></div></div>
+    <div id="r-well-wrap"><div class="sec"><h2>Doing Well</h2><span>Keep it up</span></div><div class="tiles" id="r-well"></div></div>
+    <div id="r-skip-wrap" hidden><div class="sec"><h2>Not Measured Today</h2></div><div class="tiles" id="r-skip"></div></div>
+    <div class="row" style="margin-top:16px"><button class="btn ghost" id="r-map" type="button">View My Skin Map</button></div>
+    <div id="r-again" hidden class="notice"><p><strong>One more, right away.</strong> On your first day a second scan straight after the first shows how steady the reading is. Same spot, same light.</p><button class="btn small" id="r-again-btn" type="button">Scan Again Now</button></div>
+    <h2>Your Routine Suggestion</h2>
+    <p class="muted">What to do and how often, by step and ingredient. The app also matches products from your budget and stores; this demo names no brands.</p>
+    <h3>Morning</h3><div class="steps" id="r-am"></div>
+    <h3>Night</h3><div class="steps" id="r-pm"></div>
+    <ul class="cautions" id="r-cautions"></ul>
+    <p class="muted" style="margin-top:10px">This is general skincare guidance from a demo, not medical advice. For anything that hurts, spreads or worries you, see a dermatologist.</p>
+    <div class="row" style="margin-top:16px"><button class="btn ghost" id="r-home" type="button">Start Another Demo</button></div>
+  </section>
+
+  <!-- ended -->
+  <section class="screen" id="s-ended">
+    <h1>Your two weeks are done. Thank you.</h1>
+    <p>Your scans are helping Pulse check that its analysis is fair and accurate across skin tones. Your scores are kept for the accuracy study for the period stated in the notice, and you can still withdraw below.</p>
+    <div id="ended-history"></div>
+  </section>
+
+  <!-- withdrawn -->
+  <section class="screen" id="s-withdrawn">
+    <h1>You have withdrawn.</h1>
+    <p>Your scores and any photos are being destroyed, and this link no longer works. Thank you for trying Pulse. Nothing changes between us.</p>
+  </section>
+
+  <footer>
+    <p>Pulse Cosmetic Solutions LLC · <a href="/privacy/">Privacy</a> · <a href="mailto:hello@pulsecosmeticsolutions.com">hello@pulsecosmeticsolutions.com</a></p>
+    <p id="withdraw-row" hidden><button class="link" id="withdraw" type="button">Withdraw</button></p>
+  </footer>
+</main>
+<div id="sf-wrap" hidden></div>
+<div id="learn" hidden><div id="learn-body" role="dialog" aria-modal="true" aria-labelledby="learn-title"></div></div>
+<script>window.PULSE_DEMO = true;</script>
+<script src="/test/test.js"></script>
+</body>
+</html>

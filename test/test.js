@@ -5,6 +5,9 @@
 (function () {
   'use strict';
   var API = window.PULSE_TEST_API || 'https://bgagcxdsqnasgegazusf.supabase.co/functions/v1/webtest';   // Pulse dev project; switch to staging before the first real tester. PULSE_TEST_API: local end-to-end test only
+  // Demo mode (/test/demo/): same engine and screens, nothing saved. No token, no consent record, no scan or photo sent,
+  // no history, no shade stored anywhere; the shade is asked for per demo so the learn-more sheets speak to that person.
+  var DEMO = !!window.PULSE_DEMO;
   var CONSENT_VERSION = 'webtest-v1-2026-10-28';
   var TEST_DAYS = 14;
   var $ = function (id) { return document.getElementById(id); };
@@ -20,6 +23,7 @@
     return Math.max(1, Math.round((now - start) / 86400000) + 1);
   }
   function api(action, body) {
+    if (DEMO) return Promise.resolve({ ok: true, demo: true });   // nothing leaves the phone in the demo
     body = body || {}; body.action = action; if (token) body.t = token;
     return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json(); }).catch(function () { return { ok: false, error: 'network' }; });
@@ -79,6 +83,14 @@
 
   // ---------- home + history ----------
   function renderHome() {
+    if (DEMO) {
+      $('home-day').textContent = 'Demo · Nothing Saved';
+      $('home-title').textContent = 'Ready to see your scan?';
+      $('home-sub').textContent = 'Face a window or a lamp, no hat or glasses, phone at eye level. Daylight is best.';
+      $('home-shade-row').innerHTML = shadeChip();
+      $('home-history').innerHTML = '';
+      show('s-home'); return;
+    }
     var d = dayIndex();
     $('withdraw-row').hidden = false;
     if (d > TEST_DAYS) { $('ended-history').innerHTML = historyHtml(); show('s-ended'); return; }
@@ -90,6 +102,7 @@
     $('home-history').innerHTML = historyHtml();
     show('s-home');
   }
+  function dayLabel(day) { return DEMO ? 'Demo Scan' : 'Day ' + day + ' of ' + TEST_DAYS; }
   function historyHtml() {
     if (!history.length) return '<p class="muted" style="margin-top:20px">Your 14-day line appears here after your first scan.</p>';
     var pts = history.filter(function (s) { return s.skin_score != null; });
@@ -174,12 +187,12 @@
       if (!r.ok || !r.face || !r.analysis) return fail(!r.ok ? 'The engine could not read that photo. Try again in better light.' : 'No face found. Try again, closer to the camera.');
       var a = r.analysis;
       var body = { local_date: localDate(), result: { model_version: a.model_version, skin_score: a.skin_score, skin_type: a.skin_type, confidence: a.confidence, concerns: a.concerns, quality: a.quality, lighting_signature: a.lighting_signature } };
-      if (state && state.keep_photos) body.photo_b64 = b64;
-      Promise.all([api('scan', body), busyDone()]).then(function (out) {
+      if (state && state.keep_photos && !DEMO) body.photo_b64 = b64;
+      Promise.all([DEMO ? Promise.resolve({ ok: true, demo: true }) : api('scan', body), busyDone()]).then(function (out) {
         var res = out[0]; stopBusy();
         if (!res.ok) { alert('Your reading could not be saved (' + (res.error || 'network') + '). It is shown below but will not count.'); }
-        else history.push({ id: res.scan_id, date: localDate(), day: res.day_index, skin_score: a.skin_score, concerns: a.concerns, not_measured: a.quality.not_measured || [], issues: a.quality.issues || [] });
-        var day = res.ok ? res.day_index : dayIndex();
+        else if (!DEMO) history.push({ id: res.scan_id, date: localDate(), day: res.day_index, skin_score: a.skin_score, concerns: a.concerns, not_measured: a.quality.not_measured || [], issues: a.quality.issues || [] });
+        var day = res.ok && !DEMO ? res.day_index : dayIndex();
         renderResult(a, day);
         if (!renderMap(a, r, b64, day)) show('s-result');
       });
@@ -192,7 +205,7 @@
   var NM_WHY = { acne: 'the photo was too grainy to tell a breakout from grain', pores: 'the photo was too grainy or soft to see pores', texture: 'the photo was too soft to read texture', dark_circles: 'the under-eye was too shadowed to read', redness: 'the lighting color made redness unreliable', oiliness: 'the light was too bright to read shine', spots: 'not enough confidence in this photo', radiance: 'not enough confidence in this photo' };
   function band(v) { return v < 50 ? ['focus', 'Needs focus'] : v < 70 ? ['watch', 'Watch'] : ['good', 'Doing well']; }
   function renderResult(a, day) {
-    $('r-day').textContent = 'Day ' + day + ' of ' + TEST_DAYS;
+    $('r-day').textContent = dayLabel(day);
     var nm = a.quality.not_measured || [];
     $('r-note').textContent = (a.status === 'low_confidence' ? 'Low-confidence reading (' + (TIP[a.reason] ? TIP[a.reason].replace(/\.$/, '').toLowerCase() : a.reason) + '). Scores still count, but a rescan in better light is worth it. ' : '')
       + (a.skin_type ? 'Skin reads as ' + a.skin_type + ' today.' : '');
@@ -215,7 +228,7 @@
     $('r-pm').innerHTML = plan.steps.filter(function (s) { return s.period === 'pm'; }).map(stepHtml).join('');
     $('r-cautions').innerHTML = plan.cautions.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('');
     var firstDayScans = history.filter(function (s) { return s.day === 1; }).length;
-    $('r-again').hidden = !(day === 1 && firstDayScans === 1);
+    $('r-again').hidden = DEMO || !(day === 1 && firstDayScans === 1);
   }
   function stepHtml(s) {
     return '<div class="step"><div class="l">' + esc(s.label) + '</div><div class="f">' + esc(frequency(s)) + (s.ingredients.length ? ' · ' + esc(s.ingredients.join(', ')) : '') + '</div><p class="w">' + esc(s.why) + '</p>' + (s.caution ? '<p class="c">' + esc(s.caution) + '</p>' : '') + '</div>';
@@ -228,7 +241,10 @@
     if (s.start_per_week < s.per_week) return n(s.start_per_week) + ' a week, then ' + target;
     return s.per_week >= 7 ? 'Every ' + when : n(s.per_week) + ' a week';
   }
-  $('r-home').addEventListener('click', renderHome);
+  $('r-home').addEventListener('click', function () {
+    if (DEMO) { if (state) state.tone = null; mapState = null; lastRead = null; show('s-gate'); return; }   // next person starts clean
+    renderHome();
+  });
 
   // ---------- skin map (heat map) + scan animation ----------
   // Ported from the app (pulse-app/src/lib/face-core.ts zonesFor/superellipse/heatFor/heatSummary and
@@ -387,7 +403,7 @@
     if (!list.length) { mapState = null; $('r-map').hidden = true; return false; }
     mapState = { W: r.width, H: r.height, zones: zonesFor(lm, r.width, r.height), photo: 'data:image/jpeg;base64,' + b64, by: by, list: list, measured: measured, i: 0 };
     $('r-map').hidden = false;
-    $('map-day').textContent = 'Day ' + day + ' of ' + TEST_DAYS;
+    $('map-day').textContent = dayLabel(day);
     $('map-face').innerHTML = '<img alt="Your scan photo" src="' + mapState.photo + '">' + faceLayers(r.width, r.height, 'm') + '<span class="tag" id="map-tag"></span>'
       + '<button class="arrow prev" id="map-prev" type="button" aria-label="Previous concern"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>'
       + '<button class="arrow next" id="map-nextc" type="button" aria-label="Next concern"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>'
@@ -508,6 +524,7 @@
   function validTone(t) { return /^mst_(10|[1-9])(_(cool|neutral|warm|olive|red|unsure))?$/.test(t || ''); }
   function savedTone() {
     if (state && validTone(state.tone)) return state.tone;
+    if (DEMO) return null;   // each demo asks again; nothing is remembered between people
     try { var t = localStorage.getItem('pulse_webtest_tone'); if (validTone(t)) return t; } catch (e) {}
     return null;
   }
@@ -543,7 +560,7 @@
   $('shade-save').addEventListener('click', function () {
     if (!shadePick.gem || !shadePick.und) return;
     var tone = 'mst_' + shadePick.gem + '_' + shadePick.und;
-    try { localStorage.setItem('pulse_webtest_tone', tone); } catch (e) {}
+    if (!DEMO) { try { localStorage.setItem('pulse_webtest_tone', tone); } catch (e) {} }
     if (state) state.tone = tone;
     $('shade-save').disabled = true;
     api('set_tone', { tone: tone }).then(function () { $('shade-save').disabled = false; (afterShade || renderHome)(); });
@@ -657,7 +674,7 @@
       token = null; stopCamera(); $('withdraw-row').hidden = true; show('s-withdrawn');
     });
   });
-  $('relink').addEventListener('submit', function (e) {
+  if ($('relink')) $('relink').addEventListener('submit', function (e) {
     e.preventDefault();
     var email = $('relink').email.value.trim(); if (!email) return;
     api('request_link', { email: email }).then(function () { $('relink').hidden = true; $('relink-done').hidden = false; });
@@ -666,8 +683,15 @@
   // ---------- boot ----------
   function boot() {
     // The engine iframe is created here, after the message listener above exists, so its 'ready' is never missed.
-    var fr = document.createElement('iframe'); fr.id = 'engine'; fr.src = 'engine.html'; fr.title = 'Pulse analysis engine'; fr.setAttribute('aria-hidden', 'true');
+    var fr = document.createElement('iframe'); fr.id = 'engine'; fr.src = '/test/engine.html'; fr.title = 'Pulse analysis engine'; fr.setAttribute('aria-hidden', 'true');
     document.body.appendChild(fr);
+    if (DEMO) {
+      state = { ok: true, demo: true, consented: true, keep_photos: false, started_on: localDate(), test_days: TEST_DAYS, tone: null };
+      history = [];
+      var startBtn = $('demo-start');
+      if (startBtn) startBtn.addEventListener('click', function () { if (needsShade()) openShade(renderHome); else renderHome(); });
+      show('s-gate'); return;
+    }
     var q = new URLSearchParams(location.search).get('t');
     if (q) { token = q; try { localStorage.setItem('pulse_webtest_t', q); } catch (e) {} window.history.replaceState(null, '', location.pathname); }
     else { try { token = localStorage.getItem('pulse_webtest_t'); } catch (e) {} }

@@ -131,6 +131,19 @@
 
   // ---------- export ----------
   $('refresh').addEventListener('click', load);
+  // Clean slate: every scan and kept photo destroyed, every consent cleared (testers start again at Day 1 on their next
+  // visit). The list, links and shades stay. Two confirmations; the second asks for the word RESET.
+  $('reset').addEventListener('click', function () {
+    var scans = testers.reduce(function (n, t) { return n + (+t.scans || 0); }, 0), photos = testers.reduce(function (n, t) { return n + (+t.photos || 0); }, 0);
+    if (!confirm('Clean slate: destroy ' + scans + ' scans and ' + photos + ' photos and clear every consent? Testers keep their links and start again at Day 1. This cannot be undone.')) return;
+    if (prompt('Type RESET to confirm.') !== 'RESET') return;
+    $('reset').disabled = true;
+    api('admin.reset').then(function (r) {
+      $('reset').disabled = false;
+      alert(r.ok ? 'Done: ' + r.scans_deleted + ' scans deleted, ' + r.photos_removed + ' of ' + r.photos_expected + ' photos removed, ' + r.consents_reset + ' consents cleared.' : 'Reset failed (' + (r.error || 'unknown') + ').');
+      load();
+    });
+  });
   $('export').addEventListener('click', function () {
     api('admin.export').then(function (r) {
       if (!r.ok) { alert('Could not export.'); return; }
